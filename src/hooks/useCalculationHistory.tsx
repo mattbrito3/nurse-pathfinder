@@ -1,9 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import type { CalculationHistory, CalculationType } from '@/types/calculator';
 
 const STORAGE_KEY_PREFIX = 'medication_calculation_history';
 const MAX_HISTORY_ITEMS = 50; // Limitar histórico para performance
+
+interface DatabaseCalculationHistory {
+  id: string;
+  user_id: string;
+  type: CalculationType;
+  medication_name: string | null;
+  calculation_data: any;
+  result_data: any;
+  is_favorite: boolean;
+  created_at: string;
+  updated_at: string;
+}
 
 export const useCalculationHistory = () => {
   const { user } = useAuth();
@@ -53,35 +66,125 @@ export const useCalculationHistory = () => {
     }
   };
 
-  // Carregar histórico do localStorage
-  useEffect(() => {
-    const loadHistory = () => {
-      try {
-        // Migrar histórico antigo se necessário
-        migrateOldHistory();
-        
-        const storageKey = getStorageKey();
-        const savedHistory = localStorage.getItem(storageKey);
-        if (savedHistory) {
-          const parsed = JSON.parse(savedHistory);
-          // Converter strings de data de volta para objetos Date
-          const historyWithDates = parsed.map((item: any) => ({
-            ...item,
-            timestamp: new Date(item.timestamp)
-          }));
-          setHistory(historyWithDates);
-        } else {
-          setHistory([]);
-        }
-      } catch (error) {
-        console.error('Erro ao carregar histórico:', error);
-        setHistory([]);
-      } finally {
-        setIsLoading(false);
-      }
+  // Converter dados do banco para o formato da aplicação
+  const convertFromDatabase = (dbItem: DatabaseCalculationHistory): CalculationHistory => {
+    return {
+      id: dbItem.id,
+      type: dbItem.type,
+      calculation: {
+        ...dbItem.calculation_data,
+        result: dbItem.result_data
+      },
+      timestamp: new Date(dbItem.created_at),
+      isFavorite: dbItem.is_favorite,
+      medicationName: dbItem.medication_name || undefined
     };
+  };
 
-    loadHistory();
+  // Carregar histórico do Supabase
+  const loadHistoryFromDatabase = async () => {
+    if (!user?.id) {
+      setHistory([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('calculation_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(MAX_HISTORY_ITEMS);
+
+      if (error) {
+        console.error('Erro ao carregar histórico do banco:', error);
+        // Fallback para localStorage se houver erro
+        await loadHistoryFromLocalStorage();
+        return;
+      }
+
+      const convertedHistory = (data || []).map(convertFromDatabase);
+      setHistory(convertedHistory);
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
+      // Fallback para localStorage
+      await loadHistoryFromLocalStorage();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fallback: carregar do localStorage
+  const loadHistoryFromLocalStorage = async () => {
+    try {
+      // Migrar histórico antigo se necessário
+      migrateOldHistory();
+      
+      const storageKey = getStorageKey();
+      const savedHistory = localStorage.getItem(storageKey);
+      if (savedHistory) {
+        const parsed = JSON.parse(savedHistory);
+        // Converter strings de data de volta para objetos Date
+        const historyWithDates = parsed.map((item: any) => ({
+          ...item,
+          timestamp: new Date(item.timestamp)
+        }));
+        setHistory(historyWithDates);
+        
+        // Tentar migrar para o banco de dados
+        if (user?.id) {
+          await migrateLocalStorageToDatabase(historyWithDates);
+        }
+      } else {
+        setHistory([]);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar histórico do localStorage:', error);
+      setHistory([]);
+    }
+  };
+
+  // Migrar localStorage para Supabase
+  const migrateLocalStorageToDatabase = async (localHistory: CalculationHistory[]) => {
+    if (!user?.id || localHistory.length === 0) return;
+
+    try {
+      const dataToInsert = localHistory.map(item => ({
+        user_id: user.id,
+        type: item.type,
+        medication_name: item.medicationName,
+        calculation_data: {
+          ...item.calculation,
+          result: undefined // Remover result do calculation_data
+        },
+        result_data: item.calculation.result,
+        is_favorite: item.isFavorite,
+        created_at: item.timestamp.toISOString()
+      }));
+
+      const { error } = await supabase
+        .from('calculation_history')
+        .insert(dataToInsert);
+
+      if (!error) {
+        console.log(`Migrados ${localHistory.length} cálculos para o banco de dados`);
+        // Limpar localStorage após migração bem-sucedida
+        const storageKey = getStorageKey();
+        localStorage.removeItem(storageKey);
+      }
+    } catch (error) {
+      console.error('Erro ao migrar para o banco:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      loadHistoryFromDatabase();
+    } else {
+      // Usuário não logado - usar localStorage
+      loadHistoryFromLocalStorage();
+    }
   }, [user?.id]); // Recarregar quando o usuário mudar
 
   // Salvar histórico no localStorage
@@ -95,50 +198,169 @@ export const useCalculationHistory = () => {
   };
 
   // Adicionar novo cálculo ao histórico
-  const addCalculation = (
+  const addCalculation = async (
     type: CalculationType,
     calculation: any,
     medicationName?: string
   ) => {
-    const newItem: CalculationHistory = {
-      id: `calc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      type,
-      calculation,
-      timestamp: new Date(),
-      isFavorite: false,
-      medicationName: medicationName || 
-        (calculation.medicationName) || 
-        `${type.charAt(0).toUpperCase() + type.slice(1)}`
-    };
+    if (!user?.id) {
+      // Fallback para localStorage se não estiver logado
+      const newItem: CalculationHistory = {
+        id: `calc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        calculation,
+        timestamp: new Date(),
+        isFavorite: false,
+        medicationName: medicationName || 
+          (calculation.medicationName) || 
+          `${type.charAt(0).toUpperCase() + type.slice(1)}`
+      };
 
-    const newHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
-    setHistory(newHistory);
-    saveToStorage(newHistory);
-    
-    return newItem.id;
+      const newHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
+      setHistory(newHistory);
+      saveToStorage(newHistory);
+      
+      return newItem.id;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('calculation_history')
+        .insert({
+          user_id: user.id,
+          type,
+          medication_name: medicationName || calculation.medicationName || null,
+          calculation_data: {
+            ...calculation,
+            result: undefined // Remover result do calculation_data
+          },
+          result_data: calculation.result,
+          is_favorite: false
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Erro ao salvar cálculo:', error);
+        throw error;
+      }
+
+      // Atualizar estado local
+      const newItem = convertFromDatabase(data);
+      setHistory(prev => [newItem, ...prev].slice(0, MAX_HISTORY_ITEMS));
+      
+      return data.id;
+    } catch (error) {
+      console.error('Erro ao adicionar cálculo:', error);
+      // Fallback para localStorage em caso de erro
+      const newItem: CalculationHistory = {
+        id: `calc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        calculation,
+        timestamp: new Date(),
+        isFavorite: false,
+        medicationName: medicationName || calculation.medicationName
+      };
+
+      const newHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
+      setHistory(newHistory);
+      saveToStorage(newHistory);
+      
+      return newItem.id;
+    }
   };
 
   // Alternar favorito
-  const toggleFavorite = (id: string) => {
-    const newHistory = history.map(item =>
-      item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+  const toggleFavorite = async (id: string) => {
+    const item = history.find(h => h.id === id);
+    if (!item) return;
+
+    const newIsFavorite = !item.isFavorite;
+
+    if (user?.id) {
+      try {
+        const { error } = await supabase
+          .from('calculation_history')
+          .update({ is_favorite: newIsFavorite })
+          .eq('id', id)
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Erro ao atualizar favorito:', error);
+          return;
+        }
+      } catch (error) {
+        console.error('Erro ao togglear favorito:', error);
+        return;
+      }
+    }
+
+    // Atualizar estado local
+    const newHistory = history.map(h =>
+      h.id === id ? { ...h, isFavorite: newIsFavorite } : h
     );
     setHistory(newHistory);
-    saveToStorage(newHistory);
+    
+    if (!user?.id) {
+      saveToStorage(newHistory);
+    }
   };
 
   // Remover cálculo
-  const removeCalculation = (id: string) => {
+  const removeCalculation = async (id: string) => {
+    if (user?.id) {
+      try {
+        const { error } = await supabase
+          .from('calculation_history')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Erro ao remover cálculo:', error);
+          return;
+        }
+      } catch (error) {
+        console.error('Erro ao deletar cálculo:', error);
+        return;
+      }
+    }
+
+    // Atualizar estado local
     const newHistory = history.filter(item => item.id !== id);
     setHistory(newHistory);
-    saveToStorage(newHistory);
+    
+    if (!user?.id) {
+      saveToStorage(newHistory);
+    }
   };
 
   // Limpar todo histórico
-  const clearHistory = () => {
+  const clearHistory = async () => {
+    if (user?.id) {
+      try {
+        const { error } = await supabase
+          .from('calculation_history')
+          .delete()
+          .eq('user_id', user.id);
+
+        if (error) {
+          console.error('Erro ao limpar histórico:', error);
+          return;
+        }
+      } catch (error) {
+        console.error('Erro ao limpar histórico:', error);
+        return;
+      }
+    }
+
+    // Atualizar estado local
     setHistory([]);
-    const storageKey = getStorageKey();
-    localStorage.removeItem(storageKey);
+    
+    if (!user?.id) {
+      const storageKey = getStorageKey();
+      localStorage.removeItem(storageKey);
+    }
   };
 
   // Obter estatísticas

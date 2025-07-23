@@ -51,42 +51,119 @@ const MedicationCalculator = () => {
     diluentVolume: 0
   });
 
-  const handleDosageCalculation = () => {
+  const handleDosageCalculation = async () => {
+    // Validações antes do cálculo
+    const errors: string[] = [];
+    
+    if (!dosageData.patientWeight || dosageData.patientWeight <= 0) {
+      errors.push('Peso do paciente é obrigatório e deve ser maior que zero');
+    }
+    
+    if (!dosageData.prescribedDose || dosageData.prescribedDose <= 0) {
+      errors.push('Dose prescrita é obrigatória e deve ser maior que zero');
+    }
+    
+    if (!dosageData.availableConcentration || dosageData.availableConcentration <= 0) {
+      errors.push('Concentração disponível é obrigatória e deve ser maior que zero');
+    }
+    
+    if (!dosageData.medicationName?.trim()) {
+      errors.push('Nome do medicamento é obrigatório');
+    }
+    
+    if ((dosageData.concentrationUnit === 'mg/ampola' || dosageData.concentrationUnit === 'g/ampola') 
+        && (!dosageData.ampouleVolume || dosageData.ampouleVolume <= 0)) {
+      errors.push('Volume da ampola é obrigatório para ampolas secas');
+    }
+    
+    if (errors.length > 0) {
+      toast.error(`Corrija os seguintes erros:\n• ${errors.join('\n• ')}`);
+      return;
+    }
+    
     const result = calculateDosage(dosageData);
     setDosageData(result);
     
     if (result.result) {
-      addCalculation('dosage', result, result.medicationName);
+      await addCalculation('dosage', result, result.medicationName);
       toast.success('Cálculo realizado e salvo no histórico!');
     }
   };
 
-  const handleInfusionCalculation = () => {
+  const handleInfusionCalculation = async () => {
+    // Validações antes do cálculo
+    const errors: string[] = [];
+    
+    if (!infusionData.totalVolume || infusionData.totalVolume <= 0) {
+      errors.push('Volume total é obrigatório e deve ser maior que zero');
+    }
+    
+    if (!infusionData.totalTime || infusionData.totalTime <= 0) {
+      errors.push('Tempo total é obrigatório e deve ser maior que zero');
+    }
+    
+    if (errors.length > 0) {
+      toast.error(`Corrija os seguintes erros:\n• ${errors.join('\n• ')}`);
+      return;
+    }
+    
     const result = calculateInfusion(infusionData);
     setInfusionData(result);
     
     if (result.result) {
-      addCalculation('infusion', result, 'Gotejamento');
+      await addCalculation('infusion', result, 'Gotejamento');
       toast.success('Cálculo realizado e salvo no histórico!');
     }
   };
 
-  const handleConversion = () => {
+  const handleConversion = async () => {
+    // Validações antes do cálculo
+    const errors: string[] = [];
+    
+    if (!conversionData.value || conversionData.value <= 0) {
+      errors.push('Valor é obrigatório e deve ser maior que zero');
+    }
+    
+    if (conversionData.fromUnit === conversionData.toUnit) {
+      errors.push('Unidade de origem deve ser diferente da unidade de destino');
+    }
+    
+    if (errors.length > 0) {
+      toast.error(`Corrija os seguintes erros:\n• ${errors.join('\n• ')}`);
+      return;
+    }
+    
     const result = convertUnits(conversionData);
     setConversionData(result);
     
     if (result.result) {
-      addCalculation('conversion', result, 'Conversão de Unidades');
+      await addCalculation('conversion', result, 'Conversão de Unidades');
       toast.success('Conversão realizada e salva no histórico!');
     }
   };
 
-  const handleConcentrationCalculation = () => {
+  const handleConcentrationCalculation = async () => {
+    // Validações antes do cálculo
+    const errors: string[] = [];
+    
+    if (!concentrationData.drugAmount || concentrationData.drugAmount <= 0) {
+      errors.push('Quantidade do medicamento é obrigatória e deve ser maior que zero');
+    }
+    
+    if (!concentrationData.diluentVolume || concentrationData.diluentVolume <= 0) {
+      errors.push('Volume do diluente é obrigatório e deve ser maior que zero');
+    }
+    
+    if (errors.length > 0) {
+      toast.error(`Corrija os seguintes erros:\n• ${errors.join('\n• ')}`);
+      return;
+    }
+    
     const result = calculateConcentration(concentrationData);
     setConcentrationData(result);
     
     if (result.result) {
-      addCalculation('concentration', result, 'Diluição');
+      await addCalculation('concentration', result, 'Diluição');
       toast.success('Cálculo realizado e salvo no histórico!');
     }
   };
