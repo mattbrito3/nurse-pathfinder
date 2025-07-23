@@ -53,7 +53,7 @@ const Dashboard = () => {
       href: "/dashboard/glossary",
       color: "text-green-600",
       bgColor: "bg-green-50",
-      available: false
+      available: true
     },
     {
       icon: Brain,
