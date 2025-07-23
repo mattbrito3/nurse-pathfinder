@@ -81,11 +81,33 @@ export const useCalculationHistory = () => {
     };
   };
 
+  // Verificar se a tabela existe
+  const checkTableExists = async () => {
+    try {
+      const { error } = await supabase
+        .from('calculation_history')
+        .select('id')
+        .limit(1);
+      
+      return !error || !error.message?.includes('does not exist');
+    } catch (error) {
+      return false;
+    }
+  };
+
   // Carregar histórico do Supabase
   const loadHistoryFromDatabase = async () => {
     if (!user?.id) {
       setHistory([]);
       setIsLoading(false);
+      return;
+    }
+
+    // Verificar se a tabela existe primeiro
+    const tableExists = await checkTableExists();
+    if (!tableExists) {
+      console.log('Tabela calculation_history não existe. Usando localStorage como fallback.');
+      await loadHistoryFromLocalStorage();
       return;
     }
 
@@ -203,8 +225,8 @@ export const useCalculationHistory = () => {
     calculation: any,
     medicationName?: string
   ) => {
+    // Usar localStorage sempre se não tiver usuário ou se a tabela não existir
     if (!user?.id) {
-      // Fallback para localStorage se não estiver logado
       const newItem: CalculationHistory = {
         id: `calc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         type,
@@ -214,6 +236,26 @@ export const useCalculationHistory = () => {
         medicationName: medicationName || 
           (calculation.medicationName) || 
           `${type.charAt(0).toUpperCase() + type.slice(1)}`
+      };
+
+      const newHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
+      setHistory(newHistory);
+      saveToStorage(newHistory);
+      
+      return newItem.id;
+    }
+
+    // Verificar se a tabela existe
+    const tableExists = await checkTableExists();
+    if (!tableExists) {
+      console.log('Tabela não existe. Usando localStorage.');
+      const newItem: CalculationHistory = {
+        id: `calc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        calculation,
+        timestamp: new Date(),
+        isFavorite: false,
+        medicationName: medicationName || calculation.medicationName
       };
 
       const newHistory = [newItem, ...history].slice(0, MAX_HISTORY_ITEMS);
@@ -277,21 +319,25 @@ export const useCalculationHistory = () => {
 
     const newIsFavorite = !item.isFavorite;
 
+    // Verificar se pode usar banco de dados
     if (user?.id) {
-      try {
-        const { error } = await supabase
-          .from('calculation_history')
-          .update({ is_favorite: newIsFavorite })
-          .eq('id', id)
-          .eq('user_id', user.id);
+      const tableExists = await checkTableExists();
+      if (tableExists) {
+        try {
+          const { error } = await supabase
+            .from('calculation_history')
+            .update({ is_favorite: newIsFavorite })
+            .eq('id', id)
+            .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Erro ao atualizar favorito:', error);
-          throw new Error('Falha ao atualizar favorito no banco de dados');
+          if (error) {
+            console.error('Erro ao atualizar favorito:', error);
+            throw new Error('Falha ao atualizar favorito no banco de dados');
+          }
+        } catch (error) {
+          console.error('Erro ao togglear favorito:', error);
+          throw error;
         }
-      } catch (error) {
-        console.error('Erro ao togglear favorito:', error);
-        throw error;
       }
     }
 
@@ -301,28 +347,31 @@ export const useCalculationHistory = () => {
     );
     setHistory(newHistory);
     
-    if (!user?.id) {
-      saveToStorage(newHistory);
-    }
+    // Salvar no localStorage também
+    saveToStorage(newHistory);
   };
 
   // Remover cálculo
   const removeCalculation = async (id: string) => {
+    // Verificar se pode usar banco de dados
     if (user?.id) {
-      try {
-        const { error } = await supabase
-          .from('calculation_history')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user.id);
+      const tableExists = await checkTableExists();
+      if (tableExists) {
+        try {
+          const { error } = await supabase
+            .from('calculation_history')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id);
 
-        if (error) {
-          console.error('Erro ao remover cálculo:', error);
-          throw new Error('Falha ao remover do banco de dados');
+          if (error) {
+            console.error('Erro ao remover cálculo:', error);
+            throw new Error('Falha ao remover do banco de dados');
+          }
+        } catch (error) {
+          console.error('Erro ao deletar cálculo:', error);
+          throw error;
         }
-      } catch (error) {
-        console.error('Erro ao deletar cálculo:', error);
-        throw error;
       }
     }
 
@@ -331,27 +380,30 @@ export const useCalculationHistory = () => {
     setHistory(newHistory);
     console.log(`Removido cálculo ${id}. Histórico agora tem ${newHistory.length} itens`);
     
-    if (!user?.id) {
-      saveToStorage(newHistory);
-    }
+    // Salvar no localStorage também
+    saveToStorage(newHistory);
   };
 
   // Limpar todo histórico
   const clearHistory = async () => {
+    // Verificar se pode usar banco de dados
     if (user?.id) {
-      try {
-        const { error } = await supabase
-          .from('calculation_history')
-          .delete()
-          .eq('user_id', user.id);
+      const tableExists = await checkTableExists();
+      if (tableExists) {
+        try {
+          const { error } = await supabase
+            .from('calculation_history')
+            .delete()
+            .eq('user_id', user.id);
 
-        if (error) {
+          if (error) {
+            console.error('Erro ao limpar histórico:', error);
+            throw new Error('Falha ao limpar histórico do banco de dados');
+          }
+        } catch (error) {
           console.error('Erro ao limpar histórico:', error);
-          throw new Error('Falha ao limpar histórico do banco de dados');
+          throw error;
         }
-      } catch (error) {
-        console.error('Erro ao limpar histórico:', error);
-        throw error;
       }
     }
 
@@ -359,11 +411,10 @@ export const useCalculationHistory = () => {
     setHistory([]);
     console.log('Histórico limpo completamente');
     
-    if (!user?.id) {
-      const storageKey = getStorageKey();
-      localStorage.removeItem(storageKey);
-      console.log('LocalStorage limpo também');
-    }
+    // Limpar localStorage também
+    const storageKey = getStorageKey();
+    localStorage.removeItem(storageKey);
+    console.log('LocalStorage limpo também');
   };
 
   // Obter estatísticas
