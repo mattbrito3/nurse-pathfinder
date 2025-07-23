@@ -13,7 +13,6 @@ import {
   Filter, 
   Heart, 
   HeartOff,
-  Volume2,
   Tag,
   Star,
   Users
@@ -258,14 +257,9 @@ const MedicalGlossary = () => {
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start gap-4">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold text-lg">{term.term}</h3>
-                                {term.pronunciation && (
-                                  <Button variant="ghost" size="sm" className="p-1 h-6 w-6">
-                                    <Volume2 className="h-3 w-3" />
-                                  </Button>
-                                )}
-                                {user && (
+                                                             <div className="flex items-center gap-2 mb-2">
+                                 <h3 className="font-semibold text-lg">{term.term}</h3>
+                                 {user && (
                                   <Button
                                     variant="ghost"
                                     size="sm"
@@ -394,14 +388,9 @@ const MedicalGlossary = () => {
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-2xl flex items-center gap-2">
-                    {selectedTerm.term}
-                    {selectedTerm.pronunciation && (
-                      <Badge variant="outline" className="text-sm">
-                        {selectedTerm.pronunciation}
-                      </Badge>
-                    )}
-                  </CardTitle>
+                                     <CardTitle className="text-2xl">
+                     {selectedTerm.term}
+                   </CardTitle>
                   <div className="flex items-center gap-2 mt-2">
                     {selectedTerm.category_name && (
                       <Badge 
