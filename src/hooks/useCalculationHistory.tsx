@@ -287,11 +287,11 @@ export const useCalculationHistory = () => {
 
         if (error) {
           console.error('Erro ao atualizar favorito:', error);
-          return;
+          throw new Error('Falha ao atualizar favorito no banco de dados');
         }
       } catch (error) {
         console.error('Erro ao togglear favorito:', error);
-        return;
+        throw error;
       }
     }
 
@@ -318,17 +318,18 @@ export const useCalculationHistory = () => {
 
         if (error) {
           console.error('Erro ao remover cálculo:', error);
-          return;
+          throw new Error('Falha ao remover do banco de dados');
         }
       } catch (error) {
         console.error('Erro ao deletar cálculo:', error);
-        return;
+        throw error;
       }
     }
 
     // Atualizar estado local
     const newHistory = history.filter(item => item.id !== id);
     setHistory(newHistory);
+    console.log(`Removido cálculo ${id}. Histórico agora tem ${newHistory.length} itens`);
     
     if (!user?.id) {
       saveToStorage(newHistory);
@@ -346,20 +347,22 @@ export const useCalculationHistory = () => {
 
         if (error) {
           console.error('Erro ao limpar histórico:', error);
-          return;
+          throw new Error('Falha ao limpar histórico do banco de dados');
         }
       } catch (error) {
         console.error('Erro ao limpar histórico:', error);
-        return;
+        throw error;
       }
     }
 
     // Atualizar estado local
     setHistory([]);
+    console.log('Histórico limpo completamente');
     
     if (!user?.id) {
       const storageKey = getStorageKey();
       localStorage.removeItem(storageKey);
+      console.log('LocalStorage limpo também');
     }
   };
 

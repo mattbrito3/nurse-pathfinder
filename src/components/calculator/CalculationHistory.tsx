@@ -150,11 +150,16 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
     }
   };
 
-  const handleClearHistory = () => {
+  const handleClearHistory = async () => {
     if (window.confirm('Tem certeza que deseja limpar todo o histórico? Esta ação não pode ser desfeita.')) {
-      clearHistory();
-      setSelectedItems([]);
-      toast.success('Histórico limpo com sucesso');
+      try {
+        await clearHistory();
+        setSelectedItems([]);
+        toast.success('Histórico limpo com sucesso');
+      } catch (error) {
+        console.error('Erro ao limpar histórico:', error);
+        toast.error('Erro ao limpar histórico. Tente novamente.');
+      }
     }
   };
 
@@ -357,7 +362,14 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => toggleFavorite(calculation.id)}
+                        onClick={async () => {
+                          try {
+                            await toggleFavorite(calculation.id);
+                          } catch (error) {
+                            console.error('Erro ao alterar favorito:', error);
+                            toast.error('Erro ao alterar favorito');
+                          }
+                        }}
                       >
                         <Star className={`h-4 w-4 ${calculation.isFavorite ? 'text-yellow-500 fill-current' : ''}`} />
                       </Button>
@@ -383,10 +395,15 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
+                        onClick={async () => {
                           if (window.confirm('Tem certeza que deseja remover este cálculo?')) {
-                            removeCalculation(calculation.id);
-                            toast.success('Cálculo removido');
+                            try {
+                              await removeCalculation(calculation.id);
+                              toast.success('Cálculo removido');
+                            } catch (error) {
+                              console.error('Erro ao remover cálculo:', error);
+                              toast.error('Erro ao remover cálculo');
+                            }
                           }
                         }}
                       >
