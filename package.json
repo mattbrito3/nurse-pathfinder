@@ -5,10 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:clean": "pkill -f vite || true && vite",
+    "dev:port": "vite --port 8080 --strictPort",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "stop": "pkill -f vite || echo 'Nenhum processo Vite rodando'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
