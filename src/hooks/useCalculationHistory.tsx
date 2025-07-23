@@ -519,7 +519,7 @@ export const useCalculationHistory = (page = 0) => {
         break;
 
       case 'concentration':
-        const concentration = calculation.calculation as ConcentrationCalculation;
+        const concentration = calculation.calculation;
         text += `Diluição: ${concentration.drugAmount}${concentration.drugUnit} em ${concentration.diluentVolume}ml\n`;
         text += `Concentração final: ${concentration.result?.finalConcentration}${concentration.result?.concentrationUnit}\n`;
         break;
@@ -562,7 +562,7 @@ export const useCalculationHistory = (page = 0) => {
 
       switch (calc.type) {
         case 'dosage':
-          const dosage = calc.calculation as DosageCalculation;
+          const dosage = calc.calculation;
           report += `Medicamento: ${dosage.medicationName || 'N/A'}\n`;
           report += `Paciente: ${dosage.patientWeight}kg\n`;
           report += `Dose prescrita: ${dosage.prescribedDose}${dosage.prescribedUnit}\n`;
@@ -571,7 +571,7 @@ export const useCalculationHistory = (page = 0) => {
           break;
 
         case 'infusion':
-          const infusion = calc.calculation as InfusionCalculation;
+          const infusion = calculation.calculation as InfusionCalculation;
           report += `Volume: ${infusion.totalVolume}ml\n`;
           report += `Tempo: ${infusion.totalTime}${infusion.timeUnit}\n`;
           report += `Equipo: ${infusion.equipmentType}\n`;
@@ -674,7 +674,7 @@ export const useCalculationHistory = (page = 0) => {
     // Header do documento
     pdf.setFontSize(20);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('RELATÓRIO DE CÁLCULOS MEDICAMENTOSOS', pageWidth / 2, currentY, { align: 'center' });
+    pdf.text('RELATÓRIO DE CÁLCULOS MEDICAMENTOS', pageWidth / 2, currentY, { align: 'center' });
     currentY += 15;
 
     // Logo/marca (texto simples)
@@ -739,7 +739,7 @@ export const useCalculationHistory = (page = 0) => {
           break;
 
         case 'infusion':
-          const infusion = calc.calculation as InfusionCalculation;
+          const infusion = calc.calculation;
           detailsText = `Volume total: ${infusion.totalVolume} ml\n`;
           detailsText += `Tempo total: ${infusion.totalTime} ${infusion.timeUnit}\n`;
           detailsText += `Tipo de equipo: ${infusion.equipmentType}\n`;
@@ -754,12 +754,12 @@ export const useCalculationHistory = (page = 0) => {
           break;
 
         case 'conversion':
-          const conversion = calc.calculation as UnitConversion;
+          const conversion = calc.calculation;
           detailsText = `Conversão: ${conversion.value} ${conversion.fromUnit} → ${conversion.result?.convertedValue} ${conversion.toUnit}`;
           break;
 
         case 'concentration':
-          const concentration = calc.calculation as ConcentrationCalculation;
+          const concentration = calc.calculation;
           detailsText = `Medicamento: ${concentration.drugAmount} ${concentration.drugUnit}\n`;
           detailsText += `Volume do diluente: ${concentration.diluentVolume} ml\n`;
           detailsText += `Concentração final: ${concentration.result?.finalConcentration} ${concentration.result?.concentrationUnit}`;
