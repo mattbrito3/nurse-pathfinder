@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import type { CalculationHistory, CalculationType } from '@/types/calculator';
+import jsPDF from 'jspdf';
 
 const STORAGE_KEY_PREFIX = 'medication_calculation_history';
 const MAX_HISTORY_ITEMS = 50; // Limitar histórico para performance
@@ -638,6 +639,198 @@ export const useCalculationHistory = (page = 0) => {
     }
   };
 
+  // Gerar PDF profissional
+  const exportToPDF = (calculations: CalculationHistory[]): jsPDF => {
+    const pdf = new jsPDF();
+    const pageHeight = pdf.internal.pageSize.height;
+    const pageWidth = pdf.internal.pageSize.width;
+    let currentY = 20;
+
+    // Função para adicionar nova página se necessário
+    const checkPageBreak = (requiredSpace: number) => {
+      if (currentY + requiredSpace > pageHeight - 20) {
+        pdf.addPage();
+        currentY = 20;
+        return true;
+      }
+      return false;
+    };
+
+    // Função para texto multilinha
+    const addMultilineText = (text: string, x: number, y: number, maxWidth: number, lineHeight = 6) => {
+      const lines = pdf.splitTextToSize(text, maxWidth);
+      pdf.text(lines, x, y);
+      return lines.length * lineHeight;
+    };
+
+    // Header do documento
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('RELATÓRIO DE CÁLCULOS MEDICAMENTOSOS', pageWidth / 2, currentY, { align: 'center' });
+    currentY += 15;
+
+    // Logo/marca (texto simples)
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('🏥 Nurse Pathfinder', pageWidth / 2, currentY, { align: 'center' });
+    currentY += 15;
+
+    // Informações do relatório
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('pt-BR');
+    const timeStr = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    
+    pdf.setFontSize(10);
+    pdf.text(`Data: ${dateStr} - ${timeStr}`, 20, currentY);
+    pdf.text(`Total de cálculos: ${calculations.length}`, 20, currentY + 6);
+    currentY += 20;
+
+    // Linha separadora
+    pdf.setDrawColor(0, 0, 0);
+    pdf.line(20, currentY, pageWidth - 20, currentY);
+    currentY += 10;
+
+    // Iterar pelos cálculos
+    calculations.forEach((calc, index) => {
+      checkPageBreak(50); // Espaço mínimo necessário
+
+      // Título do cálculo
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      const title = `CÁLCULO #${index + 1} - ${calc.type.toUpperCase()}`;
+      pdf.text(title, 20, currentY);
+      currentY += 10;
+
+      // Data e hora
+      const calcDate = calc.timestamp.toLocaleDateString('pt-BR');
+      const calcTime = calc.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Data: ${calcDate} - ${calcTime}`, 20, currentY);
+      
+      if (calc.isFavorite) {
+        pdf.setTextColor(255, 215, 0); // Dourado
+        pdf.text('⭐ FAVORITO', 120, currentY);
+        pdf.setTextColor(0, 0, 0); // Voltar para preto
+      }
+      currentY += 8;
+
+      // Dados específicos por tipo
+      pdf.setFontSize(9);
+      let detailsText = '';
+
+      switch (calc.type) {
+        case 'dosage':
+          const dosage = calc.calculation;
+          detailsText = `Medicamento: ${dosage.medicationName || 'N/A'}\n`;
+          detailsText += `Peso do paciente: ${dosage.patientWeight} kg\n`;
+          detailsText += `Dose prescrita: ${dosage.prescribedDose} ${dosage.prescribedUnit}\n`;
+          detailsText += `Concentração disponível: ${dosage.availableConcentration} ${dosage.concentrationUnit}\n`;
+          detailsText += `Volume a administrar: ${dosage.result?.volumeToAdminister} ${dosage.result?.unit}`;
+          break;
+
+        case 'infusion':
+          const infusion = calc.calculation;
+          detailsText = `Volume total: ${infusion.totalVolume} ml\n`;
+          detailsText += `Tempo total: ${infusion.totalTime} ${infusion.timeUnit}\n`;
+          detailsText += `Tipo de equipo: ${infusion.equipmentType}\n`;
+          detailsText += `Velocidade: ${infusion.result?.mlPerHour} ml/h`;
+          if (infusion.equipmentType !== 'bomba') {
+            const drops = infusion.equipmentType === 'macro' 
+              ? infusion.result?.dropsPerMinute 
+              : infusion.result?.microdropsPerMinute;
+            const unit = infusion.equipmentType === 'macro' ? 'gotas/min' : 'microgotas/min';
+            detailsText += `\nGotejamento: ${drops} ${unit}`;
+          }
+          break;
+
+        case 'conversion':
+          const conversion = calc.calculation;
+          detailsText = `Conversão: ${conversion.value} ${conversion.fromUnit} → ${conversion.result?.convertedValue} ${conversion.toUnit}`;
+          break;
+
+        case 'concentration':
+          const concentration = calc.calculation;
+          detailsText = `Medicamento: ${concentration.drugAmount} ${concentration.drugUnit}\n`;
+          detailsText += `Volume do diluente: ${concentration.diluentVolume} ml\n`;
+          detailsText += `Concentração final: ${concentration.result?.finalConcentration} ${concentration.result?.concentrationUnit}`;
+          break;
+      }
+
+      const detailsHeight = addMultilineText(detailsText, 20, currentY, pageWidth - 40);
+      currentY += detailsHeight + 5;
+
+      // Passo a passo (se existir)
+      if (calc.calculation.result?.steps?.length > 0) {
+        checkPageBreak(30);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('PASSO A PASSO:', 20, currentY);
+        currentY += 6;
+        
+        pdf.setFont('helvetica', 'normal');
+        calc.calculation.result.steps.forEach((step: string, stepIndex: number) => {
+          checkPageBreak(8);
+          const stepText = `${stepIndex + 1}. ${step}`;
+          const stepHeight = addMultilineText(stepText, 25, currentY, pageWidth - 50);
+          currentY += stepHeight;
+        });
+        currentY += 3;
+      }
+
+      // Alertas (se existirem)
+      if (calc.calculation.result?.alerts?.length > 0) {
+        checkPageBreak(15);
+        pdf.setTextColor(255, 0, 0); // Vermelho para alertas
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('⚠️ ALERTAS:', 20, currentY);
+        currentY += 6;
+        
+        pdf.setFont('helvetica', 'normal');
+        const alertsText = calc.calculation.result.alerts.join(', ');
+        const alertsHeight = addMultilineText(alertsText, 25, currentY, pageWidth - 50);
+        currentY += alertsHeight;
+        pdf.setTextColor(0, 0, 0); // Voltar para preto
+      } else {
+        checkPageBreak(10);
+        pdf.setTextColor(0, 128, 0); // Verde para OK
+        pdf.text('✅ Nenhum alerta', 20, currentY);
+        pdf.setTextColor(0, 0, 0); // Voltar para preto
+        currentY += 6;
+      }
+
+      // Linha separadora entre cálculos
+      currentY += 5;
+      checkPageBreak(10);
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(20, currentY, pageWidth - 20, currentY);
+      currentY += 10;
+    });
+
+    // Footer
+    checkPageBreak(20);
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'italic');
+    pdf.text('Relatório gerado por Nurse Pathfinder - https://nurse-pathfinder.com', pageWidth / 2, pageHeight - 10, { align: 'center' });
+
+    // Numeração de páginas
+    const pageCount = pdf.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      pdf.setFontSize(8);
+      pdf.text(`Página ${i} de ${pageCount}`, pageWidth - 30, pageHeight - 10);
+    }
+
+    return pdf;
+  };
+
+  // Download como arquivo PDF
+  const downloadReportPDF = (calculations: CalculationHistory[], filename?: string) => {
+    const pdf = exportToPDF(calculations);
+    const pdfFilename = filename || `calculos_medicamentosos_${new Date().toISOString().split('T')[0]}.pdf`;
+    pdf.save(pdfFilename);
+  };
+
   // Download como arquivo de texto
   const downloadReport = (calculations: CalculationHistory[], filename?: string) => {
     const report = exportToReport(calculations);
@@ -664,8 +857,10 @@ export const useCalculationHistory = (page = 0) => {
     filterHistory,
     exportToText,
     exportToReport,
+    exportToPDF,
     shareCalculation,
     downloadReport,
+    downloadReportPDF,
     hasNextPage,
     totalCount,
     // Função para limpar históricos antigos/órfãos (administrativa)

@@ -21,8 +21,10 @@ import {
   Zap,
   FileText,
   Copy,
-  ChevronDown
+  ChevronDown,
+  FileDown
 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import type { CalculationHistory as CalculationHistoryType, CalculationType } from "@/types/calculator";
 import { toast } from "sonner";
@@ -44,7 +46,8 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
     getStats,
     filterHistory,
     shareCalculation,
-    downloadReport
+    downloadReport,
+    downloadReportPDF
   } = useCalculationHistory(page);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -125,8 +128,8 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
     }
   };
 
-  const handleDownload = () => {
-    const itemsToDownload = selectedItems.length > 0
+    const handleDownloadTXT = () => {
+    const itemsToDownload = selectedItems.length > 0 
       ? history.filter(item => selectedItems.includes(item.id))
       : filteredHistory;
     
@@ -136,8 +139,25 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
     }
 
     downloadReport(itemsToDownload);
-    toast.success(`Relatório baixado com ${itemsToDownload.length} cálculo(s)`);
+    toast.success(`Relatório TXT baixado com ${itemsToDownload.length} cálculo(s)`);
   };
+
+  const handleDownloadPDF = () => {
+    const itemsToDownload = selectedItems.length > 0 
+      ? history.filter(item => selectedItems.includes(item.id))
+      : filteredHistory;
+    
+    if (itemsToDownload.length === 0) {
+      toast.error('Nenhum cálculo selecionado para download');
+      return;
+    }
+
+    downloadReportPDF(itemsToDownload);
+    toast.success(`Relatório PDF baixado com ${itemsToDownload.length} cálculo(s)`);
+  };
+
+  // Manter função legado para compatibilidade
+  const handleDownload = handleDownloadTXT;
 
   const toggleSelection = (id: string) => {
     setSelectedItems(prev => 
@@ -284,10 +304,25 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
               
               {selectedItems.length > 0 && (
                 <>
-                  <Button variant="outline" size="sm" onClick={handleDownload}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Baixar ({selectedItems.length})
-                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        Baixar ({selectedItems.length})
+                        <ChevronDown className="h-4 w-4 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                      <DropdownMenuItem onClick={handleDownloadTXT}>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Baixar como TXT
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleDownloadPDF}>
+                        <FileDown className="h-4 w-4 mr-2" />
+                        Baixar como PDF
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -460,10 +495,25 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
         {/* Botões de ação globais */}
         {filteredHistory.length > 0 && (
           <div className="flex gap-2 pt-4 border-t">
-            <Button variant="outline" onClick={handleDownload}>
-              <Download className="h-4 w-4 mr-2" />
-              Baixar Relatório
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Download className="h-4 w-4 mr-2" />
+                  Baixar Relatório
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={handleDownloadTXT}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Baixar como TXT
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadPDF}>
+                  <FileDown className="h-4 w-4 mr-2" />
+                  Baixar como PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </CardContent>
