@@ -142,7 +142,7 @@ const MedicalGlossary = () => {
                       <SelectValue placeholder="Todas as categorias" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas as categorias</SelectItem>
+                      <SelectItem value="all">Todas as categorias</SelectItem>
                       {categories.map((category) => (
                         <SelectItem key={category.id} value={category.name}>
                           {category.name}
@@ -160,7 +160,7 @@ const MedicalGlossary = () => {
                       <SelectValue placeholder="Todas as dificuldades" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todas as dificuldades</SelectItem>
+                      <SelectItem value="all">Todas as dificuldades</SelectItem>
                       <SelectItem value="básico">Básico</SelectItem>
                       <SelectItem value="intermediário">Intermediário</SelectItem>
                       <SelectItem value="avançado">Avançado</SelectItem>

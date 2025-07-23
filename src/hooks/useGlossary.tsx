@@ -352,11 +352,11 @@ export const useGlossary = () => {
         );
       }
 
-      if (filters.category) {
+      if (filters.category && filters.category !== 'all') {
         filteredTerms = filteredTerms.filter(term => term.category_name === filters.category);
       }
 
-      if (filters.difficulty) {
+      if (filters.difficulty && filters.difficulty !== 'all') {
         filteredTerms = filteredTerms.filter(term => term.difficulty_level === filters.difficulty);
       }
 
