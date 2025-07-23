@@ -1,37 +1,94 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import type { CalculationHistory, CalculationType } from '@/types/calculator';
 
-const STORAGE_KEY = 'medication_calculation_history';
+const STORAGE_KEY_PREFIX = 'medication_calculation_history';
 const MAX_HISTORY_ITEMS = 50; // Limitar histórico para performance
 
 export const useCalculationHistory = () => {
+  const { user } = useAuth();
   const [history, setHistory] = useState<CalculationHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Carregar histórico do localStorage
-  useEffect(() => {
+  // Criar chave específica do usuário
+  const getStorageKey = () => {
+    if (user?.id) {
+      return `${STORAGE_KEY_PREFIX}_${user.id}`;
+    }
+    // Fallback para usuário anônimo (sessão)
+    return `${STORAGE_KEY_PREFIX}_anonymous_${getOrCreateSessionId()}`;
+  };
+
+  // Criar ID de sessão para usuários não logados
+  const getOrCreateSessionId = () => {
+    let sessionId = sessionStorage.getItem('calculation_session_id');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem('calculation_session_id', sessionId);
+    }
+    return sessionId;
+  };
+
+  // Migrar histórico antigo se necessário
+  const migrateOldHistory = () => {
     try {
-      const savedHistory = localStorage.getItem(STORAGE_KEY);
-      if (savedHistory) {
-        const parsed = JSON.parse(savedHistory);
-        // Converter strings de data de volta para objetos Date
-        const historyWithDates = parsed.map((item: any) => ({
-          ...item,
-          timestamp: new Date(item.timestamp)
-        }));
-        setHistory(historyWithDates);
+      const oldKey = 'medication_calculation_history';
+      const oldHistory = localStorage.getItem(oldKey);
+      
+      if (oldHistory && user?.id) {
+        const newKey = getStorageKey();
+        const existingHistory = localStorage.getItem(newKey);
+        
+        // Se não existe histórico para o usuário atual, migrar o antigo
+        if (!existingHistory) {
+          localStorage.setItem(newKey, oldHistory);
+          console.log('Histórico migrado para o usuário:', user.id);
+        }
+        
+        // Remover histórico antigo após migração
+        localStorage.removeItem(oldKey);
       }
     } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Erro ao migrar histórico:', error);
     }
-  }, []);
+  };
+
+  // Carregar histórico do localStorage
+  useEffect(() => {
+    const loadHistory = () => {
+      try {
+        // Migrar histórico antigo se necessário
+        migrateOldHistory();
+        
+        const storageKey = getStorageKey();
+        const savedHistory = localStorage.getItem(storageKey);
+        if (savedHistory) {
+          const parsed = JSON.parse(savedHistory);
+          // Converter strings de data de volta para objetos Date
+          const historyWithDates = parsed.map((item: any) => ({
+            ...item,
+            timestamp: new Date(item.timestamp)
+          }));
+          setHistory(historyWithDates);
+        } else {
+          setHistory([]);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar histórico:', error);
+        setHistory([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, [user?.id]); // Recarregar quando o usuário mudar
 
   // Salvar histórico no localStorage
   const saveToStorage = (newHistory: CalculationHistory[]) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newHistory));
+      const storageKey = getStorageKey();
+      localStorage.setItem(storageKey, JSON.stringify(newHistory));
     } catch (error) {
       console.error('Erro ao salvar histórico:', error);
     }
@@ -80,7 +137,8 @@ export const useCalculationHistory = () => {
   // Limpar todo histórico
   const clearHistory = () => {
     setHistory([]);
-    localStorage.removeItem(STORAGE_KEY);
+    const storageKey = getStorageKey();
+    localStorage.removeItem(storageKey);
   };
 
   // Obter estatísticas
@@ -311,6 +369,26 @@ export const useCalculationHistory = () => {
     exportToText,
     exportToReport,
     shareCalculation,
-    downloadReport
+    downloadReport,
+    // Função para limpar históricos antigos/órfãos (administrativa)
+    cleanupOldHistories: () => {
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.startsWith(STORAGE_KEY_PREFIX) && key !== getStorageKey()) {
+            keysToRemove.push(key);
+          }
+        }
+        
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        if (keysToRemove.length > 0) {
+          console.log(`Removidos ${keysToRemove.length} históricos antigos`);
+        }
+      } catch (error) {
+        console.error('Erro ao limpar históricos:', error);
+      }
+    }
   };
 };
