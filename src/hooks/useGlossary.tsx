@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { useToast } from './use-toast';
+import { expandedMedicalTerms, medicalCategories } from '@/data/expandedMedicalTerms';
 
 // Tipos
 export interface GlossaryCategory {
@@ -47,262 +48,54 @@ export const useGlossary = () => {
     favoritesOnly: false
   });
 
-  // Dados mock para desenvolvimento (simulando dados do banco)
-  const mockCategories: GlossaryCategory[] = [
-    { id: '1', name: 'Anatomia', description: 'Termos relacionados à estrutura do corpo humano', color: '#EF4444', created_at: new Date().toISOString() },
-    { id: '2', name: 'Fisiologia', description: 'Termos sobre funcionamento dos sistemas corporais', color: '#F59E0B', created_at: new Date().toISOString() },
-    { id: '3', name: 'Farmacologia', description: 'Medicamentos e suas ações no organismo', color: '#10B981', created_at: new Date().toISOString() },
-    { id: '4', name: 'Patologia', description: 'Doenças e condições médicas', color: '#8B5CF6', created_at: new Date().toISOString() },
-    { id: '5', name: 'Procedimentos', description: 'Técnicas e procedimentos de enfermagem', color: '#06B6D4', created_at: new Date().toISOString() },
-    { id: '6', name: 'Emergência', description: 'Termos de urgência e emergência', color: '#DC2626', created_at: new Date().toISOString() },
-    { id: '7', name: 'Materiais', description: 'Equipamentos e materiais hospitalares', color: '#6B7280', created_at: new Date().toISOString() },
-    { id: '8', name: 'Sinais Vitais', description: 'Parâmetros de avaliação do paciente', color: '#EC4899', created_at: new Date().toISOString() },
+  // Dados expandidos baseados na nova base de termos
+  const categoryColors = [
+    '#EF4444', '#F59E0B', '#10B981', '#8B5CF6', '#06B6D4', 
+    '#DC2626', '#6B7280', '#EC4899', '#F97316', '#84CC16', '#3B82F6'
   ];
 
-  const mockTerms: MedicalTerm[] = [
-    // Anatomia
-    {
-      id: '1',
-      term: 'Aorta',
-      definition: 'Maior artéria do corpo humano, que transporta sangue oxigenado do coração para todo o organismo.',
-      category_id: '1',
-      category_name: 'Anatomia',
-      synonyms: ['artéria principal'],
-      related_terms: ['ventrículo esquerdo', 'circulação sistêmica'],
-      difficulty_level: 'básico',
+  const categoryDescriptions: Record<string, string> = {
+    'Cardiovascular': 'Sistema circulatório e coração',
+    'Respiratório': 'Sistema respiratório e pulmões',
+    'Neurológico': 'Sistema nervoso e cérebro',
+    'Gastrointestinal': 'Sistema digestivo',
+    'Geniturinário': 'Sistema renal e genital',
+    'Endócrino': 'Hormônios e metabolismo',
+    'Procedimentos': 'Técnicas e procedimentos',
+    'Farmacologia': 'Medicamentos e drogas',
+    'Sinais Vitais': 'Parâmetros vitais',
+    'Emergências': 'Urgência e emergência',
+    'Fisiologia': 'Funcionamento do organismo'
+  };
+
+  const mockCategories: GlossaryCategory[] = medicalCategories.map((category, index) => ({
+    id: (index + 1).toString(),
+    name: category,
+    description: categoryDescriptions[category] || 'Categoria médica',
+    color: categoryColors[index] || '#6B7280',
+    created_at: new Date().toISOString()
+  }));
+
+  // Converter os termos expandidos para o formato do hook
+  const mockTerms: MedicalTerm[] = expandedMedicalTerms.map((term, index) => {
+    // Encontrar a categoria correspondente
+    const categoryIndex = medicalCategories.findIndex(cat => cat === term.category);
+    const categoryId = (categoryIndex + 1).toString();
+    
+    return {
+      id: term.id,
+      term: term.term,
+      definition: term.definition,
+      category_id: categoryId,
+      category_name: term.category,
+      synonyms: term.synonyms || [],
+      related_terms: term.relatedTerms || [],
+      difficulty_level: term.difficulty as 'básico' | 'intermediário' | 'avançado',
       usage_count: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
-    },
-    {
-      id: '2',
-      term: 'Átrio',
-      definition: 'Cada uma das duas cavidades superiores do coração que recebem o sangue.',
-      category_id: '1',
-      category_name: 'Anatomia',
-      synonyms: ['aurícula'],
-      related_terms: ['ventrículo', 'coração', 'válvula'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '3',
-      term: 'Ventrículo',
-      definition: 'Cada uma das duas cavidades inferiores do coração responsáveis por bombear o sangue.',
-      category_id: '1',
-      category_name: 'Anatomia',
-      synonyms: [],
-      related_terms: ['átrio', 'coração', 'sístole'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    // Fisiologia
-    {
-      id: '4',
-      term: 'Homeostase',
-      definition: 'Capacidade do organismo de manter o equilíbrio interno apesar das variações do ambiente externo.',
-      category_id: '2',
-      category_name: 'Fisiologia',
-      synonyms: ['equilíbrio fisiológico'],
-      related_terms: ['metabolismo', 'regulação'],
-      difficulty_level: 'intermediário',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '5',
-      term: 'Sístole',
-      definition: 'Fase de contração do coração em que o sangue é bombeado para fora dos ventrículos.',
-      category_id: '2',
-      category_name: 'Fisiologia',
-      synonyms: ['contração cardíaca'],
-      related_terms: ['diástole', 'pressão arterial'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '6',
-      term: 'Diástole',
-      definition: 'Fase de relaxamento do coração em que os ventrículos se enchem de sangue.',
-      category_id: '2',
-      category_name: 'Fisiologia',
-      synonyms: ['relaxamento cardíaco'],
-      related_terms: ['sístole', 'pressão arterial'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    // Farmacologia
-    {
-      id: '7',
-      term: 'Analgésico',
-      definition: 'Medicamento usado para alívio da dor sem causar perda de consciência.',
-      category_id: '3',
-      category_name: 'Farmacologia',
-      synonyms: ['medicamento para dor'],
-      related_terms: ['anti-inflamatório', 'opioide'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '8',
-      term: 'Antibiótico',
-      definition: 'Medicamento que combate infecções causadas por bactérias.',
-      category_id: '3',
-      category_name: 'Farmacologia',
-      synonyms: ['antimicrobiano'],
-      related_terms: ['infecção', 'resistência bacteriana'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    // Patologia
-    {
-      id: '9',
-      term: 'Hipertensão',
-      definition: 'Condição caracterizada pela elevação persistente da pressão arterial.',
-      category_id: '4',
-      category_name: 'Patologia',
-      synonyms: ['pressão alta'],
-      related_terms: ['pressão arterial', 'cardiovascular'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '10',
-      term: 'Diabetes',
-      definition: 'Doença caracterizada por níveis elevados de glicose no sangue devido à deficiência ou resistência à insulina.',
-      category_id: '4',
-      category_name: 'Patologia',
-      synonyms: ['diabetes mellitus'],
-      related_terms: ['glicemia', 'insulina', 'glicose'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    // Sinais Vitais
-    {
-      id: '11',
-      term: 'Pressão Arterial',
-      definition: 'Força exercida pelo sangue contra as paredes das artérias durante a circulação.',
-      category_id: '8',
-      category_name: 'Sinais Vitais',
-      synonyms: ['PA'],
-      related_terms: ['sístole', 'diástole', 'hipertensão'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '12',
-      term: 'Frequência Cardíaca',
-      definition: 'Número de batimentos cardíacos por minuto.',
-      category_id: '8',
-      category_name: 'Sinais Vitais',
-      synonyms: ['FC', 'pulso'],
-      related_terms: ['ritmo cardíaco', 'taquicardia'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '13',
-      term: 'Temperatura',
-      definition: 'Medida do calor corporal, indicador importante do estado de saúde.',
-      category_id: '8',
-      category_name: 'Sinais Vitais',
-      synonyms: ['febre'],
-      related_terms: ['hipotermia', 'hipertermia'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '14',
-      term: 'Taquicardia',
-      definition: 'Aumento da frequência cardíaca acima dos valores normais (>100 bpm em adultos).',
-      category_id: '8',
-      category_name: 'Sinais Vitais',
-      synonyms: [],
-      related_terms: ['frequência cardíaca', 'bradicardia'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    {
-      id: '15',
-      term: 'Bradicardia',
-      definition: 'Diminuição da frequência cardíaca abaixo dos valores normais (<60 bpm em adultos).',
-      category_id: '8',
-      category_name: 'Sinais Vitais',
-      synonyms: [],
-      related_terms: ['frequência cardíaca', 'taquicardia'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    // Procedimentos
-    {
-      id: '16',
-      term: 'Punção Venosa',
-      definition: 'Procedimento de inserção de agulha ou cateter em uma veia para coleta de sangue ou administração de medicamentos.',
-      category_id: '5',
-      category_name: 'Procedimentos',
-      synonyms: ['acesso venoso'],
-      related_terms: ['cateter', 'flebotomia'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    // Materiais
-    {
-      id: '17',
-      term: 'Estetoscópio',
-      definition: 'Instrumento usado para auscultar sons internos do corpo, especialmente do coração e pulmões.',
-      category_id: '7',
-      category_name: 'Materiais',
-      synonyms: [],
-      related_terms: ['ausculta', 'sinais vitais'],
-      difficulty_level: 'básico',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    },
-    // Emergência
-    {
-      id: '18',
-      term: 'RCP',
-      definition: 'Ressuscitação Cardiopulmonar - conjunto de manobras para reverter parada cardiorrespiratória.',
-      category_id: '6',
-      category_name: 'Emergência',
-      synonyms: ['ressuscitação cardiopulmonar'],
-      related_terms: ['parada cardíaca', 'compressões torácicas'],
-      difficulty_level: 'avançado',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }
-  ];
+    };
+  });
 
   // Buscar categorias (usando dados mock por enquanto)
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
@@ -311,12 +104,13 @@ export const useGlossary = () => {
       // Simular delay de rede
       await new Promise(resolve => setTimeout(resolve, 500));
       return mockCategories;
-    }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
-  // Buscar termos médicos (usando dados mock por enquanto)
-  const { data: terms = [], isLoading: termsLoading, refetch: refetchTerms } = useQuery({
-    queryKey: ['medical-terms', filters],
+  // Buscar termos com filtros aplicados
+  const { data: terms = [], isLoading: termsLoading } = useQuery({
+    queryKey: ['glossary-terms', filters],
     queryFn: async () => {
       // Simular delay de rede
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -326,83 +120,89 @@ export const useGlossary = () => {
       // Aplicar filtros
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
-        filteredTerms = filteredTerms.filter(term => 
+        filteredTerms = filteredTerms.filter(term =>
           term.term.toLowerCase().includes(searchLower) ||
           term.definition.toLowerCase().includes(searchLower) ||
           term.synonyms?.some(synonym => synonym.toLowerCase().includes(searchLower)) ||
-          false
+          term.related_terms?.some(related => related.toLowerCase().includes(searchLower))
         );
       }
 
-      if (filters.category && filters.category !== 'all') {
+      if (filters.category) {
         filteredTerms = filteredTerms.filter(term => term.category_name === filters.category);
       }
 
-      if (filters.difficulty && filters.difficulty !== 'all') {
+      if (filters.difficulty) {
         filteredTerms = filteredTerms.filter(term => term.difficulty_level === filters.difficulty);
       }
 
-      // Ordenar por termo
-      filteredTerms.sort((a, b) => a.term.localeCompare(b.term));
-      
-      return filteredTerms as MedicalTerm[];
-    }
-  });
-
-  // Buscar favoritos do usuário (usando localStorage por enquanto)
-  const { data: userFavorites = [] } = useQuery({
-    queryKey: ['user-favorites', user?.id],
-    queryFn: async () => {
-      if (!user) return [];
-      
-      const stored = localStorage.getItem(`favorites_${user.id}`);
-      return stored ? JSON.parse(stored) : [];
-    },
-    enabled: !!user
-  });
-
-  // Adicionar/remover favorito (usando localStorage por enquanto)
-  const toggleFavoriteMutation = useMutation({
-    mutationFn: async ({ termId, isFavorite }: { termId: string; isFavorite: boolean }) => {
-      if (!user) throw new Error('Usuário não logado');
-
-      const stored = localStorage.getItem(`favorites_${user.id}`);
-      let favorites: string[] = stored ? JSON.parse(stored) : [];
-
-      if (isFavorite) {
-        // Remover favorito
-        favorites = favorites.filter(id => id !== termId);
-      } else {
-        // Adicionar favorito
-        favorites.push(termId);
+      if (filters.favoritesOnly && user) {
+        const favorites = getUserFavorites();
+        filteredTerms = filteredTerms.filter(term => favorites.includes(term.id));
       }
 
+      return filteredTerms as MedicalTerm[];
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutos
+  });
+
+  // Função para obter favoritos do usuário
+  const getUserFavorites = (): string[] => {
+    if (!user) return [];
+    
+    const stored = localStorage.getItem(`favorites_${user.id}`);
+    return stored ? JSON.parse(stored) : [];
+  };
+
+  // Buscar favoritos do usuário
+  const { data: userFavorites = [] } = useQuery({
+    queryKey: ['user-favorites', user?.id],
+    queryFn: getUserFavorites,
+    enabled: !!user,
+  });
+
+  // Mutation para alternar favorito
+  const { mutate: toggleFavorite, isPending: isToggling } = useMutation({
+    mutationFn: async (termId: string) => {
+      if (!user) throw new Error('Usuário não autenticado');
+      
+      const stored = localStorage.getItem(`favorites_${user.id}`);
+      let favorites: string[] = stored ? JSON.parse(stored) : [];
+      
+      if (favorites.includes(termId)) {
+        favorites = favorites.filter(id => id !== termId);
+        toast({
+          title: "Removido dos favoritos",
+          description: "Termo removido da sua lista de favoritos."
+        });
+      } else {
+        favorites.push(termId);
+        toast({
+          title: "Adicionado aos favoritos",
+          description: "Termo adicionado à sua lista de favoritos."
+        });
+      }
+      
       localStorage.setItem(`favorites_${user.id}`, JSON.stringify(favorites));
       return favorites;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
-      toast({
-        title: "Favorito atualizado",
-        description: "Sua lista de favoritos foi atualizada.",
-      });
     },
     onError: (error) => {
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar os favoritos.",
-        variant: "destructive",
+        description: "Não foi possível alterar os favoritos.",
+        variant: "destructive"
       });
-      console.error('Erro ao atualizar favorito:', error);
     }
   });
 
-  // Incrementar contador de uso (mock por enquanto)
-  const incrementUsageMutation = useMutation({
+  // Mutation para incrementar uso do termo
+  const { mutate: incrementUsage } = useMutation({
     mutationFn: async (termId: string) => {
-      // Simular incremento de uso
-      console.log('Termo visualizado:', termId);
-      return true;
+      // Em produção, isso seria uma chamada para o backend
+      console.log(`Incrementando uso do termo: ${termId}`);
     }
   });
 
@@ -420,42 +220,32 @@ export const useGlossary = () => {
     });
   };
 
-  const toggleFavorite = (termId: string) => {
-    const isFavorite = userFavorites.includes(termId);
-    toggleFavoriteMutation.mutate({ termId, isFavorite });
-  };
-
-  const incrementUsage = (termId: string) => {
-    incrementUsageMutation.mutate(termId);
-  };
-
-  // Filtrar termos por favoritos se necessário
-  const filteredTerms = filters.favoritesOnly 
-    ? terms.filter(term => userFavorites.includes(term.id))
-    : terms;
+  // Estatísticas
+  const totalTerms = mockTerms.length;
+  const favoriteCount = userFavorites.length;
+  const categoriesCount = mockCategories.length;
 
   return {
     // Dados
     categories,
-    terms: filteredTerms,
+    terms,
     userFavorites,
     filters,
     
-    // Estados de carregamento
+    // Estados de loading
     categoriesLoading,
     termsLoading,
-    isToggling: toggleFavoriteMutation.isPending,
+    isToggling,
     
-    // Funções
+    // Ações
     updateFilters,
     clearFilters,
     toggleFavorite,
     incrementUsage,
-    refetchTerms,
     
     // Estatísticas
-    totalTerms: terms.length,
-    favoriteCount: userFavorites.length,
-    categoriesCount: categories.length
+    totalTerms,
+    favoriteCount,
+    categoriesCount
   };
 };
