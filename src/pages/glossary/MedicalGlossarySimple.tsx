@@ -57,7 +57,7 @@ const MedicalGlossarySimple = () => {
                 <Card className="p-4">
                   <h4 className="font-medium">Taquicardia</h4>
                   <p className="text-sm text-muted-foreground">
-                    Aumento da frequência cardíaca acima dos valores normais (>100 bpm em adultos).
+                                          Aumento da frequência cardíaca acima dos valores normais (&gt;100 bpm em adultos).
                   </p>
                 </Card>
               </div>

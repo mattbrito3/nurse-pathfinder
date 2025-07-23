@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,7 +20,8 @@ import {
   Calendar,
   Zap,
   FileText,
-  Copy
+  Copy,
+  ChevronDown
 } from "lucide-react";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import type { CalculationHistory as CalculationHistoryType, CalculationType } from "@/types/calculator";
@@ -31,9 +32,12 @@ interface CalculationHistoryProps {
 }
 
 const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) => {
+  const [page, setPage] = useState(0);
   const {
     history,
     isLoading,
+    hasNextPage,
+    totalCount,
     toggleFavorite,
     removeCalculation,
     clearHistory,
@@ -41,12 +45,13 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
     filterHistory,
     shareCalculation,
     downloadReport
-  } = useCalculationHistory();
+  } = useCalculationHistory(page);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<CalculationType | 'all'>('all');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const stats = getStats();
   
@@ -155,6 +160,7 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
       try {
         await clearHistory();
         setSelectedItems([]);
+        setPage(0); // Reset pagination
         toast.success('Histórico limpo com sucesso');
       } catch (error) {
         console.error('Erro ao limpar histórico:', error);
@@ -162,6 +168,21 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
       }
     }
   };
+
+  // Carregar mais itens (infinite scroll)
+  const loadMore = useCallback(async () => {
+    if (isLoadingMore || !hasNextPage) return;
+    
+    setIsLoadingMore(true);
+    try {
+      setPage(prev => prev + 1);
+    } catch (error) {
+      console.error('Erro ao carregar mais itens:', error);
+      toast.error('Erro ao carregar mais itens');
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [isLoadingMore, hasNextPage]);
 
   if (isLoading) {
     return (
@@ -197,7 +218,7 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
         {/* Estatísticas */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-blue-50 p-3 rounded-lg text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+            <div className="text-2xl font-bold text-blue-600">{totalCount || stats.total}</div>
             <div className="text-sm text-blue-700">Total</div>
           </div>
           <div className="bg-green-50 p-3 rounded-lg text-center">
@@ -414,6 +435,25 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
                 </CardContent>
               </Card>
             ))}
+          </div>
+        )}
+
+        {/* Carregar mais itens */}
+        {hasNextPage && (
+          <div className="flex justify-center pt-4">
+            <Button 
+              variant="outline" 
+              onClick={loadMore}
+              disabled={isLoadingMore}
+              className="flex items-center gap-2"
+            >
+              {isLoadingMore ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+              {isLoadingMore ? 'Carregando...' : 'Carregar mais'}
+            </Button>
           </div>
         )}
 

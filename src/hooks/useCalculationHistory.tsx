@@ -5,6 +5,7 @@ import type { CalculationHistory, CalculationType } from '@/types/calculator';
 
 const STORAGE_KEY_PREFIX = 'medication_calculation_history';
 const MAX_HISTORY_ITEMS = 50; // Limitar histórico para performance
+const ITEMS_PER_PAGE = 20; // Paginação
 
 interface DatabaseCalculationHistory {
   id: string;
@@ -18,10 +19,12 @@ interface DatabaseCalculationHistory {
   updated_at: string;
 }
 
-export const useCalculationHistory = () => {
+export const useCalculationHistory = (page = 0) => {
   const { user } = useAuth();
   const [history, setHistory] = useState<CalculationHistory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Criar chave específica do usuário
   const getStorageKey = () => {
@@ -112,12 +115,21 @@ export const useCalculationHistory = () => {
     }
 
     try {
+      // Buscar total de registros
+      const { count } = await supabase
+        .from('calculation_history')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      setTotalCount(count || 0);
+
+      // Buscar dados paginados
       const { data, error } = await supabase
         .from('calculation_history')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
-        .limit(MAX_HISTORY_ITEMS);
+        .range(page * ITEMS_PER_PAGE, (page + 1) * ITEMS_PER_PAGE - 1);
 
       if (error) {
         console.error('Erro ao carregar histórico do banco:', error);
@@ -127,7 +139,15 @@ export const useCalculationHistory = () => {
       }
 
       const convertedHistory = (data || []).map(convertFromDatabase);
-      setHistory(convertedHistory);
+      
+      // Se é página 0, substitui. Se não, adiciona (infinite scroll)
+      if (page === 0) {
+        setHistory(convertedHistory);
+      } else {
+        setHistory(prev => [...prev, ...convertedHistory]);
+      }
+
+      setHasNextPage((data || []).length === ITEMS_PER_PAGE);
     } catch (error) {
       console.error('Erro ao carregar histórico:', error);
       // Fallback para localStorage
@@ -646,6 +666,8 @@ export const useCalculationHistory = () => {
     exportToReport,
     shareCalculation,
     downloadReport,
+    hasNextPage,
+    totalCount,
     // Função para limpar históricos antigos/órfãos (administrativa)
     cleanupOldHistories: () => {
       try {
