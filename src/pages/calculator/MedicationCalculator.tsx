@@ -8,13 +8,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, ArrowLeft, AlertTriangle, CheckCircle, Info, Clock } from "lucide-react";
+import { Calculator, ArrowLeft, AlertTriangle, CheckCircle, Info, Clock, History } from "lucide-react";
 import { calculateDosage, calculateInfusion, convertUnits, calculateConcentration } from "@/utils/medicationCalculations";
-import type { DosageCalculation, InfusionCalculation, UnitConversion, ConcentrationCalculation, CalculationType } from "@/types/calculator";
+import { useCalculationHistory } from "@/hooks/useCalculationHistory";
+import CalculationHistory from "@/components/calculator/CalculationHistory";
+import type { DosageCalculation, InfusionCalculation, UnitConversion, ConcentrationCalculation, CalculationType, CalculationHistory as CalculationHistoryType } from "@/types/calculator";
+import { toast } from "sonner";
 
 const MedicationCalculator = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<CalculationType>('dosage');
+  const [activeTab, setActiveTab] = useState<CalculationType | 'history'>('dosage');
+  const { addCalculation } = useCalculationHistory();
 
   // Estados para cada tipo de cálculo
   const [dosageData, setDosageData] = useState<DosageCalculation>({
@@ -50,21 +54,67 @@ const MedicationCalculator = () => {
   const handleDosageCalculation = () => {
     const result = calculateDosage(dosageData);
     setDosageData(result);
+    
+    if (result.result) {
+      addCalculation('dosage', result, result.medicationName);
+      toast.success('Cálculo realizado e salvo no histórico!');
+    }
   };
 
   const handleInfusionCalculation = () => {
     const result = calculateInfusion(infusionData);
     setInfusionData(result);
+    
+    if (result.result) {
+      addCalculation('infusion', result, 'Gotejamento');
+      toast.success('Cálculo realizado e salvo no histórico!');
+    }
   };
 
   const handleConversion = () => {
     const result = convertUnits(conversionData);
     setConversionData(result);
+    
+    if (result.result) {
+      addCalculation('conversion', result, 'Conversão de Unidades');
+      toast.success('Conversão realizada e salva no histórico!');
+    }
   };
 
   const handleConcentrationCalculation = () => {
     const result = calculateConcentration(concentrationData);
     setConcentrationData(result);
+    
+    if (result.result) {
+      addCalculation('concentration', result, 'Diluição');
+      toast.success('Cálculo realizado e salvo no histórico!');
+    }
+  };
+
+  // Função para recarregar cálculo do histórico
+  const handleReloadCalculation = (calculation: CalculationHistoryType) => {
+    switch (calculation.type) {
+      case 'dosage':
+        setDosageData(calculation.calculation as DosageCalculation);
+        setActiveTab('dosage');
+        toast.success('Cálculo carregado!');
+        break;
+      case 'infusion':
+        setInfusionData(calculation.calculation as InfusionCalculation);
+        setActiveTab('infusion');
+        toast.success('Cálculo carregado!');
+        break;
+      case 'conversion':
+        setConversionData(calculation.calculation as UnitConversion);
+        setActiveTab('conversion');
+        toast.success('Conversão carregada!');
+        break;
+      case 'concentration':
+        setConcentrationData(calculation.calculation as ConcentrationCalculation);
+        setActiveTab('concentration');
+        toast.success('Cálculo carregado!');
+        break;
+    }
   };
 
   const renderResult = (result: any, type: string) => {
@@ -187,12 +237,16 @@ const MedicationCalculator = () => {
             </AlertDescription>
           </Alert>
 
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CalculationType)}>
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CalculationType | 'history')}>
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="dosage">Dosagem</TabsTrigger>
               <TabsTrigger value="infusion">Gotejamento</TabsTrigger>
               <TabsTrigger value="conversion">Conversão</TabsTrigger>
               <TabsTrigger value="concentration">Diluição</TabsTrigger>
+              <TabsTrigger value="history" className="flex items-center gap-2">
+                <History className="h-4 w-4" />
+                Histórico
+              </TabsTrigger>
             </TabsList>
 
             {/* Cálculo de Dosagem */}
@@ -496,6 +550,11 @@ const MedicationCalculator = () => {
               </Card>
 
               {renderResult(concentrationData.result, 'concentration')}
+            </TabsContent>
+
+            {/* Histórico */}
+            <TabsContent value="history">
+              <CalculationHistory onReloadCalculation={handleReloadCalculation} />
             </TabsContent>
           </Tabs>
         </div>

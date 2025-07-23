@@ -80,6 +80,7 @@ export interface CalculationHistory {
   calculation: DosageCalculation | InfusionCalculation | UnitConversion | ConcentrationCalculation | PediatricCalculation;
   timestamp: Date;
   isFavorite: boolean;
+  medicationName?: string;
 }
 
 export interface SafetyAlert {
