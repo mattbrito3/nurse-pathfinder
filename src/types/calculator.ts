@@ -3,6 +3,8 @@ export interface DosageCalculation {
   patientWeight: number;
   medicationName: string;
   prescribedDose: number;
+  drugAmount: number;
+  drugUnit: 'mg' | 'mcg' | 'UI';
   prescribedUnit: 'mg/kg' | 'mcg/kg' | 'mg' | 'mcg' | 'UI/kg';
   availableConcentration: number;
   concentrationUnit: 'mg/ml' | 'mcg/ml' | 'mg/ampola' | 'UI/ml' | 'g/ampola';
@@ -20,6 +22,8 @@ export interface InfusionCalculation {
   totalVolume: number;
   totalTime: number;
   timeUnit: 'min' | 'h';
+  drugAmount: number;
+  drugUnit: 'mg' | 'mcg' | 'UI';
   equipmentType: 'macro' | 'micro' | 'bomba';
   result?: {
     dropsPerMinute: number;
@@ -34,6 +38,8 @@ export interface UnitConversion {
   value: number;
   fromUnit: string;
   toUnit: string;
+  drugAmount: number;
+  drugUnit: 'mg' | 'mcg' | 'UI';
   category: 'weight' | 'volume' | 'concentration';
   result?: {
     convertedValue: number;
@@ -61,6 +67,8 @@ export interface PediatricCalculation {
   medicationName: string;
   adultDose: number;
   adultDoseUnit: string;
+  drugAmount: number;
+  drugUnit: 'mg' | 'mcg' | 'UI';
   calculationMethod: 'weight' | 'bsa' | 'age';
   result?: {
     pediatricDose: number;

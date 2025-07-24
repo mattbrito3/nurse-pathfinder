@@ -317,7 +317,10 @@ export const useCalculationHistory = (page = 0) => {
       }
 
       // Atualizar estado local
-      const newItem = convertFromDatabase(data);
+      const newItem = convertFromDatabase({
+        ...data,
+        type: data.type as CalculationType // Corrige o tipo para evitar erro de tipagem
+      });
       setHistory(prev => [newItem, ...prev].slice(0, MAX_HISTORY_ITEMS));
       
       return data.id;
@@ -519,13 +522,13 @@ export const useCalculationHistory = (page = 0) => {
         break;
 
       case 'concentration':
-        const concentration = calculation.calculation;
+        const concentration = calculation.calculation as ConcentrationCalculation;
         text += `Diluição: ${concentration.drugAmount}${concentration.drugUnit} em ${concentration.diluentVolume}ml\n`;
         text += `Concentração final: ${concentration.result?.finalConcentration}${concentration.result?.concentrationUnit}\n`;
         break;
     }
 
-    if (calculation.calculation.result?.alerts?.length > 0) {
+    if (calculation.calculation.result?.alert?.length > 0) {
       text += `\n⚠️ Alertas: ${calculation.calculation.result.alerts.join(', ')}\n`;
     }
 
