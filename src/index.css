@@ -154,3 +154,91 @@ All colors MUST be HSL.
     transform: translateY(0);
   }
 }
+
+/* Flashcard 3D Animation Styles */
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  
+  .transform-style-preserve-3d {
+    transform-style: preserve-3d;
+  }
+  
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+  
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+  
+  /* Card flip animation */
+  .card-flip-enter {
+    transform: rotateY(0deg);
+  }
+  
+  .card-flip-enter-active {
+    transform: rotateY(180deg);
+    transition: transform 0.7s ease-in-out;
+  }
+  
+  .card-flip-exit {
+    transform: rotateY(180deg);
+  }
+  
+  .card-flip-exit-active {
+    transform: rotateY(0deg);
+    transition: transform 0.7s ease-in-out;
+  }
+  
+  /* Fade in animation for quality buttons */
+  .animate-in {
+    animation-duration: 0.3s;
+    animation-timing-function: ease-out;
+    animation-fill-mode: both;
+  }
+  
+  .fade-in-50 {
+    animation-name: fadeIn;
+    opacity: 0;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Hover effects for buttons */
+  .hover\:scale-105:hover {
+    transform: scale(1.05);
+  }
+  
+  .active\:scale-95:active {
+    transform: scale(0.95);
+  }
+  
+  /* Smooth transitions */
+  .transition-all {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  /* Background gradients for study mode */
+  .bg-study-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  
+  .bg-success-gradient {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+  
+  .bg-error-gradient {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  }
+}

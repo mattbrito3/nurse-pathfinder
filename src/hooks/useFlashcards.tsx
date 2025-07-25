@@ -143,6 +143,54 @@ export const useFlashcards = () => {
     refetchInterval: 60000 // Refetch every minute
   });
 
+  // Get cards for study session
+  const getStudyCards = async (sessionType: 'review' | 'learning' | 'practice', categoryId?: string, limit: number = 10) => {
+    if (!user?.id) throw new Error('User not authenticated');
+
+    if (sessionType === 'review') {
+      // Use due cards for review
+      const { data, error } = await supabase
+        .rpc('get_cards_due_for_review', {
+          user_uuid: user.id,
+          limit_count: limit
+        });
+      
+      if (error) throw error;
+      return data || [];
+    } else {
+      // For learning/practice, get cards from specific category or all
+      let query = supabase
+        .from('flashcards')
+        .select(`
+          id as flashcard_id,
+          front,
+          back,
+          difficulty_level,
+          category:flashcard_categories(name),
+          progress:user_flashcard_progress(mastery_level, times_seen)
+        `)
+        .eq('is_public', true)
+        .limit(limit);
+
+      if (categoryId) {
+        query = query.eq('category_id', categoryId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      return data?.map(card => ({
+        flashcard_id: card.flashcard_id,
+        front: card.front,
+        back: card.back,
+        category_name: card.category?.name || 'Geral',
+        difficulty_level: card.difficulty_level,
+        mastery_level: card.progress?.[0]?.mastery_level || 0,
+        times_seen: card.progress?.[0]?.times_seen || 0
+      })) || [];
+    }
+  };
+
   // Fetch user progress for a specific flashcard
   const getUserProgress = async (flashcardId: string): Promise<UserProgress | null> => {
     if (!user?.id) return null;
@@ -427,6 +475,7 @@ export const useFlashcards = () => {
     // Functions
     useFlashcardsByCategory,
     getUserProgress,
+    getStudyCards,
     refetchDueCards,
     
     // Mutations

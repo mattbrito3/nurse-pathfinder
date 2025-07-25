@@ -42,6 +42,13 @@ const FlashcardsPage = () => {
         sessionType: 'review',
         categoryId: selectedCategory || undefined
       });
+      
+      // Store session info for the study page
+      sessionStorage.setItem(`study_session_${session.id}`, JSON.stringify({
+        sessionType: 'review',
+        categoryId: selectedCategory
+      }));
+      
       navigate(`/dashboard/flashcards/study/${session.id}`);
     } catch (error) {
       console.error('Erro ao iniciar sessão:', error);
@@ -54,6 +61,13 @@ const FlashcardsPage = () => {
         sessionType: 'learning',
         categoryId
       });
+      
+      // Store session info for the study page
+      sessionStorage.setItem(`study_session_${session.id}`, JSON.stringify({
+        sessionType: 'learning',
+        categoryId
+      }));
+      
       navigate(`/dashboard/flashcards/study/${session.id}`);
     } catch (error) {
       console.error('Erro ao iniciar aprendizado:', error);
