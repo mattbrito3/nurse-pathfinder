@@ -161,12 +161,16 @@ const StudyPage: React.FC = () => {
         totalTime: prev.totalTime + responseTime
       }));
 
-      // Move to next card or complete session
-      if (currentCardIndex < studyCards.length - 1) {
-        setCurrentCardIndex(prev => prev + 1);
-      } else {
-        completeSession();
-      }
+      // Move to next card or complete session with small delay
+      setTimeout(() => {
+        if (currentCardIndex < studyCards.length - 1) {
+          console.log('📈 Avançando para próximo card:', currentCardIndex + 1);
+          setCurrentCardIndex(prev => prev + 1);
+        } else {
+          console.log('🏁 Finalizando sessão');
+          completeSession();
+        }
+      }, 300); // Small delay to ensure state reset
     } catch (error) {
       console.error('Error submitting response:', error);
     }
@@ -184,11 +188,14 @@ const StudyPage: React.FC = () => {
   };
 
   const handleSkipCard = () => {
-    if (currentCardIndex < studyCards.length - 1) {
-      setCurrentCardIndex(prev => prev + 1);
-    } else {
-      completeSession();
-    }
+    console.log('⏭️ Pulando card:', currentCardIndex);
+    setTimeout(() => {
+      if (currentCardIndex < studyCards.length - 1) {
+        setCurrentCardIndex(prev => prev + 1);
+      } else {
+        completeSession();
+      }
+    }, 100);
   };
 
   const currentCard = studyCards[currentCardIndex];
@@ -196,6 +203,11 @@ const StudyPage: React.FC = () => {
   const accuracy = sessionStats.correct + sessionStats.incorrect > 0 
     ? (sessionStats.correct / (sessionStats.correct + sessionStats.incorrect)) * 100 
     : 0;
+
+  // Debug logging
+  console.log('🎯 Current card index:', currentCardIndex);
+  console.log('📚 Total cards:', studyCards.length);
+  console.log('📄 Current card:', currentCard?.front);
 
   // Session completion screen
   if (isSessionComplete) {
@@ -320,6 +332,7 @@ const StudyPage: React.FC = () => {
       <main className="container mx-auto px-4 py-8">
         {!isPaused ? (
           <FlashcardComponent
+            key={`flashcard-${currentCardIndex}-${currentCard.flashcard_id}`}
             flashcard={currentCard}
             onResponse={handleCardResponse}
             isLoading={isSubmittingResponse}

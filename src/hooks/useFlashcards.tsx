@@ -179,8 +179,8 @@ export const useFlashcards = () => {
       const { data, error } = await query;
       if (error) throw error;
 
-      return data?.map(card => ({
-        flashcard_id: card.flashcard_id,
+      return data?.map((card, index) => ({
+        flashcard_id: card.flashcard_id || `card_${index}_${Date.now()}`,
         front: card.front,
         back: card.back,
         category_name: card.category?.name || 'Geral',

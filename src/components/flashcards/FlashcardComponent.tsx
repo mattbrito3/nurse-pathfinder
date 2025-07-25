@@ -77,11 +77,21 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
 
   // Reset card state when flashcard changes
   useEffect(() => {
+    console.log('🔄 Resetando card para:', flashcard.id);
     setIsFlipped(false);
     setShowQuality(false);
     setStartTime(Date.now());
     setResponseTime(0);
   }, [flashcard.id]);
+
+  // Also reset when flashcard object changes completely
+  useEffect(() => {
+    console.log('🔄 Novo flashcard detectado:', flashcard.front);
+    setIsFlipped(false);
+    setShowQuality(false);
+    setStartTime(Date.now());
+    setResponseTime(0);
+  }, [flashcard.front, flashcard.back]);
 
   const handleFlip = () => {
     if (!isFlipped) {
