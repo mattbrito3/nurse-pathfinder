@@ -112,9 +112,19 @@ export const useGlossary = () => {
     }
   };
 
-  // Migrar favoritos do localStorage para o banco de dados
+  // Verificar se estamos usando dados mock (IDs não são UUIDs)
+  const isUsingMockData = (): boolean => {
+    return mockTerms.length > 0 && !mockTerms[0].id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
+  };
+
+  // Para dados mock, usar localStorage com chave específica para mock data
+  const getMockFavoritesKey = (): string => {
+    return user ? `mock_glossary_favorites_${user.id}` : 'mock_glossary_favorites_anonymous';
+  };
+
+  // Migrar favoritos do localStorage para o banco de dados (apenas para dados reais)
   const migrateFavoritesToDatabase = async (): Promise<void> => {
-    if (!user) return;
+    if (!user || isUsingMockData()) return;
 
     try {
       const stored = localStorage.getItem(`favorites_${user.id}`);
@@ -133,9 +143,10 @@ export const useGlossary = () => {
 
       const existingTermIds = existingFavorites?.map(f => f.term_id) || [];
       
-      // Filtrar apenas os favoritos que não existem no banco
+      // Filtrar apenas os favoritos que não existem no banco e são UUIDs válidos
       const favoritesToInsert = localFavorites
         .filter(termId => !existingTermIds.includes(termId))
+        .filter(termId => termId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i))
         .map(termId => ({
           user_id: user.id,
           term_id: termId
@@ -164,9 +175,14 @@ export const useGlossary = () => {
     }
   };
 
-  // Buscar favoritos do usuário do banco de dados
+  // Buscar favoritos do usuário do banco de dados (apenas para dados reais)
   const getUserFavoritesFromDB = async (): Promise<string[]> => {
     if (!user) return [];
+
+    // Se estamos usando dados mock, usar localStorage
+    if (isUsingMockData()) {
+      return getUserFavoritesFromLocalStorage();
+    }
 
     try {
       const tableExists = await checkFavoritesTableExists();
@@ -208,6 +224,14 @@ export const useGlossary = () => {
   // Fallback para localStorage
   const getUserFavoritesFromLocalStorage = (): string[] => {
     if (!user) return [];
+    
+    // Para dados mock, usar chave específica
+    if (isUsingMockData()) {
+      const stored = localStorage.getItem(getMockFavoritesKey());
+      return stored ? JSON.parse(stored) : [];
+    }
+    
+    // Para dados reais, usar chave original
     const stored = localStorage.getItem(`favorites_${user.id}`);
     return stored ? JSON.parse(stored) : [];
   };
@@ -225,7 +249,7 @@ export const useGlossary = () => {
 
   // Buscar favoritos do usuário
   const { data: userFavorites = [] } = useQuery({
-    queryKey: ['user-favorites', user?.id],
+    queryKey: ['user-favorites', user?.id, isUsingMockData()],
     queryFn: getUserFavoritesFromDB,
     enabled: !!user,
     staleTime: 2 * 60 * 1000, // 2 minutos
@@ -273,8 +297,36 @@ export const useGlossary = () => {
     mutationFn: async (termId: string) => {
       if (!user) throw new Error('Usuário não autenticado');
 
-      const tableExists = await checkFavoritesTableExists();
       const isCurrentlyFavorite = userFavorites.includes(termId);
+      const usingMockData = isUsingMockData();
+
+      if (usingMockData) {
+        // Para dados mock, usar localStorage com chave específica
+        console.log('Usando localStorage para dados mock');
+        const storageKey = getMockFavoritesKey();
+        const stored = localStorage.getItem(storageKey);
+        let favorites: string[] = stored ? JSON.parse(stored) : [];
+        
+        if (isCurrentlyFavorite) {
+          favorites = favorites.filter(id => id !== termId);
+          toast({
+            title: "Removido dos favoritos",
+            description: "Termo removido da sua lista de favoritos."
+          });
+        } else {
+          favorites.push(termId);
+          toast({
+            title: "Adicionado aos favoritos",
+            description: "Termo adicionado à sua lista de favoritos."
+          });
+        }
+        
+        localStorage.setItem(storageKey, JSON.stringify(favorites));
+        return termId;
+      }
+
+      // Para dados reais, usar banco de dados
+      const tableExists = await checkFavoritesTableExists();
 
       if (tableExists) {
         // Usar banco de dados
@@ -357,7 +409,13 @@ export const useGlossary = () => {
   const { mutate: incrementUsage } = useMutation({
     mutationFn: async (termId: string) => {
       try {
-        // Verificar se a função increment_usage_function existe
+        // Para dados mock, apenas log
+        if (isUsingMockData()) {
+          console.log(`Incrementando uso do termo mock: ${termId}`);
+          return;
+        }
+
+        // Para dados reais, usar função RPC
         const { error } = await supabase.rpc('increment_term_usage', {
           term_id: termId
         });
@@ -372,9 +430,9 @@ export const useGlossary = () => {
     }
   });
 
-  // Efeito para migrar dados na inicialização
+  // Efeito para migrar dados na inicialização (apenas para dados reais)
   useEffect(() => {
-    if (user) {
+    if (user && !isUsingMockData()) {
       // Verificar e migrar dados do localStorage para o banco
       migrateFavoritesToDatabase().catch(console.error);
     }
