@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route } from "react-router-dom";
 import { Suspense, lazy, useEffect} from "react";
 import { runGlossaryMigrations } from "@/utils/runMigrations";
+import { runGlossaryDataMigrations } from "@/utils/runGlossaryMigrations";
 
 
 // Páginas que carregam imediatamente (críticas)
@@ -41,9 +42,23 @@ const PageLoader = () => (
 );
 
 const App = () => {
-  // Executar migrações do glossário na inicialização
+  // Executar migrações na inicialização
   useEffect(() => {
-    runGlossaryMigrations().catch(console.error);
+    const runMigrations = async () => {
+      try {
+        // Executar migrações de estrutura primeiro
+        await runGlossaryMigrations();
+        
+        // Depois executar migração de dados
+        await runGlossaryDataMigrations();
+        
+        console.log('✅ Todas as migrações executadas com sucesso');
+      } catch (error) {
+        console.error('❌ Erro ao executar migrações:', error);
+      }
+    };
+
+    runMigrations();
   }, []);
 
   return (
