@@ -62,7 +62,7 @@ const Dashboard = () => {
       href: "/dashboard/flashcards",
       color: "text-purple-600",
       bgColor: "bg-purple-50",
-      available: false
+      available: true
     },
     {
       icon: FileText,

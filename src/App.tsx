@@ -18,6 +18,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const MedicationCalculator = lazy(() => import("./pages/calculator/MedicationCalculator"));
 const MedicalGlossary = lazy(() => import("./pages/glossary/MedicalGlossary"));
 const MedicalGlossarySimple = lazy(() => import("./pages/glossary/MedicalGlossarySimple"));
+const FlashcardsPage = lazy(() => import("./pages/flashcards/FlashcardsPage"));
 
 // Configuração otimizada do React Query
 const queryClient = new QueryClient({
@@ -73,6 +74,7 @@ const App = () => {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/calculator" element={<MedicationCalculator />} />
             <Route path="/dashboard/glossary" element={<MedicalGlossary />} />
+            <Route path="/dashboard/flashcards" element={<FlashcardsPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
