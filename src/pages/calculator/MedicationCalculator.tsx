@@ -24,7 +24,7 @@ const MedicationCalculator = () => {
   const [dosageData, setDosageData] = useState<DosageCalculation>({
     patientWeight: 0,
     medicationName: '',
-    prescribedDose: 0,
+    prescribedDose: 0,        // ✅ ADICIONAR
     prescribedUnit: 'mg/kg',
     availableConcentration: 0,
     concentrationUnit: 'mg/ml',
@@ -35,7 +35,7 @@ const MedicationCalculator = () => {
     totalVolume: 0,
     totalTime: 0,
     timeUnit: 'h',
-    equipmentType: 'macro'
+    equipmentType: 'macro',
   });
 
   const [conversionData, setConversionData] = useState<UnitConversion>({

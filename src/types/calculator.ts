@@ -3,8 +3,6 @@ export interface DosageCalculation {
   patientWeight: number;
   medicationName: string;
   prescribedDose: number;
-  drugAmount: number;
-  drugUnit: 'mg' | 'mcg' | 'UI';
   prescribedUnit: 'mg/kg' | 'mcg/kg' | 'mg' | 'mcg' | 'UI/kg';
   availableConcentration: number;
   concentrationUnit: 'mg/ml' | 'mcg/ml' | 'mg/ampola' | 'UI/ml' | 'g/ampola';
@@ -45,6 +43,7 @@ export interface UnitConversion {
     convertedValue: number;
     formula: string;
     explanation: string;
+    alerts: string;
   };
 }
 
@@ -57,6 +56,7 @@ export interface ConcentrationCalculation {
     concentrationUnit: string;
     steps: string[];
     safetyTips: string[];
+    alerts: string;
   };
 }
 

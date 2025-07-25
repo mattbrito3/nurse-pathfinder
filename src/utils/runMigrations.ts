@@ -1,80 +1,32 @@
 import { supabase } from '@/integrations/supabase/client';
 
-// Executar migrações do glossário médico
+// Executar inicialização de dados do glossário médico
 export const runGlossaryMigrations = async () => {
   try {
-    console.log('🔄 Executando migrações do glossário médico...');
+    console.log('🔄 Inicializando dados do glossário médico...');
 
-    // 1. Criar tabelas
-    await supabase.rpc('exec_sql', {
-      sql: `
-        -- Criar tabela de categorias do glossário
-        CREATE TABLE IF NOT EXISTS public.glossary_categories (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          name TEXT NOT NULL UNIQUE,
-          description TEXT,
-          color TEXT DEFAULT '#3B82F6',
-          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-        );
-
-        -- Criar tabela de termos médicos
-        CREATE TABLE IF NOT EXISTS public.medical_terms (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          term TEXT NOT NULL,
-          definition TEXT NOT NULL,
-          pronunciation TEXT,
-          category_id UUID REFERENCES public.glossary_categories(id),
-          synonyms TEXT[],
-          related_terms TEXT[],
-          difficulty_level TEXT CHECK (difficulty_level IN ('básico', 'intermediário', 'avançado')) DEFAULT 'básico',
-          is_favorite BOOLEAN DEFAULT FALSE,
-          usage_count INTEGER DEFAULT 0,
-          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-          updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
-        );
-
-        -- Criar tabela de favoritos do usuário
-        CREATE TABLE IF NOT EXISTS public.user_favorite_terms (
-          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-          term_id UUID REFERENCES public.medical_terms(id) ON DELETE CASCADE,
-          created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-          UNIQUE(user_id, term_id)
-        );
-      `
-    });
-
-    console.log('✅ Tabelas criadas');
-
-    // 2. Habilitar RLS
-    await supabase.sql`
-      ALTER TABLE public.glossary_categories ENABLE ROW LEVEL SECURITY;
-      ALTER TABLE public.medical_terms ENABLE ROW LEVEL SECURITY;
-      ALTER TABLE public.user_favorite_terms ENABLE ROW LEVEL SECURITY;
-    `;
-
-    console.log('✅ RLS habilitado');
-
-    // 3. Verificar se já existem dados
+    // 1. Verificar se já existem dados
     const { data: existingCategories } = await supabase
       .from('glossary_categories')
       .select('id')
       .limit(1);
 
     if (!existingCategories || existingCategories.length === 0) {
-      // 4. Inserir categorias
+      console.log('📝 Inserindo categorias iniciais...');
+      
+      // 2. Inserir categorias
       const { error: categoriesError } = await supabase
-        .from('glossary_categories')
-        .insert([
-          { name: 'Anatomia', description: 'Termos relacionados à estrutura do corpo humano', color: '#EF4444' },
-          { name: 'Fisiologia', description: 'Termos sobre funcionamento dos sistemas corporais', color: '#F59E0B' },
-          { name: 'Farmacologia', description: 'Medicamentos e suas ações no organismo', color: '#10B981' },
-          { name: 'Patologia', description: 'Doenças e condições médicas', color: '#8B5CF6' },
-          { name: 'Procedimentos', description: 'Técnicas e procedimentos de enfermagem', color: '#06B6D4' },
-          { name: 'Emergência', description: 'Termos de urgência e emergência', color: '#DC2626' },
-          { name: 'Materiais', description: 'Equipamentos e materiais hospitalares', color: '#6B7280' },
-          { name: 'Sinais Vitais', description: 'Parâmetros de avaliação do paciente', color: '#EC4899' }
-        ]);
+      .from('glossary_categories')
+      .insert([
+        { name: 'Anatomia', description: 'Termos relacionados à estrutura do corpo humano', color: '#EF4444' },
+        { name: 'Fisiologia', description: 'Termos sobre funcionamento dos sistemas corporais', color: '#F59E0B' },
+        { name: 'Farmacologia', description: 'Medicamentos e suas ações no organismo', color: '#10B981' },
+        { name: 'Patologia', description: 'Doenças e condições médicas', color: '#8B5CF6' },
+        { name: 'Procedimentos', description: 'Técnicas e procedimentos de enfermagem', color: '#06B6D4' },
+        { name: 'Emergência', description: 'Termos de urgência e emergência', color: '#DC2626' },
+        { name: 'Materiais', description: 'Equipamentos e materiais hospitalares', color: '#6B7280' },
+        { name: 'Sinais Vitais', description: 'Parâmetros de avaliação do paciente', color: '#EC4899' }
+      ] as any);
 
       if (categoriesError) {
         console.error('Erro ao inserir categorias:', categoriesError);
@@ -83,7 +35,7 @@ export const runGlossaryMigrations = async () => {
 
       console.log('✅ Categorias inseridas');
 
-      // 5. Buscar categorias para obter IDs
+      // 3. Buscar categorias para obter IDs
       const { data: categories } = await supabase
         .from('glossary_categories')
         .select('id, name');
@@ -93,7 +45,7 @@ export const runGlossaryMigrations = async () => {
         return false;
       }
 
-      // 6. Inserir termos médicos básicos
+      // 4. Inserir termos médicos básicos
       const anatomiaId = categories.find(c => c.name === 'Anatomia')?.id;
       const fisiologiaId = categories.find(c => c.name === 'Fisiologia')?.id;
       const farmacologiaId = categories.find(c => c.name === 'Farmacologia')?.id;
@@ -223,6 +175,8 @@ export const runGlossaryMigrations = async () => {
         }
       ];
 
+      console.log('📝 Inserindo termos médicos...');
+      
       const { error: termsError } = await supabase
         .from('medical_terms')
         .insert(terms);
@@ -237,11 +191,60 @@ export const runGlossaryMigrations = async () => {
       console.log('ℹ️ Dados já existem, pulando inserção');
     }
 
-    console.log('🎉 Migrações do glossário médico concluídas com sucesso!');
+    console.log('🎉 Inicialização do glossário médico concluída com sucesso!');
     return true;
 
   } catch (error) {
-    console.error('❌ Erro ao executar migrações:', error);
+    console.error('❌ Erro ao inicializar dados do glossário:', error);
+    
+    // Se as tabelas não existem, mostrar instruções
+    if (error && typeof error === 'object' && 'code' in error && error.code === '42P01') {
+      console.log(`
+📋 INSTRUÇÕES PARA CRIAR TABELAS:
+
+1. Acesse o Supabase Dashboard
+2. Vá em SQL Editor  
+3. Execute este SQL:
+
+-- Criar tabelas do glossário
+CREATE TABLE IF NOT EXISTS public.glossary_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  description TEXT,
+  color TEXT DEFAULT '#3B82F6',
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.medical_terms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  term TEXT NOT NULL,
+  definition TEXT NOT NULL,
+  pronunciation TEXT,
+  category_id UUID REFERENCES public.glossary_categories(id),
+  synonyms TEXT[],
+  related_terms TEXT[],
+  difficulty_level TEXT CHECK (difficulty_level IN ('básico', 'intermediário', 'avançado')) DEFAULT 'básico',
+  is_favorite BOOLEAN DEFAULT FALSE,
+  usage_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.user_favorite_terms (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  term_id UUID REFERENCES public.medical_terms(id) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  UNIQUE(user_id, term_id)
+);
+
+-- Habilitar RLS
+ALTER TABLE public.glossary_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.medical_terms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_favorite_terms ENABLE ROW LEVEL SECURITY;
+      `);
+    }
+    
     return false;
   }
 };
