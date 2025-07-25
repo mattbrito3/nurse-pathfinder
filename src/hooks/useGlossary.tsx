@@ -97,6 +97,121 @@ export const useGlossary = () => {
     };
   });
 
+  // Verificar se a tabela user_favorite_terms existe
+  const checkFavoritesTableExists = async (): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from('user_favorite_terms')
+        .select('id')
+        .limit(1);
+      
+      return !error;
+    } catch (error) {
+      console.log('Tabela user_favorite_terms não existe ainda:', error);
+      return false;
+    }
+  };
+
+  // Migrar favoritos do localStorage para o banco de dados
+  const migrateFavoritesToDatabase = async (): Promise<void> => {
+    if (!user) return;
+
+    try {
+      const stored = localStorage.getItem(`favorites_${user.id}`);
+      if (!stored) return;
+
+      const localFavorites: string[] = JSON.parse(stored);
+      if (localFavorites.length === 0) return;
+
+      console.log(`Migrando ${localFavorites.length} favoritos do localStorage para o banco...`);
+
+      // Verificar quais favoritos já existem no banco
+      const { data: existingFavorites } = await supabase
+        .from('user_favorite_terms')
+        .select('term_id')
+        .eq('user_id', user.id);
+
+      const existingTermIds = existingFavorites?.map(f => f.term_id) || [];
+      
+      // Filtrar apenas os favoritos que não existem no banco
+      const favoritesToInsert = localFavorites
+        .filter(termId => !existingTermIds.includes(termId))
+        .map(termId => ({
+          user_id: user.id,
+          term_id: termId
+        }));
+
+      if (favoritesToInsert.length > 0) {
+        const { error } = await supabase
+          .from('user_favorite_terms')
+          .insert(favoritesToInsert);
+
+        if (error) {
+          console.error('Erro ao migrar favoritos:', error);
+          throw error;
+        }
+
+        console.log(`${favoritesToInsert.length} favoritos migrados com sucesso!`);
+      }
+
+      // Remover do localStorage após migração bem-sucedida
+      localStorage.removeItem(`favorites_${user.id}`);
+      console.log('LocalStorage de favoritos limpo após migração');
+
+    } catch (error) {
+      console.error('Erro na migração de favoritos:', error);
+      // Manter dados no localStorage em caso de erro
+    }
+  };
+
+  // Buscar favoritos do usuário do banco de dados
+  const getUserFavoritesFromDB = async (): Promise<string[]> => {
+    if (!user) return [];
+
+    try {
+      const tableExists = await checkFavoritesTableExists();
+      if (!tableExists) {
+        console.log('Tabela user_favorite_terms não existe, usando localStorage como fallback');
+        return getUserFavoritesFromLocalStorage();
+      }
+
+      const { data, error } = await supabase
+        .from('user_favorite_terms')
+        .select('term_id')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Erro ao buscar favoritos do banco:', error);
+        return getUserFavoritesFromLocalStorage();
+      }
+
+      const favorites = data?.map(f => f.term_id) || [];
+      
+      // Migrar dados do localStorage se o banco estiver vazio mas houver dados locais
+      if (favorites.length === 0) {
+        await migrateFavoritesToDatabase();
+        // Buscar novamente após migração
+        const { data: newData } = await supabase
+          .from('user_favorite_terms')
+          .select('term_id')
+          .eq('user_id', user.id);
+        return newData?.map(f => f.term_id) || [];
+      }
+
+      return favorites;
+    } catch (error) {
+      console.error('Erro ao buscar favoritos:', error);
+      return getUserFavoritesFromLocalStorage();
+    }
+  };
+
+  // Fallback para localStorage
+  const getUserFavoritesFromLocalStorage = (): string[] => {
+    if (!user) return [];
+    const stored = localStorage.getItem(`favorites_${user.id}`);
+    return stored ? JSON.parse(stored) : [];
+  };
+
   // Buscar categorias (usando dados mock por enquanto)
   const { data: categories = [], isLoading: categoriesLoading } = useQuery({
     queryKey: ['glossary-categories'],
@@ -108,9 +223,17 @@ export const useGlossary = () => {
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
+  // Buscar favoritos do usuário
+  const { data: userFavorites = [] } = useQuery({
+    queryKey: ['user-favorites', user?.id],
+    queryFn: getUserFavoritesFromDB,
+    enabled: !!user,
+    staleTime: 2 * 60 * 1000, // 2 minutos
+  });
+
   // Buscar termos com filtros aplicados
   const { data: terms = [], isLoading: termsLoading } = useQuery({
-    queryKey: ['glossary-terms', filters],
+    queryKey: ['glossary-terms', filters, userFavorites],
     queryFn: async () => {
       // Simular delay de rede
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -137,8 +260,7 @@ export const useGlossary = () => {
       }
 
       if (filters.favoritesOnly && user) {
-        const favorites = getUserFavorites();
-        filteredTerms = filteredTerms.filter(term => favorites.includes(term.id));
+        filteredTerms = filteredTerms.filter(term => userFavorites.includes(term.id));
       }
 
       return filteredTerms as MedicalTerm[];
@@ -146,53 +268,86 @@ export const useGlossary = () => {
     staleTime: 2 * 60 * 1000, // 2 minutos
   });
 
-  // Função para obter favoritos do usuário
-  const getUserFavorites = (): string[] => {
-    if (!user) return [];
-    
-    const stored = localStorage.getItem(`favorites_${user.id}`);
-    return stored ? JSON.parse(stored) : [];
-  };
-
-  // Buscar favoritos do usuário
-  const { data: userFavorites = [] } = useQuery({
-    queryKey: ['user-favorites', user?.id],
-    queryFn: getUserFavorites,
-    enabled: !!user,
-  });
-
   // Mutation para alternar favorito
   const { mutate: toggleFavorite, isPending: isToggling } = useMutation({
     mutationFn: async (termId: string) => {
       if (!user) throw new Error('Usuário não autenticado');
-      
-      const stored = localStorage.getItem(`favorites_${user.id}`);
-      let favorites: string[] = stored ? JSON.parse(stored) : [];
-      
-      if (favorites.includes(termId)) {
-        favorites = favorites.filter(id => id !== termId);
-        toast({
-          title: "Removido dos favoritos",
-          description: "Termo removido da sua lista de favoritos."
-        });
+
+      const tableExists = await checkFavoritesTableExists();
+      const isCurrentlyFavorite = userFavorites.includes(termId);
+
+      if (tableExists) {
+        // Usar banco de dados
+        try {
+          if (isCurrentlyFavorite) {
+            // Remover favorito
+            const { error } = await supabase
+              .from('user_favorite_terms')
+              .delete()
+              .eq('user_id', user.id)
+              .eq('term_id', termId);
+
+            if (error) throw error;
+
+            toast({
+              title: "Removido dos favoritos",
+              description: "Termo removido da sua lista de favoritos."
+            });
+          } else {
+            // Adicionar favorito
+            const { error } = await supabase
+              .from('user_favorite_terms')
+              .insert({
+                user_id: user.id,
+                term_id: termId
+              });
+
+            if (error) throw error;
+
+            toast({
+              title: "Adicionado aos favoritos",
+              description: "Termo adicionado à sua lista de favoritos."
+            });
+          }
+        } catch (error) {
+          console.error('Erro ao alterar favorito no banco:', error);
+          throw error;
+        }
       } else {
-        favorites.push(termId);
-        toast({
-          title: "Adicionado aos favoritos",
-          description: "Termo adicionado à sua lista de favoritos."
-        });
+        // Fallback para localStorage
+        console.log('Usando localStorage como fallback para favoritos');
+        const stored = localStorage.getItem(`favorites_${user.id}`);
+        let favorites: string[] = stored ? JSON.parse(stored) : [];
+        
+        if (isCurrentlyFavorite) {
+          favorites = favorites.filter(id => id !== termId);
+          toast({
+            title: "Removido dos favoritos",
+            description: "Termo removido da sua lista de favoritos."
+          });
+        } else {
+          favorites.push(termId);
+          toast({
+            title: "Adicionado aos favoritos",
+            description: "Termo adicionado à sua lista de favoritos."
+          });
+        }
+        
+        localStorage.setItem(`favorites_${user.id}`, JSON.stringify(favorites));
       }
-      
-      localStorage.setItem(`favorites_${user.id}`, JSON.stringify(favorites));
-      return favorites;
+
+      return termId;
     },
     onSuccess: () => {
+      // Invalidar queries relacionadas para atualizar a UI
       queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
+      queryClient.invalidateQueries({ queryKey: ['glossary-terms'] });
     },
     onError: (error) => {
+      console.error('Erro ao alterar favoritos:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível alterar os favoritos.",
+        description: "Não foi possível alterar os favoritos. Tente novamente.",
         variant: "destructive"
       });
     }
@@ -201,10 +356,29 @@ export const useGlossary = () => {
   // Mutation para incrementar uso do termo
   const { mutate: incrementUsage } = useMutation({
     mutationFn: async (termId: string) => {
-      // Em produção, isso seria uma chamada para o backend
-      console.log(`Incrementando uso do termo: ${termId}`);
+      try {
+        // Verificar se a função increment_usage_function existe
+        const { error } = await supabase.rpc('increment_term_usage', {
+          term_id: termId
+        });
+
+        if (error) {
+          console.log('Função increment_term_usage não encontrada, usando log:', error);
+          console.log(`Incrementando uso do termo: ${termId}`);
+        }
+      } catch (error) {
+        console.log(`Incrementando uso do termo: ${termId}`);
+      }
     }
   });
+
+  // Efeito para migrar dados na inicialização
+  useEffect(() => {
+    if (user) {
+      // Verificar e migrar dados do localStorage para o banco
+      migrateFavoritesToDatabase().catch(console.error);
+    }
+  }, [user]);
 
   // Funções auxiliares
   const updateFilters = (newFilters: Partial<SearchFilters>) => {
