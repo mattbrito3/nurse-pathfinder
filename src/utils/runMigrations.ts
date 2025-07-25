@@ -7,7 +7,7 @@ export const runGlossaryMigrations = async () => {
 
     // 1. Verificar se já existem dados
     const { data: existingCategories } = await supabase
-      .from('glossary_categories')
+      .from('glossary_categories' as any)
       .select('id')
       .limit(1);
 
@@ -16,7 +16,7 @@ export const runGlossaryMigrations = async () => {
       
       // 2. Inserir categorias
       const { error: categoriesError } = await supabase
-      .from('glossary_categories')
+      .from('glossary_categories' as any)
       .insert([
         { name: 'Anatomia', description: 'Termos relacionados à estrutura do corpo humano', color: '#EF4444' },
         { name: 'Fisiologia', description: 'Termos sobre funcionamento dos sistemas corporais', color: '#F59E0B' },
@@ -37,7 +37,7 @@ export const runGlossaryMigrations = async () => {
 
       // 3. Buscar categorias para obter IDs
       const { data: categories } = await supabase
-        .from('glossary_categories')
+        .from('glossary_categories' as any)
         .select('id, name');
 
       if (!categories) {
@@ -178,7 +178,7 @@ export const runGlossaryMigrations = async () => {
       console.log('📝 Inserindo termos médicos...');
       
       const { error: termsError } = await supabase
-        .from('medical_terms')
+        .from('medical_terms' as any)
         .insert(terms);
 
       if (termsError) {
