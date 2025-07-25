@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import type { GlossaryCategory, GlossaryCategoryInsert, MedicalTermInsert } from '@/types/glossary';
 
 // Executar inicialização de dados do glossário médico
 export const runGlossaryMigrations = async () => {
@@ -7,17 +8,15 @@ export const runGlossaryMigrations = async () => {
 
     // 1. Verificar se já existem dados
     const { data: existingCategories } = await supabase
-      .from('glossary_categories' as any)
+      .from('glossary_categories')
       .select('id')
-      .limit(1);
+      .limit(1) as { data: Pick<GlossaryCategory, 'id'>[] | null };
 
     if (!existingCategories || existingCategories.length === 0) {
       console.log('📝 Inserindo categorias iniciais...');
       
       // 2. Inserir categorias
-      const { error: categoriesError } = await supabase
-      .from('glossary_categories' as any)
-      .insert([
+      const categoriesData: GlossaryCategoryInsert[] = [
         { name: 'Anatomia', description: 'Termos relacionados à estrutura do corpo humano', color: '#EF4444' },
         { name: 'Fisiologia', description: 'Termos sobre funcionamento dos sistemas corporais', color: '#F59E0B' },
         { name: 'Farmacologia', description: 'Medicamentos e suas ações no organismo', color: '#10B981' },
@@ -26,7 +25,11 @@ export const runGlossaryMigrations = async () => {
         { name: 'Emergência', description: 'Termos de urgência e emergência', color: '#DC2626' },
         { name: 'Materiais', description: 'Equipamentos e materiais hospitalares', color: '#6B7280' },
         { name: 'Sinais Vitais', description: 'Parâmetros de avaliação do paciente', color: '#EC4899' }
-      ] as any);
+      ];
+
+      const { error: categoriesError } = await supabase
+        .from('glossary_categories')
+        .insert(categoriesData) as { error: any };
 
       if (categoriesError) {
         console.error('Erro ao inserir categorias:', categoriesError);
@@ -37,8 +40,8 @@ export const runGlossaryMigrations = async () => {
 
       // 3. Buscar categorias para obter IDs
       const { data: categories } = await supabase
-        .from('glossary_categories' as any)
-        .select('id, name');
+        .from('glossary_categories')
+        .select('id, name') as { data: Pick<GlossaryCategory, 'id' | 'name'>[] | null };
 
       if (!categories) {
         console.error('Erro ao buscar categorias');
@@ -178,8 +181,8 @@ export const runGlossaryMigrations = async () => {
       console.log('📝 Inserindo termos médicos...');
       
       const { error: termsError } = await supabase
-        .from('medical_terms' as any)
-        .insert(terms);
+        .from('medical_terms')
+        .insert(terms as MedicalTermInsert[]) as { error: any };
 
       if (termsError) {
         console.error('Erro ao inserir termos:', termsError);
