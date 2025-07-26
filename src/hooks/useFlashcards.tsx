@@ -248,9 +248,20 @@ export const useFlashcards = () => {
     } else {
       // For learning/practice, get cards from specific category or all
       console.log('🔍 Building query for learning/practice cards...');
+      
+      // Build select string dynamically to avoid cache issues - START SIMPLE
+      const selectFields = [
+        'id as flashcard_id',
+        'front', 
+        'back',
+        'difficulty_level'
+      ].join(', ');
+      
+      console.log('📝 Select fields:', selectFields);
+      
       let query = supabase
         .from('flashcards')
-        .select('id as flashcard_id, front, back, difficulty_level, category:flashcard_categories(name), progress:user_flashcard_progress(mastery_level, times_seen)')
+        .select(selectFields)
         .eq('is_public', true);
       
       console.log('✅ Query built successfully');
@@ -273,10 +284,10 @@ export const useFlashcards = () => {
         flashcard_id: card.flashcard_id || `card_${index}_${Date.now()}`,
         front: card.front,
         back: card.back,
-        category_name: card.category?.name || 'Geral',
+        category_name: 'Geral', // Simplified for now
         difficulty_level: card.difficulty_level,
-        mastery_level: card.progress?.[0]?.mastery_level || 0,
-        times_seen: card.progress?.[0]?.times_seen || 0
+        mastery_level: 0, // Simplified for now
+        times_seen: 0 // Simplified for now
       })) || [];
 
       // If no category specified (random exploration), shuffle the cards
