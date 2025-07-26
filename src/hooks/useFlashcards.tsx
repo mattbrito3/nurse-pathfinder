@@ -107,6 +107,7 @@ export const useFlashcards = () => {
   const useFlashcardsByCategory = (categoryId?: string, enabled: boolean = true) => {
     return useQuery({
       queryKey: ['flashcards', categoryId, user?.id],
+      staleTime: 0, // Force refresh to see updated times_seen
       queryFn: async () => {
         // First get the flashcards
         let query = supabase
@@ -350,7 +351,11 @@ export const useFlashcards = () => {
   const markAsViewed = useMutation({
     mutationFn: async (flashcardId: string) => {
       console.log('🚀 markAsViewed chamado para:', flashcardId);
-      if (!user?.id) throw new Error('User not authenticated');
+      console.log('👤 Usuário atual:', user?.id);
+      if (!user?.id) {
+        console.error('❌ Usuário não autenticado!');
+        throw new Error('User not authenticated');
+      }
 
       // Check if progress exists
       const { data: existingProgress } = await supabase
