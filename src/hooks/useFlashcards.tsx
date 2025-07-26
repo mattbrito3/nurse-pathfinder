@@ -249,13 +249,9 @@ export const useFlashcards = () => {
       // For learning/practice, get cards from specific category or all
       console.log('🔍 Building query for learning/practice cards...');
       
-      // Build select string dynamically to avoid cache issues - START SIMPLE
-      const selectFields = [
-        'id as flashcard_id',
-        'front', 
-        'back',
-        'difficulty_level'
-      ].join(', ');
+      // FORCE CACHE BUST - completely different approach
+      const timestamp = Date.now();
+      const selectFields = `id as card_id_${timestamp % 1000}, front, back, difficulty_level`;
       
       console.log('📝 Select fields:', selectFields);
       
@@ -280,15 +276,21 @@ export const useFlashcards = () => {
       console.log('📊 Query result:', { dataLength: data?.length || 0, error: error?.message });
       if (error) throw error;
 
-      let mappedCards = data?.map((card, index) => ({
-        flashcard_id: card.flashcard_id || `card_${index}_${Date.now()}`,
-        front: card.front,
-        back: card.back,
-        category_name: 'Geral', // Simplified for now
-        difficulty_level: card.difficulty_level,
-        mastery_level: 0, // Simplified for now
-        times_seen: 0 // Simplified for now
-      })) || [];
+      let mappedCards = data?.map((card, index) => {
+        // Get the dynamic field name
+        const cardIdField = Object.keys(card).find(key => key.startsWith('card_id_'));
+        const flashcard_id = cardIdField ? card[cardIdField] : `card_${index}_${Date.now()}`;
+        
+        return {
+          flashcard_id,
+          front: card.front,
+          back: card.back,
+          category_name: 'Geral', // Simplified for now
+          difficulty_level: card.difficulty_level,
+          mastery_level: 0, // Simplified for now
+          times_seen: 0 // Simplified for now
+        };
+      }) || [];
 
       // If no category specified (random exploration), shuffle the cards
       if (!categoryId && mappedCards.length > 0) {
