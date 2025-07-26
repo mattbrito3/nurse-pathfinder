@@ -75,18 +75,21 @@ const BrowsePage: React.FC = () => {
     }
   }, [isFavoritesRoute]);
 
-  // Get flashcards data
+  // Get flashcards data (disabled for favorites route)
   const { 
     data: categoryFlashcards = [], 
     isLoading: categoryLoading 
-  } = useFlashcardsByCategory(isFavoritesRoute ? null : (isGeneralBrowse ? undefined : categoryId));
+  } = useFlashcardsByCategory(
+    isFavoritesRoute ? null : (isGeneralBrowse ? undefined : categoryId),
+    !isFavoritesRoute // Disable when on favorites route
+  );
 
   const { 
     data: favoriteFlashcards = [], 
     isLoading: favoritesLoading 
   } = useFavoriteFlashcards();
 
-  // Choose the appropriate data source
+  // Choose the appropriate data source - ONLY favorites when on favorites route
   const flashcards = isFavoritesRoute ? favoriteFlashcards : categoryFlashcards;
   const flashcardsLoading = isFavoritesRoute ? favoritesLoading : categoryLoading;
 

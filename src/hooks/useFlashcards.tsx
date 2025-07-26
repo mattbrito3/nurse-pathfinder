@@ -94,7 +94,7 @@ export const useFlashcards = () => {
   });
 
   // Fetch flashcards by category
-  const useFlashcardsByCategory = (categoryId?: string) => {
+  const useFlashcardsByCategory = (categoryId?: string, enabled: boolean = true) => {
     return useQuery({
       queryKey: ['flashcards', categoryId, user?.id],
       queryFn: async () => {
@@ -135,7 +135,7 @@ export const useFlashcards = () => {
 
         return flashcardsWithProgress as Flashcard[];
       },
-      enabled: !!categories.length
+      enabled: !!categories.length && enabled
     });
   };
 
