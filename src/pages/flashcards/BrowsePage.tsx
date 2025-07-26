@@ -147,16 +147,15 @@ const BrowsePage: React.FC = () => {
   const filteredFlashcards = useMemo(() => {
     let filtered = [...flashcards];
 
-    // TRIPLE SAFETY: If on favorites route, FORCE filter and return early
+    // TRIPLE SAFETY: If on favorites route, FORCE filter favorites first
     if (isFavoritesRoute) {
-      // Apply multiple safety filters
+      // Apply multiple safety filters for favorites
       filtered = filtered
         .filter(card => card.progress?.is_favorite === true)
         .filter(card => card.progress !== null)
         .filter(card => card.progress !== undefined);
       
-      // Return immediately - no other filters should apply on favorites route
-      return filtered;
+      // Continue to apply other filters (difficulty, search, etc.) to favorites
     }
 
     // Advanced search filter
