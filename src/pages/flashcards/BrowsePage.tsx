@@ -37,6 +37,9 @@ const BrowsePage: React.FC = () => {
 
   // Check if this is the favorites route
   const isFavoritesRoute = categoryId === 'favorites';
+  
+  // Check if this is general browse (no specific category)
+  const isGeneralBrowse = !categoryId;
 
   // State
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -60,7 +63,7 @@ const BrowsePage: React.FC = () => {
   const { 
     data: categoryFlashcards = [], 
     isLoading: categoryLoading 
-  } = useFlashcardsByCategory(isFavoritesRoute ? null : categoryId);
+  } = useFlashcardsByCategory(isFavoritesRoute ? null : (isGeneralBrowse ? undefined : categoryId));
 
   const { 
     data: favoriteFlashcards = [], 
@@ -230,7 +233,7 @@ const BrowsePage: React.FC = () => {
     setSelectedCard(flashcard);
   };
 
-  if (!currentCategory && !isFavoritesRoute && !flashcardsLoading) {
+  if (!currentCategory && !isFavoritesRoute && !isGeneralBrowse && !flashcardsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -264,9 +267,11 @@ const BrowsePage: React.FC = () => {
               <h1 className="text-xl font-bold text-foreground">
                 {isFavoritesRoute 
                   ? 'Meus Favoritos' 
-                  : currentCategory 
-                    ? `Explorar: ${currentCategory.name}` 
-                    : 'Explorando Flashcards'
+                  : isGeneralBrowse
+                    ? 'Busca Avançada'
+                    : currentCategory 
+                      ? `Explorar: ${currentCategory.name}` 
+                      : 'Explorando Flashcards'
                 }
               </h1>
             </div>
@@ -320,25 +325,27 @@ const BrowsePage: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Category Info or Favorites Header */}
-            {(currentCategory || isFavoritesRoute) && (
+            {/* Category Info, Favorites, or General Browse Header */}
+            {(currentCategory || isFavoritesRoute || isGeneralBrowse) && (
               <Card className="mb-6">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div 
                       className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl"
-                      style={{ backgroundColor: isFavoritesRoute ? '#ef4444' : currentCategory?.color }}
+                      style={{ backgroundColor: isFavoritesRoute ? '#ef4444' : isGeneralBrowse ? '#3b82f6' : currentCategory?.color }}
                     >
-                      {isFavoritesRoute ? '⭐' : '📚'}
+                      {isFavoritesRoute ? '⭐' : isGeneralBrowse ? '🔍' : '📚'}
                     </div>
                     <div>
                       <CardTitle className="text-2xl">
-                        {isFavoritesRoute ? 'Meus Flashcards Favoritos' : currentCategory?.name}
+                        {isFavoritesRoute ? 'Meus Flashcards Favoritos' : isGeneralBrowse ? 'Busca Avançada de Flashcards' : currentCategory?.name}
                       </CardTitle>
                       <p className="text-muted-foreground">
                         {isFavoritesRoute 
                           ? 'Todos os seus flashcards marcados como favoritos' 
-                          : currentCategory?.description
+                          : isGeneralBrowse 
+                            ? 'Explore e filtre flashcards de todas as categorias com ferramentas avançadas de busca'
+                            : currentCategory?.description
                         }
                       </p>
                     </div>
