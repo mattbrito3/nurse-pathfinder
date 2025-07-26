@@ -89,7 +89,7 @@ const BrowsePage: React.FC = () => {
     isLoading: favoritesLoading 
   } = useFavoriteFlashcards();
 
-  // Choose the appropriate data source - ONLY favorites when on favorites route
+  // ABSOLUTE FORCED DATA SOURCE - No mixing allowed!
   const flashcards = isFavoritesRoute ? favoriteFlashcards : categoryFlashcards;
   const flashcardsLoading = isFavoritesRoute ? favoritesLoading : categoryLoading;
 
@@ -109,9 +109,16 @@ const BrowsePage: React.FC = () => {
   const filteredFlashcards = useMemo(() => {
     let filtered = [...flashcards];
 
-    // FORCE: If on favorites route, ensure only favorites are shown
+    // TRIPLE SAFETY: If on favorites route, FORCE filter and return early
     if (isFavoritesRoute) {
-      filtered = filtered.filter(card => card.progress?.is_favorite === true);
+      // Apply multiple safety filters
+      filtered = filtered
+        .filter(card => card.progress?.is_favorite === true)
+        .filter(card => card.progress !== null)
+        .filter(card => card.progress !== undefined);
+      
+      // Return immediately - no other filters should apply on favorites route
+      return filtered;
     }
 
     // Advanced search filter

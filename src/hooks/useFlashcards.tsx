@@ -188,7 +188,9 @@ export const useFlashcards = () => {
 
         return flashcardsWithProgress as Flashcard[];
       },
-      enabled: !!user?.id
+      enabled: !!user?.id,
+      staleTime: 0, // Always fetch fresh data
+      cacheTime: 0  // Don't cache at all
     });
   };
 
