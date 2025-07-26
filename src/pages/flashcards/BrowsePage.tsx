@@ -38,6 +38,12 @@ const BrowsePage: React.FC = () => {
   // Check if this is the favorites route
   const isFavoritesRoute = categoryId === 'favorites';
   
+  // 🔍 DEBUG: Check route detection
+  console.log('🔍 ROUTE DEBUG:');
+  console.log('categoryId:', categoryId);
+  console.log('isFavoritesRoute:', isFavoritesRoute);
+  console.log('current pathname:', window.location.pathname);
+  
   // Check if this is general browse (no specific category)
   const isGeneralBrowse = !categoryId;
 
