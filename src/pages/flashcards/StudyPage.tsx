@@ -217,13 +217,13 @@ const StudyPage: React.FC = () => {
   // Session completion screen
   if (isSessionComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900 dark:to-emerald-800 flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardHeader className="text-center">
             <div className="mx-auto mb-4 p-4 bg-green-500 rounded-full w-fit">
               <Trophy className="h-12 w-12 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold text-gray-800">
+            <CardTitle className="text-2xl font-bold">
               Sessão Concluída! 🎉
             </CardTitle>
           </CardHeader>
@@ -231,19 +231,19 @@ const StudyPage: React.FC = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-blue-600">{studyCards.length}</div>
-                <div className="text-sm text-gray-600">Cartões Estudados</div>
+                <div className="text-sm text-muted-foreground">Cartões Estudados</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600">{sessionStats.correct}</div>
-                <div className="text-sm text-gray-600">Corretas</div>
+                <div className="text-sm text-muted-foreground">Corretas</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-red-600">{sessionStats.incorrect}</div>
-                <div className="text-sm text-gray-600">Incorretas</div>
+                <div className="text-sm text-muted-foreground">Incorretas</div>
               </div>
               <div className="text-center">
                 <div className="text-3xl font-bold text-purple-600">{accuracy.toFixed(0)}%</div>
-                <div className="text-sm text-gray-600">Precisão</div>
+                <div className="text-sm text-muted-foreground">Precisão</div>
               </div>
             </div>
 
@@ -290,10 +290,10 @@ const StudyPage: React.FC = () => {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur border-b sticky top-0 z-40">
+      <header className="bg-background/80 backdrop-blur border-b sticky top-0 z-40">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button 
@@ -308,7 +308,7 @@ const StudyPage: React.FC = () => {
               <Badge variant="outline">
                 {sessionData.session_type === 'review' ? 'Revisão' : 'Aprendizado'}
               </Badge>
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-muted-foreground">
                 {currentCardIndex + 1} de {studyCards.length}
               </span>
             </div>
