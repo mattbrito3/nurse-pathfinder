@@ -231,7 +231,7 @@ export const useFlashcards = () => {
   const getStudyCards = async (sessionType: 'review' | 'learning' | 'practice', categoryId?: string, limit: number = 10) => {
     if (!user?.id) throw new Error('User not authenticated');
     
-    console.log('🎲 getStudyCards called:', { sessionType, categoryId, limit });
+
 
 
 
@@ -247,19 +247,10 @@ export const useFlashcards = () => {
       return data || [];
     } else {
       // For learning/practice, get cards from specific category or all
-      console.log('🔍 Building query for learning/practice cards...');
-      
-      // SIMPLIFIED - No alias to avoid SQL issues
-      const selectFields = `id, front, back, difficulty_level`;
-      
-      console.log('📝 Select fields:', selectFields);
-      
       let query = supabase
         .from('flashcards')
-        .select(selectFields)
+        .select('id, front, back, difficulty_level, category_id, category:flashcard_categories(name)')
         .eq('is_public', true);
-      
-      console.log('✅ Query built successfully');
 
       if (categoryId) {
         query = query.eq('category_id', categoryId);
@@ -270,19 +261,17 @@ export const useFlashcards = () => {
       
       query = query.limit(limit);
 
-      console.log('🚀 Executing query...');
       const { data, error } = await query;
-      console.log('📊 Query result:', { dataLength: data?.length || 0, error: error?.message });
       if (error) throw error;
 
       let mappedCards = data?.map((card, index) => ({
         flashcard_id: card.id || `card_${index}_${Date.now()}`,
         front: card.front,
         back: card.back,
-        category_name: 'Geral', // Simplified for now
+        category_name: card.category?.name || 'Geral',
         difficulty_level: card.difficulty_level,
-        mastery_level: 0, // Simplified for now
-        times_seen: 0 // Simplified for now
+        mastery_level: 0, // Will add progress data later
+        times_seen: 0 // Will add progress data later
       })) || [];
 
       // If no category specified (random exploration), shuffle the cards
