@@ -346,6 +346,58 @@ export const useFlashcards = () => {
     }
   });
 
+  // Mark flashcard as viewed (increment times_seen)
+  const markAsViewed = useMutation({
+    mutationFn: async (flashcardId: string) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      // Check if progress exists
+      const { data: existingProgress } = await supabase
+        .from('user_flashcard_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('flashcard_id', flashcardId)
+        .maybeSingle();
+
+      if (existingProgress) {
+        // Update existing progress
+        const { error } = await supabase
+          .from('user_flashcard_progress')
+          .update({
+            times_seen: existingProgress.times_seen + 1,
+            last_reviewed_at: new Date().toISOString()
+          })
+          .eq('id', existingProgress.id);
+
+        if (error) throw error;
+        return { ...existingProgress, times_seen: existingProgress.times_seen + 1 };
+      } else {
+        // Create new progress record
+        const { data, error } = await supabase
+          .from('user_flashcard_progress')
+          .insert({
+            user_id: user.id,
+            flashcard_id: flashcardId,
+            times_seen: 1,
+            times_correct: 0,
+            times_incorrect: 0,
+            consecutive_correct: 0,
+            last_reviewed_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      // Invalidate queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+      queryClient.invalidateQueries({ queryKey: ['user-flashcard-stats'] });
+    }
+  });
+
   // Submit flashcard response
   const submitResponse = useMutation({
     mutationFn: async ({
@@ -577,12 +629,14 @@ export const useFlashcards = () => {
     startStudySession: startStudySession.mutateAsync,
     endStudySession: endStudySession.mutateAsync,
     submitResponse: submitResponse.mutateAsync,
+    markAsViewed: markAsViewed.mutateAsync,
     toggleFavorite: toggleFavorite.mutateAsync,
     createFlashcard: createFlashcard.mutateAsync,
     
     // Loading states for mutations
     isStartingSession: startStudySession.isPending,
     isSubmittingResponse: submitResponse.isPending,
+    isMarkingAsViewed: markAsViewed.isPending,
     isTogglingFavorite: toggleFavorite.isPending,
     isCreatingFlashcard: createFlashcard.isPending
   };

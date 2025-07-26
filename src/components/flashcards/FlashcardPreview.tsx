@@ -37,6 +37,7 @@ interface FlashcardPreviewProps {
   onToggleFavorite: (flashcardId: string) => void;
   onStartStudy: (flashcardId: string) => void;
   onPreview: (flashcard: FlashcardPreviewData) => void;
+  onViewed?: (flashcardId: string) => void;
   isLoading?: boolean;
 }
 
@@ -62,6 +63,7 @@ export const FlashcardPreview: React.FC<FlashcardPreviewProps> = ({
   onToggleFavorite,
   onStartStudy,
   onPreview,
+  onViewed,
   isLoading = false
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -73,6 +75,10 @@ export const FlashcardPreview: React.FC<FlashcardPreviewProps> = ({
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
+    // Mark as viewed when user flips the card
+    if (!isFlipped && onViewed) {
+      onViewed(flashcard.id);
+    }
   };
 
   const handlePreview = (e: React.MouseEvent) => {

@@ -32,6 +32,7 @@ const BrowsePage: React.FC = () => {
     useFavoriteFlashcards,
     toggleFavorite, 
     startStudySession,
+    markAsViewed,
     isTogglingFavorite 
   } = useFlashcards();
 
@@ -560,6 +561,7 @@ const BrowsePage: React.FC = () => {
                     onToggleFavorite={handleToggleFavorite}
                     onStartStudy={handleStartStudy}
                     onPreview={handlePreview}
+                    onViewed={markAsViewed}
                     isLoading={isTogglingFavorite}
                   />
                 ))}

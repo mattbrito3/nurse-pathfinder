@@ -33,6 +33,7 @@ interface FlashcardData {
 interface FlashcardComponentProps {
   flashcard: FlashcardData;
   onResponse: (quality: number, responseTime: number) => void;
+  onViewed?: (flashcardId: string) => void;
   isLoading?: boolean;
   sessionProgress?: {
     current: number;
@@ -71,6 +72,7 @@ const masteryColors = {
 export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
   flashcard,
   onResponse,
+  onViewed,
   isLoading = false,
   sessionProgress
 }) => {
@@ -101,6 +103,10 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
     if (!isFlipped) {
       setIsFlipped(true);
       setResponseTime(Date.now() - startTime);
+      // Mark as viewed when user flips the card
+      if (onViewed) {
+        onViewed(flashcard.id);
+      }
       // Small delay before showing quality buttons for better UX
       setTimeout(() => setShowQuality(true), 300);
     }
