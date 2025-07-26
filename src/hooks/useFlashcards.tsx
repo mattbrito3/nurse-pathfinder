@@ -231,7 +231,7 @@ export const useFlashcards = () => {
   const getStudyCards = async (sessionType: 'review' | 'learning' | 'practice', categoryId?: string, limit: number = 10) => {
     if (!user?.id) throw new Error('User not authenticated');
 
-    console.log('🎲 getStudyCards called:', { sessionType, categoryId, limit, userId: user.id });
+
 
     if (sessionType === 'review') {
       // Use due cards for review
@@ -258,23 +258,16 @@ export const useFlashcards = () => {
         .eq('is_public', true);
 
       if (categoryId) {
-        console.log('🔍 Filtering by categoryId:', categoryId);
         query = query.eq('category_id', categoryId);
       } else {
-        console.log('🎲 Random exploration - no category filter applied');
-        // For random exploration, order randomly and limit
-        query = query.order('created_at', { ascending: false }); // Will shuffle client-side
+        // For random exploration, order by creation date and shuffle client-side
+        query = query.order('created_at', { ascending: false });
       }
       
       query = query.limit(limit);
 
       const { data, error } = await query;
-      if (error) {
-        console.error('❌ Query error:', error);
-        throw error;
-      }
-
-      console.log('✅ Query result:', data?.length || 0, 'cards found');
+      if (error) throw error;
 
       let mappedCards = data?.map((card, index) => ({
         flashcard_id: card.flashcard_id || `card_${index}_${Date.now()}`,
@@ -288,7 +281,6 @@ export const useFlashcards = () => {
 
       // If no category specified (random exploration), shuffle the cards
       if (!categoryId && mappedCards.length > 0) {
-        console.log('🎲 Shuffling cards for random exploration');
         mappedCards = shuffleArray(mappedCards);
       }
 

@@ -88,6 +88,8 @@ const StudyPage: React.FC = () => {
         categoryId = parsed.categoryId;
       }
 
+      const isRandomExploration = !categoryId && sessionType === 'practice';
+
       // Create session data
       const session: StudySessionData = {
         id: sessionId!,
@@ -103,15 +105,7 @@ const StudyPage: React.FC = () => {
       setSessionData(session);
       
       // Load real cards from database
-      console.log('🎯 StudyPage loading cards:', { sessionType, categoryId, isRandom });
       const cards = await getStudyCards(sessionType, categoryId, 10);
-      console.log('🎯 StudyPage cards loaded:', cards.length);
-      
-      if (cards.length === 0) {
-        console.log('⚠️ No cards found, using fallback mock data');
-      } else {
-        console.log('✅ Real cards loaded successfully');
-      }
 
       if (cards.length === 0) {
         // Fallback to mock data if no cards available
