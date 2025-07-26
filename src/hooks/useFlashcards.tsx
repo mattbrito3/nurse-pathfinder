@@ -3,6 +3,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 
+// Utility function to shuffle array (Fisher-Yates algorithm)
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
 // Types
 export interface FlashcardCategory {
   id: string;
@@ -221,6 +231,8 @@ export const useFlashcards = () => {
   const getStudyCards = async (sessionType: 'review' | 'learning' | 'practice', categoryId?: string, limit: number = 10) => {
     if (!user?.id) throw new Error('User not authenticated');
 
+    console.log('🎲 getStudyCards called:', { sessionType, categoryId, limit, userId: user.id });
+
     if (sessionType === 'review') {
       // Use due cards for review
       const { data, error } = await supabase
@@ -243,17 +255,28 @@ export const useFlashcards = () => {
           category:flashcard_categories(name),
           progress:user_flashcard_progress(mastery_level, times_seen)
         `)
-        .eq('is_public', true)
-        .limit(limit);
+        .eq('is_public', true);
 
       if (categoryId) {
+        console.log('🔍 Filtering by categoryId:', categoryId);
         query = query.eq('category_id', categoryId);
+      } else {
+        console.log('🎲 Random exploration - no category filter applied');
+        // For random exploration, order randomly and limit
+        query = query.order('created_at', { ascending: false }); // Will shuffle client-side
       }
+      
+      query = query.limit(limit);
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Query error:', error);
+        throw error;
+      }
 
-      return data?.map((card, index) => ({
+      console.log('✅ Query result:', data?.length || 0, 'cards found');
+
+      let mappedCards = data?.map((card, index) => ({
         flashcard_id: card.flashcard_id || `card_${index}_${Date.now()}`,
         front: card.front,
         back: card.back,
@@ -262,6 +285,14 @@ export const useFlashcards = () => {
         mastery_level: card.progress?.[0]?.mastery_level || 0,
         times_seen: card.progress?.[0]?.times_seen || 0
       })) || [];
+
+      // If no category specified (random exploration), shuffle the cards
+      if (!categoryId && mappedCards.length > 0) {
+        console.log('🎲 Shuffling cards for random exploration');
+        mappedCards = shuffleArray(mappedCards);
+      }
+
+      return mappedCards;
     }
   };
 
