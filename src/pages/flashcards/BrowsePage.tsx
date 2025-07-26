@@ -50,7 +50,7 @@ const BrowsePage: React.FC = () => {
     tags: [],
     sortBy: 'created_at',
     sortOrder: 'desc',
-    onlyFavorites: false,
+    onlyFavorites: isFavoritesRoute,
     showMastered: true,
     searchFields: ['front', 'back', 'tags'],
     masteryLevel: [0, 5],
@@ -58,6 +58,22 @@ const BrowsePage: React.FC = () => {
   });
 
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
+
+  // Update filters when route changes to favorites
+  useEffect(() => {
+    if (isFavoritesRoute) {
+      setFilters(prev => ({
+        ...prev,
+        onlyFavorites: true,
+        // Reset other filters to show all favorites
+        search: '',
+        difficulty: [1, 5],
+        tags: [],
+        masteryLevel: [0, 5],
+        dateRange: 'all'
+      }));
+    }
+  }, [isFavoritesRoute]);
 
   // Get flashcards data
   const { 
@@ -123,8 +139,8 @@ const BrowsePage: React.FC = () => {
       );
     }
 
-    // Favorites filter
-    if (filters.onlyFavorites) {
+    // Favorites filter (only apply if not already on favorites route)
+    if (filters.onlyFavorites && !isFavoritesRoute) {
       filtered = filtered.filter(card => card.progress?.is_favorite);
     }
 
@@ -319,6 +335,7 @@ const BrowsePage: React.FC = () => {
                 totalCards={flashcards.length}
                 filteredCards={filteredFlashcards.length}
                 isLoading={flashcardsLoading}
+                isFavoritesPage={isFavoritesRoute}
               />
             </div>
           </div>
@@ -353,9 +370,15 @@ const BrowsePage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span>{flashcards.length} flashcards disponíveis</span>
+                    <span>{flashcards.length} {isFavoritesRoute ? 'favoritos' : 'flashcards disponíveis'}</span>
                     <span>•</span>
                     <span className="font-medium text-primary">{filteredFlashcards.length} exibidos</span>
+                    {isFavoritesRoute && (
+                      <>
+                        <span>•</span>
+                        <span className="text-yellow-600 dark:text-yellow-400">⭐ Apenas favoritos</span>
+                      </>
+                    )}
                     {filters.search && (
                       <>
                         <span>•</span>

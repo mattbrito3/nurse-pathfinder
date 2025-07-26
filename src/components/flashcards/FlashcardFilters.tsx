@@ -48,6 +48,7 @@ interface FlashcardFiltersProps {
   totalCards: number;
   filteredCards: number;
   isLoading?: boolean;
+  isFavoritesPage?: boolean;
 }
 
 export const FlashcardFiltersComponent: React.FC<FlashcardFiltersProps> = ({
@@ -56,7 +57,8 @@ export const FlashcardFiltersComponent: React.FC<FlashcardFiltersProps> = ({
   availableTags,
   totalCards,
   filteredCards,
-  isLoading = false
+  isLoading = false,
+  isFavoritesPage = false
 }) => {
   const updateFilter = (key: keyof FlashcardFilters, value: any) => {
     onFiltersChange({
@@ -267,15 +269,17 @@ export const FlashcardFiltersComponent: React.FC<FlashcardFiltersProps> = ({
 
           {/* Toggle Filters */}
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant={filters.onlyFavorites ? "default" : "outline"}
-              size="sm"
-              onClick={() => updateFilter('onlyFavorites', !filters.onlyFavorites)}
-              className="flex items-center gap-2"
-            >
-              <Heart className={cn("h-4 w-4", filters.onlyFavorites && "fill-current")} />
-              Apenas Favoritos
-            </Button>
+            {!isFavoritesPage && (
+              <Button
+                variant={filters.onlyFavorites ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateFilter('onlyFavorites', !filters.onlyFavorites)}
+                className="flex items-center gap-2"
+              >
+                <Heart className={cn("h-4 w-4", filters.onlyFavorites && "fill-current")} />
+                Apenas Favoritos
+              </Button>
+            )}
             
             <Button
               variant={!filters.showMastered ? "destructive" : "outline"}
