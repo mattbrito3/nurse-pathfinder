@@ -35,14 +35,15 @@ const BrowsePage: React.FC = () => {
     isTogglingFavorite 
   } = useFlashcards();
 
-  // Check if this is the favorites route
-  const isFavoritesRoute = categoryId === 'favorites';
+  // Check if this is the favorites route using pathname
+  const isFavoritesRoute = window.location.pathname.includes('/favorites');
   
   // 🔍 DEBUG: Check route detection
-  console.log('🔍 ROUTE DEBUG:');
+  console.log('🔍 ROUTE DEBUG FIXED:');
   console.log('categoryId:', categoryId);
   console.log('isFavoritesRoute:', isFavoritesRoute);
   console.log('current pathname:', window.location.pathname);
+  console.log('pathname includes /favorites:', window.location.pathname.includes('/favorites'));
   
   // Check if this is general browse (no specific category)
   const isGeneralBrowse = !categoryId;
