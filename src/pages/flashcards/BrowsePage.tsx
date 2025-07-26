@@ -106,6 +106,11 @@ const BrowsePage: React.FC = () => {
   const filteredFlashcards = useMemo(() => {
     let filtered = [...flashcards];
 
+    // FORCE: If on favorites route, ensure only favorites are shown
+    if (isFavoritesRoute) {
+      filtered = filtered.filter(card => card.progress?.is_favorite === true);
+    }
+
     // Advanced search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
