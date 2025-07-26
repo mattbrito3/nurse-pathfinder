@@ -178,7 +178,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
           <CardContent 
             className={cn(
               "absolute inset-0 w-full h-full backface-hidden flex flex-col items-center justify-center text-center p-8",
-              "bg-gradient-to-br from-blue-50 to-indigo-100 border-2 border-blue-200"
+              "bg-gradient-to-br from-blue-200 to-indigo-300 border-2 border-blue-400"
             )}
           >
             <div className="space-y-4">
@@ -201,7 +201,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
           <CardContent 
             className={cn(
               "absolute inset-0 w-full h-full backface-hidden rotate-y-180 flex flex-col items-center justify-center text-center p-8",
-              "bg-gradient-to-br from-green-50 to-emerald-100 border-2 border-green-200"
+              "bg-gradient-to-br from-green-200 to-emerald-300 border-2 border-green-400"
             )}
           >
             <div className="space-y-4">
