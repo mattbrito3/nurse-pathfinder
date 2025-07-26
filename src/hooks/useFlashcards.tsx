@@ -349,6 +349,7 @@ export const useFlashcards = () => {
   // Mark flashcard as viewed (increment times_seen)
   const markAsViewed = useMutation({
     mutationFn: async (flashcardId: string) => {
+      console.log('🚀 markAsViewed chamado para:', flashcardId);
       if (!user?.id) throw new Error('User not authenticated');
 
       // Check if progress exists
@@ -359,8 +360,11 @@ export const useFlashcards = () => {
         .eq('flashcard_id', flashcardId)
         .maybeSingle();
 
+      console.log('📊 Progresso existente:', existingProgress);
+
       if (existingProgress) {
         // Update existing progress
+        console.log('✏️ Atualizando progresso existente, times_seen:', existingProgress.times_seen, '→', existingProgress.times_seen + 1);
         const { error } = await supabase
           .from('user_flashcard_progress')
           .update({
@@ -369,10 +373,15 @@ export const useFlashcards = () => {
           })
           .eq('id', existingProgress.id);
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro ao atualizar progresso:', error);
+          throw error;
+        }
+        console.log('✅ Progresso atualizado com sucesso!');
         return { ...existingProgress, times_seen: existingProgress.times_seen + 1 };
       } else {
         // Create new progress record
+        console.log('🆕 Criando novo progresso');
         const { data, error } = await supabase
           .from('user_flashcard_progress')
           .insert({
@@ -387,11 +396,16 @@ export const useFlashcards = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro ao criar progresso:', error);
+          throw error;
+        }
+        console.log('✅ Novo progresso criado:', data);
         return data;
       }
     },
     onSuccess: () => {
+      console.log('✅ markAsViewed onSuccess executado - invalidando queries');
       // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['flashcards'] });
       queryClient.invalidateQueries({ queryKey: ['user-flashcard-stats'] });

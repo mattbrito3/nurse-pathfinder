@@ -101,11 +101,15 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
 
   const handleFlip = () => {
     if (!isFlipped) {
+      console.log('🔄 Flashcard virado!', flashcard.id);
       setIsFlipped(true);
       setResponseTime(Date.now() - startTime);
       // Mark as viewed when user flips the card
       if (onViewed) {
+        console.log('📊 Marcando como visto:', flashcard.id);
         onViewed(flashcard.id);
+      } else {
+        console.log('⚠️ onViewed não está definido!');
       }
       // Small delay before showing quality buttons for better UX
       setTimeout(() => setShowQuality(true), 300);
