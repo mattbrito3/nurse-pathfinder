@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Calculator, BookOpen, Brain, FileText, User, Settings, LogOut } from "lucide-react";
+import { Calculator, BookOpen, Brain, FileText, User, Settings, LogOut, BarChart3 } from "lucide-react";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -63,6 +63,15 @@ const Dashboard = () => {
       href: "/dashboard/flashcards",
       color: "text-purple-600",
       bgColor: "bg-purple-50",
+      available: true
+    },
+    {
+      icon: BarChart3,
+      title: "Analytics de Progresso",
+      description: "Acompanhe seu desempenho com gráficos detalhados",
+      href: "/dashboard/analytics",
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50",
       available: true
     },
     {

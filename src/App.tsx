@@ -16,6 +16,7 @@ import NotFound from "./pages/NotFound";
 
 // Lazy loading para páginas menos críticas
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Analytics = lazy(() => import("./pages/Analytics"));
 const MedicationCalculator = lazy(() => import("./pages/calculator/MedicationCalculator"));
 const MedicalGlossary = lazy(() => import("./pages/glossary/MedicalGlossary"));
 const MedicalGlossarySimple = lazy(() => import("./pages/glossary/MedicalGlossarySimple"));
@@ -76,6 +77,7 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/analytics" element={<Analytics />} />
               <Route path="/dashboard/calculator" element={<MedicationCalculator />} />
               <Route path="/dashboard/glossary" element={<MedicalGlossary />} />
                                       <Route path="/dashboard/flashcards" element={<FlashcardsPage />} />
