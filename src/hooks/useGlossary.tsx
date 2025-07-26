@@ -329,14 +329,18 @@ export const useGlossary = () => {
     queryFn: async () => {
       if (usingRealData === null) {
         // Ainda verificando
+        console.log('⏳ GLOSSARY: Still checking if real data exists...');
         return [];
       }
 
       if (usingRealData === false) {
         // Usar dados mock
+        console.log('📝 GLOSSARY: Using mock data, real data not available');
         await new Promise(resolve => setTimeout(resolve, 300));
         return mockTerms;
       }
+
+      console.log('🎯 GLOSSARY: Using real database data');
 
       try {
         // Buscar do banco
@@ -360,6 +364,7 @@ export const useGlossary = () => {
 
         if (error) throw error;
 
+        console.log('📊 GLOSSARY DB QUERY RESULT:', data?.length, 'terms fetched from database');
         return data?.map(term => ({
           id: term.id,
           term: term.term,
@@ -389,6 +394,11 @@ export const useGlossary = () => {
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
+      console.log('🔍 GLOSSARY DEBUG:');
+      console.log('Initial terms count:', allTerms.length);
+      console.log('Current filters:', filters);
+      console.log('User favorites count:', userFavorites.length);
+      
       let filteredTerms = [...allTerms];
 
       // Aplicar filtros
@@ -414,6 +424,7 @@ export const useGlossary = () => {
         filteredTerms = filteredTerms.filter(term => userFavorites.includes(term.id));
       }
 
+      console.log('Final filtered terms count:', filteredTerms.length);
       return filteredTerms as MedicalTerm[];
     },
     enabled: allTerms.length > 0,
