@@ -247,14 +247,7 @@ export const useFlashcards = () => {
       // For learning/practice, get cards from specific category or all
       let query = supabase
         .from('flashcards')
-        .select(`
-          id as flashcard_id,
-          front,
-          back,
-          difficulty_level,
-          category:flashcard_categories(name),
-          progress:user_flashcard_progress(mastery_level, times_seen)
-        `)
+        .select('id as flashcard_id, front, back, difficulty_level, category:flashcard_categories(name), progress:user_flashcard_progress(mastery_level, times_seen)')
         .eq('is_public', true);
 
       if (categoryId) {
