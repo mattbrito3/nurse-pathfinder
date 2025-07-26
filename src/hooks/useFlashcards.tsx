@@ -96,14 +96,14 @@ export const useFlashcards = () => {
   // Fetch flashcards by category
   const useFlashcardsByCategory = (categoryId?: string) => {
     return useQuery({
-      queryKey: ['flashcards', categoryId],
+      queryKey: ['flashcards', categoryId, user?.id],
       queryFn: async () => {
+        // First get the flashcards
         let query = supabase
           .from('flashcards')
           .select(`
             *,
-            category:flashcard_categories(*),
-            progress:user_flashcard_progress(*)
+            category:flashcard_categories(*)
           `)
           .eq('is_public', true)
           .order('created_at', { ascending: false });
@@ -112,9 +112,28 @@ export const useFlashcards = () => {
           query = query.eq('category_id', categoryId);
         }
 
-        const { data, error } = await query;
-        if (error) throw error;
-        return data as Flashcard[];
+        const { data: flashcardsData, error: flashcardsError } = await query;
+        if (flashcardsError) throw flashcardsError;
+
+        if (!flashcardsData || !user?.id) return flashcardsData as Flashcard[];
+
+        // Get progress for these flashcards
+        const flashcardIds = flashcardsData.map(f => f.id);
+        const { data: progressData, error: progressError } = await supabase
+          .from('user_flashcard_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .in('flashcard_id', flashcardIds);
+
+        if (progressError) throw progressError;
+
+        // Merge the data
+        const flashcardsWithProgress = flashcardsData.map(flashcard => ({
+          ...flashcard,
+          progress: progressData?.find(p => p.flashcard_id === flashcard.id) || null
+        }));
+
+        return flashcardsWithProgress as Flashcard[];
       },
       enabled: !!categories.length
     });
@@ -127,20 +146,47 @@ export const useFlashcards = () => {
       queryFn: async () => {
         if (!user?.id) return [];
         
-        const { data, error } = await supabase
+        // Get favorite flashcard IDs
+        const { data: progressData, error: progressError } = await supabase
+          .from('user_flashcard_progress')
+          .select('flashcard_id')
+          .eq('user_id', user.id)
+          .eq('is_favorite', true);
+          
+        if (progressError) throw progressError;
+        if (!progressData || progressData.length === 0) return [];
+
+        const flashcardIds = progressData.map(p => p.flashcard_id);
+
+        // Get the flashcards
+        const { data: flashcardsData, error: flashcardsError } = await supabase
           .from('flashcards')
           .select(`
             *,
-            category:flashcard_categories(*),
-            progress:user_flashcard_progress!inner(*)
+            category:flashcard_categories(*)
           `)
           .eq('is_public', true)
-          .eq('progress.user_id', user.id)
-          .eq('progress.is_favorite', true)
+          .in('id', flashcardIds)
           .order('created_at', { ascending: false });
         
-        if (error) throw error;
-        return data as Flashcard[];
+        if (flashcardsError) throw flashcardsError;
+
+        // Get full progress data
+        const { data: fullProgressData, error: fullProgressError } = await supabase
+          .from('user_flashcard_progress')
+          .select('*')
+          .eq('user_id', user.id)
+          .in('flashcard_id', flashcardIds);
+
+        if (fullProgressError) throw fullProgressError;
+
+        // Merge the data
+        const flashcardsWithProgress = flashcardsData?.map(flashcard => ({
+          ...flashcard,
+          progress: fullProgressData?.find(p => p.flashcard_id === flashcard.id) || null
+        })) || [];
+
+        return flashcardsWithProgress as Flashcard[];
       },
       enabled: !!user?.id
     });
@@ -404,7 +450,9 @@ export const useFlashcards = () => {
           .insert({
             user_id: user.id,
             flashcard_id: flashcardId,
-            is_favorite: true
+            is_favorite: true,
+            mastery_level: 0,
+            times_seen: 0
           });
         if (error) throw error;
       } else {
