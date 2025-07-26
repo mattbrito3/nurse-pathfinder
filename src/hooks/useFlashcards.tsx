@@ -428,6 +428,8 @@ export const useFlashcards = () => {
       }
 
       // 2. Get or create user progress
+      // Invalidate cache to get fresh data (including any markAsViewed updates)
+      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
       let progress = await getUserProgress(flashcardId);
       
       if (!progress) {
@@ -468,6 +470,13 @@ export const useFlashcards = () => {
       const newConsecutive = response.was_correct ? progress.consecutive_correct + 1 : 0;
       const newMasteryLevel = Math.min(5, Math.floor(newConsecutive / 3)); // Master after 3 consecutive correct
 
+      // Check if the card was viewed recently (within last 5 seconds) to avoid double counting
+      const lastReviewed = new Date(progress.last_reviewed_at || 0).getTime();
+      const now = new Date().getTime();
+      const wasRecentlyViewed = (now - lastReviewed) < 5000; // 5 seconds
+      
+      const timesSeenIncrement = wasRecentlyViewed ? 0 : 1; // Don't increment if recently viewed
+
       const { error: updateError } = await supabase
         .from('user_flashcard_progress')
         .update({
@@ -475,7 +484,7 @@ export const useFlashcards = () => {
           interval_days: newReview.new_interval,
           repetition_count: newReview.new_repetition_count,
           quality_responses: qualityHistory,
-          times_seen: progress.times_seen + 1,
+          times_seen: progress.times_seen + timesSeenIncrement,
           times_correct: progress.times_correct + (response.was_correct ? 1 : 0),
           times_incorrect: progress.times_incorrect + (response.was_correct ? 0 : 1),
           consecutive_correct: newConsecutive,
