@@ -340,7 +340,10 @@ const StudyPage: React.FC = () => {
         {!isPaused ? (
           <FlashcardComponent
             key={`flashcard-${currentCardIndex}-${currentCard.flashcard_id}`}
-            flashcard={currentCard}
+            flashcard={{
+              ...currentCard,
+              id: currentCard.flashcard_id // Map flashcard_id to id
+            }}
             onResponse={handleCardResponse}
             onViewed={markAsViewed}
             isLoading={isSubmittingResponse}

@@ -350,12 +350,7 @@ export const useFlashcards = () => {
   // Mark flashcard as viewed (increment times_seen)
   const markAsViewed = useMutation({
     mutationFn: async (flashcardId: string) => {
-      console.log('🚀 markAsViewed chamado para:', flashcardId);
-      console.log('👤 Usuário atual:', user?.id);
-      if (!user?.id) {
-        console.error('❌ Usuário não autenticado!');
-        throw new Error('User not authenticated');
-      }
+      if (!user?.id) throw new Error('User not authenticated');
 
       // Check if progress exists
       const { data: existingProgress } = await supabase
@@ -365,11 +360,8 @@ export const useFlashcards = () => {
         .eq('flashcard_id', flashcardId)
         .maybeSingle();
 
-      console.log('📊 Progresso existente:', existingProgress);
-
       if (existingProgress) {
         // Update existing progress
-        console.log('✏️ Atualizando progresso existente, times_seen:', existingProgress.times_seen, '→', existingProgress.times_seen + 1);
         const { error } = await supabase
           .from('user_flashcard_progress')
           .update({
@@ -378,15 +370,10 @@ export const useFlashcards = () => {
           })
           .eq('id', existingProgress.id);
 
-        if (error) {
-          console.error('❌ Erro ao atualizar progresso:', error);
-          throw error;
-        }
-        console.log('✅ Progresso atualizado com sucesso!');
+        if (error) throw error;
         return { ...existingProgress, times_seen: existingProgress.times_seen + 1 };
       } else {
         // Create new progress record
-        console.log('🆕 Criando novo progresso');
         const { data, error } = await supabase
           .from('user_flashcard_progress')
           .insert({
@@ -401,16 +388,11 @@ export const useFlashcards = () => {
           .select()
           .single();
 
-        if (error) {
-          console.error('❌ Erro ao criar progresso:', error);
-          throw error;
-        }
-        console.log('✅ Novo progresso criado:', data);
+        if (error) throw error;
         return data;
       }
     },
     onSuccess: () => {
-      console.log('✅ markAsViewed onSuccess executado - invalidando queries');
       // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['flashcards'] });
       queryClient.invalidateQueries({ queryKey: ['user-flashcard-stats'] });
