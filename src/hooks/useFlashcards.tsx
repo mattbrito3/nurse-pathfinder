@@ -230,6 +230,8 @@ export const useFlashcards = () => {
   // Get cards for study session
   const getStudyCards = async (sessionType: 'review' | 'learning' | 'practice', categoryId?: string, limit: number = 10) => {
     if (!user?.id) throw new Error('User not authenticated');
+    
+    console.log('🎲 getStudyCards called:', { sessionType, categoryId, limit });
 
 
 
@@ -245,10 +247,13 @@ export const useFlashcards = () => {
       return data || [];
     } else {
       // For learning/practice, get cards from specific category or all
+      console.log('🔍 Building query for learning/practice cards...');
       let query = supabase
         .from('flashcards')
         .select('id as flashcard_id, front, back, difficulty_level, category:flashcard_categories(name), progress:user_flashcard_progress(mastery_level, times_seen)')
         .eq('is_public', true);
+      
+      console.log('✅ Query built successfully');
 
       if (categoryId) {
         query = query.eq('category_id', categoryId);
@@ -259,7 +264,9 @@ export const useFlashcards = () => {
       
       query = query.limit(limit);
 
+      console.log('🚀 Executing query...');
       const { data, error } = await query;
+      console.log('📊 Query result:', { dataLength: data?.length || 0, error: error?.message });
       if (error) throw error;
 
       let mappedCards = data?.map((card, index) => ({

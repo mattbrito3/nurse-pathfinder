@@ -135,7 +135,9 @@ const StudyPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Error loading session:', error);
-      navigate('/dashboard/flashcards');
+      console.error('🚨 Detailed error:', JSON.stringify(error, null, 2));
+      // Don't auto-redirect, show error state instead
+      setStudyCards([]);
     }
   };
 
