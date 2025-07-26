@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Calculator, BookOpen, Brain, FileText, User, Settings, LogOut } from "lucide-react";
 
 const Dashboard = () => {
@@ -91,6 +92,7 @@ const Dashboard = () => {
             <span className="text-sm text-muted-foreground hidden md:block">
               Olá, {user.user_metadata?.full_name || user.email}
             </span>
+            <ThemeToggle />
             <Button variant="ghost" size="icon">
               <Settings className="h-4 w-4" />
             </Button>

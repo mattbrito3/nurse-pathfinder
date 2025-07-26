@@ -6,6 +6,7 @@ import { Routes, Route } from "react-router-dom";
 import { Suspense, lazy, useEffect} from "react";
 import { runGlossaryMigrations } from "@/utils/runMigrations";
 import { runGlossaryDataMigrations } from "@/utils/runGlossaryMigrations";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 
 // Páginas que carregam imediatamente (críticas)
@@ -64,25 +65,27 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Suspense fallback={<PageLoader />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/calculator" element={<MedicationCalculator />} />
-            <Route path="/dashboard/glossary" element={<MedicalGlossary />} />
-            <Route path="/dashboard/flashcards" element={<FlashcardsPage />} />
-            <Route path="/dashboard/flashcards/study/:sessionId" element={<StudyPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/calculator" element={<MedicationCalculator />} />
+              <Route path="/dashboard/glossary" element={<MedicalGlossary />} />
+              <Route path="/dashboard/flashcards" element={<FlashcardsPage />} />
+              <Route path="/dashboard/flashcards/study/:sessionId" element={<StudyPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 };
 

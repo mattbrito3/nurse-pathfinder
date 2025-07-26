@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Heart, Menu, X, User, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -82,6 +83,9 @@ const Header = () => {
               </Button>
             </>
           )}
+          
+          {/* Theme Toggle */}
+          <ThemeToggle />
           
           <Button 
             variant="ghost" 
