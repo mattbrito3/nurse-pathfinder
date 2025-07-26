@@ -75,14 +75,15 @@ const BrowsePage: React.FC = () => {
     }
   }, [isFavoritesRoute]);
 
-  // Get flashcards data (disabled for favorites route)
-  const { 
-    data: categoryFlashcards = [], 
-    isLoading: categoryLoading 
-  } = useFlashcardsByCategory(
+  // Get flashcards data (FORCE DISABLED for favorites route)
+  const categoryFlashcardsQuery = useFlashcardsByCategory(
     isFavoritesRoute ? null : (isGeneralBrowse ? undefined : categoryId),
     !isFavoritesRoute // Disable when on favorites route
   );
+  
+  // FORCE EMPTY when on favorites route - NO CACHE ALLOWED!
+  const categoryFlashcards = isFavoritesRoute ? [] : (categoryFlashcardsQuery.data || []);
+  const categoryLoading = isFavoritesRoute ? false : categoryFlashcardsQuery.isLoading;
 
   const { 
     data: favoriteFlashcards = [], 
@@ -92,6 +93,36 @@ const BrowsePage: React.FC = () => {
   // ABSOLUTE FORCED DATA SOURCE - No mixing allowed!
   const flashcards = isFavoritesRoute ? favoriteFlashcards : categoryFlashcards;
   const flashcardsLoading = isFavoritesRoute ? favoritesLoading : categoryLoading;
+
+  // 🔍 EMERGENCY DEBUG - Let's see what's really happening
+  if (isFavoritesRoute) {
+    console.log('🚨 FAVORITES ROUTE EMERGENCY DEBUG:');
+    console.log('favoriteFlashcards count:', favoriteFlashcards.length);
+    console.log('categoryFlashcards count:', categoryFlashcards.length);
+    console.log('final flashcards count:', flashcards.length);
+    console.log('isFavoritesRoute:', isFavoritesRoute);
+    console.log('favoritesLoading:', favoritesLoading);
+    console.log('categoryLoading:', categoryLoading);
+    
+    favoriteFlashcards.forEach((card, i) => {
+      console.log(`FAVORITE ${i}:`, {
+        front: card.front.substring(0, 30),
+        is_favorite: card.progress?.is_favorite,
+        progress: !!card.progress
+      });
+    });
+    
+    if (categoryFlashcards.length > 0) {
+      console.log('⚠️ WARNING: categoryFlashcards should be empty but has:', categoryFlashcards.length);
+      categoryFlashcards.slice(0, 3).forEach((card, i) => {
+        console.log(`CATEGORY ${i}:`, {
+          front: card.front.substring(0, 30),
+          is_favorite: card.progress?.is_favorite,
+          progress: !!card.progress
+        });
+      });
+    }
+  }
 
   // Get category info
   const currentCategory = categories.find(cat => cat.id === categoryId);
