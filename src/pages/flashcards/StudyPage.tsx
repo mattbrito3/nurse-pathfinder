@@ -49,7 +49,6 @@ const StudyPage: React.FC = () => {
     submitResponse, 
     endStudySession,
     getStudyCards,
-    markAsViewed,
     isSubmittingResponse 
   } = useFlashcards();
 
@@ -345,7 +344,6 @@ const StudyPage: React.FC = () => {
               id: currentCard.flashcard_id // Map flashcard_id to id
             }}
             onResponse={handleCardResponse}
-            onViewed={markAsViewed}
             isLoading={isSubmittingResponse}
             sessionProgress={{
               current: currentCardIndex + 1,

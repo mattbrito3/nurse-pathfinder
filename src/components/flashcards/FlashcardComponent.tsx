@@ -34,6 +34,7 @@ interface FlashcardComponentProps {
   flashcard: FlashcardData;
   onResponse: (quality: number, responseTime: number) => void;
   onViewed?: (flashcardId: string) => void;
+  showViewCount?: boolean;
   isLoading?: boolean;
   sessionProgress?: {
     current: number;
@@ -73,6 +74,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
   flashcard,
   onResponse,
   onViewed,
+  showViewCount = false,
   isLoading = false,
   sessionProgress
 }) => {
@@ -168,10 +170,12 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
             <span className="text-muted-foreground">{getMasteryText(flashcard.progress?.mastery_level || flashcard.mastery_level || 0)}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          Visto {flashcard.progress?.times_seen || flashcard.times_seen || 0}x
-        </div>
+        {showViewCount && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            Visto {flashcard.progress?.times_seen || flashcard.times_seen || 0}x
+          </div>
+        )}
       </div>
 
       {/* Main Flashcard */}
