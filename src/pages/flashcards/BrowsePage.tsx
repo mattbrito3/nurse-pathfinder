@@ -146,6 +146,13 @@ const BrowsePage: React.FC = () => {
   // Apply filters
   const filteredFlashcards = useMemo(() => {
     let filtered = [...flashcards];
+    
+    // 🔍 DEBUG: Log initial flashcards count
+    console.log('🔍 FLASHCARDS DEBUG:');
+    console.log('Initial flashcards count:', flashcards.length);
+    console.log('isFavoritesRoute:', isFavoritesRoute);
+    console.log('isGeneralBrowse:', isGeneralBrowse);
+    console.log('categoryId:', categoryId);
 
     // TRIPLE SAFETY: If on favorites route, FORCE filter favorites first
     if (isFavoritesRoute) {
@@ -179,10 +186,13 @@ const BrowsePage: React.FC = () => {
     }
 
     // Difficulty filter
+    console.log('Before difficulty filter:', filtered.length);
+    console.log('Difficulty range:', filters.difficulty);
     filtered = filtered.filter(card =>
       card.difficulty_level >= filters.difficulty[0] &&
       card.difficulty_level <= filters.difficulty[1]
     );
+    console.log('After difficulty filter:', filtered.length);
 
     // Tags filter
     if (filters.tags.length > 0) {
@@ -197,6 +207,8 @@ const BrowsePage: React.FC = () => {
     }
 
     // Mastery level filter
+    console.log('Before mastery filter:', filtered.length);
+    console.log('Mastery range:', filters.masteryLevel);
     filtered = filtered.filter(card => {
       const masteryLevel = card.mastery_level || 0;
       return masteryLevel >= filters.masteryLevel[0] && masteryLevel <= filters.masteryLevel[1];
