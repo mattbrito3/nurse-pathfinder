@@ -400,10 +400,10 @@ const StudyPage: React.FC = () => {
       </main>
 
       {/* Progress Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur border-t p-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-background/90 backdrop-blur border-t p-4">
         <div className="container mx-auto">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-foreground">
               Progresso da Sessão
             </span>
             <div className="flex items-center gap-4 text-sm">

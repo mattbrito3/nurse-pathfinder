@@ -56,7 +56,7 @@ const difficultyColors = {
 };
 
 const masteryColors = {
-  0: 'text-gray-500',
+  0: 'text-muted-foreground',
   1: 'text-red-500',
   2: 'text-orange-500',
   3: 'text-yellow-500',
@@ -116,12 +116,12 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Session Progress */}
       {sessionProgress && (
-        <div className="bg-white/80 backdrop-blur rounded-lg p-4 shadow-sm">
+        <div className="bg-background/80 backdrop-blur rounded-lg p-4 shadow-sm border">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-foreground">
               Progresso da Sessão
             </span>
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-muted-foreground">
               {sessionProgress.current} de {sessionProgress.total}
             </span>
           </div>
@@ -129,7 +129,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
             value={(sessionProgress.current / sessionProgress.total) * 100} 
             className="h-2 mb-2"
           />
-          <div className="flex justify-between text-xs text-gray-600">
+          <div className="flex justify-between text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <CheckCircle className="h-3 w-3 text-green-500" />
               {sessionProgress.correct} corretas
@@ -155,10 +155,10 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
           </Badge>
           <div className="flex items-center gap-1 text-xs">
             <Heart className={cn("h-3 w-3", masteryColors[flashcard.mastery_level as keyof typeof masteryColors])} />
-            <span className="text-gray-600">{getMasteryText(flashcard.mastery_level)}</span>
+            <span className="text-muted-foreground">{getMasteryText(flashcard.mastery_level)}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
           Visto {flashcard.times_seen}x
         </div>
@@ -185,11 +185,11 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
               <div className="p-3 bg-blue-500 rounded-full w-fit mx-auto">
                 <Brain className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 leading-relaxed">
+              <h2 className="text-2xl font-bold text-foreground leading-relaxed">
                 {flashcard.front}
               </h2>
               {!isFlipped && (
-                <p className="text-sm text-gray-600 mt-6 flex items-center justify-center gap-2">
+                <p className="text-sm text-muted-foreground mt-6 flex items-center justify-center gap-2">
                   <RotateCcw className="h-4 w-4" />
                   Clique para ver a resposta
                 </p>
@@ -208,11 +208,11 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
               <div className="p-3 bg-green-500 rounded-full w-fit mx-auto">
                 <CheckCircle className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-800 leading-relaxed">
+              <h2 className="text-xl font-semibold text-foreground leading-relaxed">
                 {flashcard.back}
               </h2>
               {responseTime > 0 && (
-                <p className="text-sm text-gray-600 flex items-center justify-center gap-2">
+                <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
                   <Clock className="h-4 w-4" />
                   Tempo: {(responseTime / 1000).toFixed(1)}s
                 </p>
@@ -226,10 +226,10 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
       {showQuality && isFlipped && (
         <div className="space-y-4 animate-in fade-in-50 duration-300">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Como foi sua resposta?
             </h3>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Sua avaliação ajuda a otimizar suas próximas revisões
             </p>
           </div>
@@ -258,7 +258,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
             })}
           </div>
 
-          <div className="text-center text-xs text-gray-500 space-y-1">
+          <div className="text-center text-xs text-muted-foreground space-y-1">
             <p>💡 <strong>Dica:</strong> Use as teclas 0-5 para responder rapidamente</p>
             <div className="flex justify-center gap-4 text-xs">
               <span>0-2: Incorreto (repetir mais cedo)</span>
@@ -271,9 +271,9 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
       {/* Loading State */}
       {isLoading && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 shadow-xl text-center">
+          <div className="bg-background rounded-lg p-6 shadow-xl text-center border">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-700">Processando resposta...</p>
+            <p className="text-foreground">Processando resposta...</p>
           </div>
         </div>
       )}
