@@ -19,7 +19,12 @@ import {
   Heart,
   Clock,
   Target,
-  Hash
+  Hash,
+  Calendar,
+  BarChart3,
+  Eye,
+  CheckCircle,
+  TrendingUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -27,10 +32,13 @@ export interface FlashcardFilters {
   search: string;
   difficulty: number[];
   tags: string[];
-  sortBy: 'created_at' | 'difficulty' | 'alphabetical' | 'times_seen';
+  sortBy: 'created_at' | 'difficulty' | 'alphabetical' | 'times_seen' | 'mastery_level';
   sortOrder: 'asc' | 'desc';
   onlyFavorites: boolean;
   showMastered: boolean;
+  searchFields: ('front' | 'back' | 'tags')[];
+  masteryLevel: number[];
+  dateRange: 'all' | 'last_week' | 'last_month' | 'last_3_months';
 }
 
 interface FlashcardFiltersProps {
@@ -75,7 +83,10 @@ export const FlashcardFiltersComponent: React.FC<FlashcardFiltersProps> = ({
       sortBy: 'created_at',
       sortOrder: 'desc',
       onlyFavorites: false,
-      showMastered: true
+      showMastered: true,
+      searchFields: ['front', 'back', 'tags'],
+      masteryLevel: [0, 5],
+      dateRange: 'all'
     });
   };
 
@@ -84,20 +95,52 @@ export const FlashcardFiltersComponent: React.FC<FlashcardFiltersProps> = ({
     filters.difficulty[0] > 1 || 
     filters.difficulty[1] < 5 || 
     filters.onlyFavorites || 
-    !filters.showMastered;
+    !filters.showMastered ||
+    filters.searchFields.length < 3 ||
+    filters.masteryLevel[0] > 0 ||
+    filters.masteryLevel[1] < 5 ||
+    filters.dateRange !== 'all';
 
   return (
     <div className="space-y-4">
       {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-        <Input
-          placeholder="Buscar flashcards... (frente, verso ou tags)"
-          value={filters.search}
-          onChange={(e) => updateFilter('search', e.target.value)}
-          className="pl-10 pr-4"
-          disabled={isLoading}
-        />
+      <div className="space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input
+            placeholder="Buscar flashcards... (frente, verso ou tags)"
+            value={filters.search}
+            onChange={(e) => updateFilter('search', e.target.value)}
+            className="pl-10 pr-4"
+            disabled={isLoading}
+          />
+        </div>
+
+        {/* Advanced Search Options */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-sm text-muted-foreground">Buscar em:</span>
+          {[
+            { key: 'front', label: 'Frente', icon: Eye },
+            { key: 'back', label: 'Verso', icon: BarChart3 },
+            { key: 'tags', label: 'Tags', icon: Hash }
+          ].map(({ key, label, icon: Icon }) => (
+            <Button
+              key={key}
+              variant={filters.searchFields.includes(key as any) ? "default" : "outline"}
+              size="sm"
+              onClick={() => {
+                const newFields = filters.searchFields.includes(key as any)
+                  ? filters.searchFields.filter(f => f !== key)
+                  : [...filters.searchFields, key as any];
+                updateFilter('searchFields', newFields);
+              }}
+              className="h-7 text-xs"
+            >
+              <Icon className="h-3 w-3 mr-1" />
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Filter Panel */}
@@ -138,6 +181,7 @@ export const FlashcardFiltersComponent: React.FC<FlashcardFiltersProps> = ({
                   <SelectItem value="difficulty">Dificuldade</SelectItem>
                   <SelectItem value="alphabetical">Ordem alfabética</SelectItem>
                   <SelectItem value="times_seen">Mais estudados</SelectItem>
+                  <SelectItem value="mastery_level">Nível de domínio</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -177,6 +221,48 @@ export const FlashcardFiltersComponent: React.FC<FlashcardFiltersProps> = ({
               <span>Muito Fácil</span>
               <span>Muito Difícil</span>
             </div>
+          </div>
+
+          {/* Mastery Level Range */}
+          <div>
+            <label className="text-sm font-medium mb-3 block flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Nível de Domínio: {filters.masteryLevel[0]} - {filters.masteryLevel[1]}
+            </label>
+            <Slider
+              value={filters.masteryLevel}
+              onValueChange={(value) => updateFilter('masteryLevel', value)}
+              min={0}
+              max={5}
+              step={1}
+              className="w-full"
+            />
+            <div className="flex justify-between text-xs text-muted-foreground mt-1">
+              <span>Iniciante</span>
+              <span>Dominado</span>
+            </div>
+          </div>
+
+          {/* Date Range Filter */}
+          <div>
+            <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              Período de Criação
+            </label>
+            <Select 
+              value={filters.dateRange} 
+              onValueChange={(value: any) => updateFilter('dateRange', value)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os períodos</SelectItem>
+                <SelectItem value="last_week">Última semana</SelectItem>
+                <SelectItem value="last_month">Último mês</SelectItem>
+                <SelectItem value="last_3_months">Últimos 3 meses</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Toggle Filters */}

@@ -15,7 +15,9 @@ import {
   BookOpen,
   Search,
   Filter,
-  Loader2
+  Loader2,
+  Hash,
+  Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -46,8 +48,13 @@ const BrowsePage: React.FC = () => {
     sortBy: 'created_at',
     sortOrder: 'desc',
     onlyFavorites: false,
-    showMastered: true
+    showMastered: true,
+    searchFields: ['front', 'back', 'tags'],
+    masteryLevel: [0, 5],
+    dateRange: 'all'
   });
+
+  const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
 
   // Get flashcards data
   const { 
@@ -80,14 +87,24 @@ const BrowsePage: React.FC = () => {
   const filteredFlashcards = useMemo(() => {
     let filtered = [...flashcards];
 
-    // Search filter
+    // Advanced search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(card =>
-        card.front.toLowerCase().includes(searchLower) ||
-        card.back.toLowerCase().includes(searchLower) ||
-        card.tags?.some(tag => tag.toLowerCase().includes(searchLower))
-      );
+      filtered = filtered.filter(card => {
+        const searchMatches = [];
+        
+        if (filters.searchFields.includes('front')) {
+          searchMatches.push(card.front.toLowerCase().includes(searchLower));
+        }
+        if (filters.searchFields.includes('back')) {
+          searchMatches.push(card.back.toLowerCase().includes(searchLower));
+        }
+        if (filters.searchFields.includes('tags')) {
+          searchMatches.push(card.tags?.some(tag => tag.toLowerCase().includes(searchLower)) || false);
+        }
+        
+        return searchMatches.some(match => match);
+      });
     }
 
     // Difficulty filter
@@ -108,11 +125,40 @@ const BrowsePage: React.FC = () => {
       filtered = filtered.filter(card => card.progress?.is_favorite);
     }
 
-    // Mastery filter
+    // Mastery level filter
+    filtered = filtered.filter(card => {
+      const masteryLevel = card.mastery_level || 0;
+      return masteryLevel >= filters.masteryLevel[0] && masteryLevel <= filters.masteryLevel[1];
+    });
+
+    // Show mastered filter
     if (!filters.showMastered) {
       filtered = filtered.filter(card => 
-        !card.progress || card.progress.mastery_level < 5
+        !card.progress || card.mastery_level < 5
       );
+    }
+
+    // Date range filter
+    if (filters.dateRange !== 'all') {
+      const now = new Date();
+      let cutoffDate = new Date();
+      
+      switch (filters.dateRange) {
+        case 'last_week':
+          cutoffDate.setDate(now.getDate() - 7);
+          break;
+        case 'last_month':
+          cutoffDate.setMonth(now.getMonth() - 1);
+          break;
+        case 'last_3_months':
+          cutoffDate.setMonth(now.getMonth() - 3);
+          break;
+      }
+      
+      filtered = filtered.filter(card => {
+        const cardDate = new Date(card.created_at || 0);
+        return cardDate >= cutoffDate;
+      });
     }
 
     // Sort
@@ -130,12 +176,16 @@ const BrowsePage: React.FC = () => {
           bValue = b.front.toLowerCase();
           break;
         case 'times_seen':
-          aValue = a.progress?.times_seen || 0;
-          bValue = b.progress?.times_seen || 0;
+          aValue = a.times_seen || 0;
+          bValue = b.times_seen || 0;
+          break;
+        case 'mastery_level':
+          aValue = a.mastery_level || 0;
+          bValue = b.mastery_level || 0;
           break;
         default: // created_at
-          aValue = new Date(a.created_at);
-          bValue = new Date(b.created_at);
+          aValue = new Date(a.created_at || 0);
+          bValue = new Date(b.created_at || 0);
       }
 
       if (filters.sortOrder === 'asc') {
@@ -298,8 +348,52 @@ const BrowsePage: React.FC = () => {
                   <div className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span>{flashcards.length} flashcards disponíveis</span>
                     <span>•</span>
-                    <span>{filteredFlashcards.length} exibidos</span>
+                    <span className="font-medium text-primary">{filteredFlashcards.length} exibidos</span>
+                    {filters.search && (
+                      <>
+                        <span>•</span>
+                        <span>Busca por: "{filters.search}"</span>
+                      </>
+                    )}
                   </div>
+                  
+                  {/* Search Results Summary */}
+                  {(filters.search || filters.tags.length > 0 || filters.difficulty[0] > 1 || filters.difficulty[1] < 5) && (
+                    <div className="mt-3 pt-3 border-t">
+                      <div className="flex flex-wrap gap-2">
+                        {filters.search && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Search className="h-3 w-3 mr-1" />
+                            "{filters.search}" em {filters.searchFields.join(', ')}
+                          </Badge>
+                        )}
+                        {filters.tags.map(tag => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            <Hash className="h-3 w-3 mr-1" />
+                            {tag}
+                          </Badge>
+                        ))}
+                        {(filters.difficulty[0] > 1 || filters.difficulty[1] < 5) && (
+                          <Badge variant="outline" className="text-xs">
+                            Dificuldade: {filters.difficulty[0]}-{filters.difficulty[1]}
+                          </Badge>
+                        )}
+                        {(filters.masteryLevel[0] > 0 || filters.masteryLevel[1] < 5) && (
+                          <Badge variant="outline" className="text-xs">
+                            Domínio: {filters.masteryLevel[0]}-{filters.masteryLevel[1]}
+                          </Badge>
+                        )}
+                        {filters.dateRange !== 'all' && (
+                          <Badge variant="outline" className="text-xs">
+                            <Calendar className="h-3 w-3 mr-1" />
+                            {filters.dateRange === 'last_week' ? 'Última semana' :
+                             filters.dateRange === 'last_month' ? 'Último mês' :
+                             'Últimos 3 meses'}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
