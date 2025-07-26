@@ -210,14 +210,19 @@ const BrowsePage: React.FC = () => {
     console.log('Before mastery filter:', filtered.length);
     console.log('Mastery range:', filters.masteryLevel);
     filtered = filtered.filter(card => {
-      const masteryLevel = card.mastery_level || 0;
-      return masteryLevel >= filters.masteryLevel[0] && masteryLevel <= filters.masteryLevel[1];
+      const masteryLevel = card.progress?.mastery_level || 0;
+      const passesFilter = masteryLevel >= filters.masteryLevel[0] && masteryLevel <= filters.masteryLevel[1];
+      if (!passesFilter) {
+        console.log('Card filtered out by mastery:', card.front.substring(0, 50), 'mastery:', masteryLevel);
+      }
+      return passesFilter;
     });
+    console.log('After mastery filter:', filtered.length);
 
     // Show mastered filter
     if (!filters.showMastered) {
       filtered = filtered.filter(card => 
-        !card.progress || card.mastery_level < 5
+        !card.progress || (card.progress?.mastery_level || 0) < 5
       );
     }
 
@@ -263,8 +268,8 @@ const BrowsePage: React.FC = () => {
           bValue = b.times_seen || 0;
           break;
         case 'mastery_level':
-          aValue = a.mastery_level || 0;
-          bValue = b.mastery_level || 0;
+          aValue = a.progress?.mastery_level || 0;
+          bValue = b.progress?.mastery_level || 0;
           break;
         default: // created_at
           aValue = new Date(a.created_at || 0);

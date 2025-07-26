@@ -22,8 +22,12 @@ interface FlashcardData {
   back: string;
   category_name: string;
   difficulty_level: number;
-  mastery_level: number;
-  times_seen: number;
+  mastery_level?: number; // For backward compatibility
+  times_seen?: number; // For backward compatibility
+  progress?: {
+    mastery_level: number;
+    times_seen: number;
+  } | null;
 }
 
 interface FlashcardComponentProps {
@@ -154,13 +158,13 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
             Nível {flashcard.difficulty_level}
           </Badge>
           <div className="flex items-center gap-1 text-xs">
-            <Heart className={cn("h-3 w-3", masteryColors[flashcard.mastery_level as keyof typeof masteryColors])} />
-            <span className="text-muted-foreground">{getMasteryText(flashcard.mastery_level)}</span>
+            <Heart className={cn("h-3 w-3", masteryColors[(flashcard.progress?.mastery_level || flashcard.mastery_level || 0) as keyof typeof masteryColors])} />
+            <span className="text-muted-foreground">{getMasteryText(flashcard.progress?.mastery_level || flashcard.mastery_level || 0)}</span>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" />
-          Visto {flashcard.times_seen}x
+          Visto {flashcard.progress?.times_seen || flashcard.times_seen || 0}x
         </div>
       </div>
 
