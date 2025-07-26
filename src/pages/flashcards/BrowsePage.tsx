@@ -27,10 +27,14 @@ const BrowsePage: React.FC = () => {
   const { 
     categories, 
     useFlashcardsByCategory, 
+    useFavoriteFlashcards,
     toggleFavorite, 
     startStudySession,
     isTogglingFavorite 
   } = useFlashcards();
+
+  // Check if this is the favorites route
+  const isFavoritesRoute = categoryId === 'favorites';
 
   // State
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -47,9 +51,18 @@ const BrowsePage: React.FC = () => {
 
   // Get flashcards data
   const { 
-    data: flashcards = [], 
-    isLoading: flashcardsLoading 
-  } = useFlashcardsByCategory(categoryId);
+    data: categoryFlashcards = [], 
+    isLoading: categoryLoading 
+  } = useFlashcardsByCategory(isFavoritesRoute ? null : categoryId);
+
+  const { 
+    data: favoriteFlashcards = [], 
+    isLoading: favoritesLoading 
+  } = useFavoriteFlashcards();
+
+  // Choose the appropriate data source
+  const flashcards = isFavoritesRoute ? favoriteFlashcards : categoryFlashcards;
+  const flashcardsLoading = isFavoritesRoute ? favoritesLoading : categoryLoading;
 
   // Get category info
   const currentCategory = categories.find(cat => cat.id === categoryId);
@@ -167,7 +180,7 @@ const BrowsePage: React.FC = () => {
     setSelectedCard(flashcard);
   };
 
-  if (!currentCategory && !flashcardsLoading) {
+  if (!currentCategory && !isFavoritesRoute && !flashcardsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-full max-w-md">
@@ -199,7 +212,12 @@ const BrowsePage: React.FC = () => {
             <div className="flex items-center gap-2">
               <BookOpen className="h-6 w-6 text-primary" />
               <h1 className="text-xl font-bold text-foreground">
-                {currentCategory ? `Explorar: ${currentCategory.name}` : 'Explorando Flashcards'}
+                {isFavoritesRoute 
+                  ? 'Meus Favoritos' 
+                  : currentCategory 
+                    ? `Explorar: ${currentCategory.name}` 
+                    : 'Explorando Flashcards'
+                }
               </h1>
             </div>
           </div>
@@ -252,20 +270,27 @@ const BrowsePage: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            {/* Category Info */}
-            {currentCategory && (
+            {/* Category Info or Favorites Header */}
+            {(currentCategory || isFavoritesRoute) && (
               <Card className="mb-6">
                 <CardHeader>
                   <div className="flex items-center gap-3">
                     <div 
                       className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl"
-                      style={{ backgroundColor: currentCategory.color }}
+                      style={{ backgroundColor: isFavoritesRoute ? '#ef4444' : currentCategory?.color }}
                     >
-                      📚
+                      {isFavoritesRoute ? '⭐' : '📚'}
                     </div>
                     <div>
-                      <CardTitle className="text-2xl">{currentCategory.name}</CardTitle>
-                      <p className="text-muted-foreground">{currentCategory.description}</p>
+                      <CardTitle className="text-2xl">
+                        {isFavoritesRoute ? 'Meus Flashcards Favoritos' : currentCategory?.name}
+                      </CardTitle>
+                      <p className="text-muted-foreground">
+                        {isFavoritesRoute 
+                          ? 'Todos os seus flashcards marcados como favoritos' 
+                          : currentCategory?.description
+                        }
+                      </p>
                     </div>
                   </div>
                 </CardHeader>

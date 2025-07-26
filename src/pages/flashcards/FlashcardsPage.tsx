@@ -79,6 +79,31 @@ const FlashcardsPage = () => {
     navigate(`/dashboard/flashcards/browse/${categoryId}`);
   };
 
+  const handleRandomExploration = async () => {
+    try {
+      const session = await startStudySession({ 
+        sessionType: 'practice',
+        categoryId: undefined // Random exploration across all categories
+      });
+      
+      // Store session info for the study page
+      sessionStorage.setItem(`study_session_${session.id}`, JSON.stringify({
+        sessionType: 'practice',
+        categoryId: null,
+        isRandom: true
+      }));
+      
+      navigate(`/dashboard/flashcards/study/${session.id}`);
+    } catch (error) {
+      console.error('Erro ao iniciar exploração aleatória:', error);
+    }
+  };
+
+  const handleBrowseFavorites = () => {
+    // Navigate to browse page with favorites filter
+    navigate('/dashboard/flashcards/browse/favorites');
+  };
+
   if (categoriesLoading || dueCardsLoading || statsLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -289,23 +314,191 @@ const FlashcardsPage = () => {
           </TabsContent>
 
           {/* Browse Tab */}
-          <TabsContent value="browse">
+          <TabsContent value="browse" className="space-y-6">
+            {/* Search and Filters */}
             <Card>
               <CardHeader>
-                <CardTitle>Explorar Flashcards</CardTitle>
-                <CardDescription>
-                  Navegue por todos os flashcards disponíveis
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    Selecione uma categoria acima para começar a explorar
-                  </p>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-blue-500" />
+                      Explorar Flashcards
+                    </CardTitle>
+                    <CardDescription>
+                      Navegue por categorias e descubra novos flashcards para estudar
+                    </CardDescription>
+                  </div>
+                  <Badge variant="outline">
+                    {categories.length} categorias
+                  </Badge>
                 </div>
-              </CardContent>
+              </CardHeader>
             </Card>
+
+            {/* Categories Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {categoriesLoading ? (
+                // Loading skeleton
+                Array.from({ length: 6 }).map((_, i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="w-8 h-8 bg-muted rounded-full" />
+                        <div className="w-4 h-4 bg-muted rounded" />
+                      </div>
+                      <div className="h-5 bg-muted rounded mb-2" />
+                      <div className="h-4 bg-muted rounded mb-4" />
+                      <div className="flex gap-2">
+                        <div className="h-8 bg-muted rounded flex-1" />
+                        <div className="h-8 bg-muted rounded flex-1" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                categories.map((category: FlashcardCategory) => (
+                  <Card 
+                    key={category.id} 
+                    className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 hover:border-primary/20"
+                  >
+                    <CardContent className="p-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div 
+                          className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl group-hover:scale-110 transition-transform duration-200"
+                          style={{ backgroundColor: category.color }}
+                        >
+                          📚
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                      </div>
+                      
+                      <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                        {category.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                        {category.description}
+                      </p>
+                      
+                      {/* Category Stats */}
+                      <div className="flex items-center gap-4 mb-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Target className="h-3 w-3" />
+                          {category.flashcard_count || 0} cards
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Star className="h-3 w-3" />
+                          Dif. {category.avg_difficulty || 'N/A'}
+                        </span>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleBrowseCategory(category.id)}
+                          className="flex-1 group-hover:border-primary/40"
+                        >
+                          <Filter className="h-3 w-3 mr-1" />
+                          Explorar
+                        </Button>
+                        <Button 
+                          size="sm"
+                          onClick={() => handleStartLearning(category.id)}
+                          disabled={isStartingSession}
+                          className="flex-1"
+                        >
+                          <Brain className="h-3 w-3 mr-1" />
+                          Estudar
+                        </Button>
+                      </div>
+                      
+                      {/* Progress Indicator */}
+                      {category.user_progress && (
+                        <div className="mt-3 pt-3 border-t">
+                          <div className="flex items-center justify-between text-xs mb-1">
+                            <span className="text-muted-foreground">Seu progresso</span>
+                            <span className="font-medium">
+                              {Math.round((category.user_progress.mastered_count / (category.flashcard_count || 1)) * 100)}%
+                            </span>
+                          </div>
+                          <Progress 
+                            value={(category.user_progress.mastered_count / (category.flashcard_count || 1)) * 100}
+                            className="h-1"
+                          />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <TrendingUp className="h-5 w-5 text-green-500" />
+                    Exploração Aleatória
+                  </CardTitle>
+                  <CardDescription>
+                    Descubra flashcards de todas as categorias
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => handleRandomExploration()}
+                    disabled={isStartingSession}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    <Target className="h-4 w-4 mr-2" />
+                    Explorar Aleatoriamente
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <Star className="h-5 w-5 text-yellow-500" />
+                    Meus Favoritos
+                  </CardTitle>
+                  <CardDescription>
+                    Acesse rapidamente seus flashcards favoritos
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button 
+                    onClick={() => handleBrowseFavorites()}
+                    className="w-full"
+                    variant="outline"
+                  >
+                    <Star className="h-4 w-4 mr-2" />
+                    Ver Favoritos
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Empty State */}
+            {!categoriesLoading && categories.length === 0 && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <BookOpen className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Nenhuma categoria encontrada</h3>
+                  <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                    Parece que ainda não existem categorias de flashcards. 
+                    Que tal criar a primeira categoria e começar a estudar?
+                  </p>
+                  <Button onClick={() => navigate('/dashboard/flashcards/create')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Criar Primeiro Flashcard
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Stats Tab */}

@@ -120,6 +120,32 @@ export const useFlashcards = () => {
     });
   };
 
+  // Fetch favorite flashcards across all categories
+  const useFavoriteFlashcards = () => {
+    return useQuery({
+      queryKey: ['favorite-flashcards', user?.id],
+      queryFn: async () => {
+        if (!user?.id) return [];
+        
+        const { data, error } = await supabase
+          .from('flashcards')
+          .select(`
+            *,
+            category:flashcard_categories(*),
+            progress:user_flashcard_progress!inner(*)
+          `)
+          .eq('is_public', true)
+          .eq('progress.user_id', user.id)
+          .eq('progress.is_favorite', true)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data as Flashcard[];
+      },
+      enabled: !!user?.id
+    });
+  };
+
   // Fetch cards due for review
   const {
     data: dueCards = [],
@@ -474,6 +500,7 @@ export const useFlashcards = () => {
     
     // Functions
     useFlashcardsByCategory,
+    useFavoriteFlashcards,
     getUserProgress,
     getStudyCards,
     refetchDueCards,
