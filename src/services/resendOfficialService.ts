@@ -33,6 +33,12 @@ export const sendVerificationEmail = async (
     console.log('🔐 Code:', verificationCode);
     console.log('👤 User:', userName);
 
+    console.log('📤 Sending email with parameters:');
+    console.log('- From:', 'Nurse Pathfinder <onboarding@resend.dev>');
+    console.log('- To:', [userEmail]);
+    console.log('- Subject:', '🩺 Código de Verificação - Nurse Pathfinder');
+    console.log('- React Template:', 'VerificationEmailTemplate');
+
     const { data, error } = await resend.emails.send({
       from: 'Nurse Pathfinder <onboarding@resend.dev>',
       to: [userEmail], // 📧 EMAIL DO USUÁRIO AQUI
@@ -43,16 +49,28 @@ export const sendVerificationEmail = async (
       }),
     });
 
+    console.log('📤 Resend API Response:');
+    console.log('- Data:', data);
+    console.log('- Error:', error);
+
     if (error) {
-      console.error('❌ Resend error:', error);
+      console.error('❌ RESEND ERROR DETAILS:');
+      console.error('- Error object:', error);
+      console.error('- Error message:', error.message);
+      console.error('- Error name:', error.name);
+      console.error('- Full error:', JSON.stringify(error, null, 2));
+      
       return {
         success: false,
-        error: error.message || 'Resend SDK failed',
+        error: `Resend Error: ${error.message || JSON.stringify(error)}`,
         method: 'Resend SDK'
       };
     }
 
-    console.log('✅ EMAIL SENT! Data:', data);
+    console.log('✅ EMAIL SENT SUCCESSFULLY!');
+    console.log('✅ Email ID:', data?.id);
+    console.log('✅ Full response:', data);
+    
     return {
       success: true,
       method: 'Resend SDK',
@@ -109,7 +127,7 @@ Nurse Pathfinder
 };
 
 /**
- * 🏆 MAIN EMAIL FUNCTION - Official Resend Implementation
+ * 🏆 MAIN EMAIL FUNCTION - ONLY Resend (NO FALLBACKS)
  */
 export const sendOfficialVerificationEmail = async (
   userEmail: string,
@@ -121,7 +139,7 @@ export const sendOfficialVerificationEmail = async (
   console.log('🔐 Code:', verificationCode);
   console.log('👤 Name:', userName);
 
-  // Primary: Official Resend SDK
+  // ONLY Official Resend SDK - NO FALLBACKS
   const resendResult = await sendVerificationEmail(userEmail, verificationCode, userName);
   
   if (resendResult.success) {
@@ -130,21 +148,14 @@ export const sendOfficialVerificationEmail = async (
     return resendResult;
   }
 
-  console.log('⚠️ Resend failed, trying browser fallback...');
+  // NO FALLBACK - Just return the error
+  console.error('❌ RESEND FAILED - NO FALLBACKS ACTIVATED');
+  console.error('❌ Error:', resendResult.error);
   
-  // Fallback: Browser email client
-  const browserResult = await sendViaBrowserFallback(userEmail, verificationCode, userName);
-  
-  if (browserResult.success) {
-    console.log('✅ Browser email client opened as fallback');
-    return browserResult;
-  }
-
-  // All methods failed
   return {
     success: false,
-    error: 'All email methods failed',
-    method: 'none'
+    error: resendResult.error || 'Resend failed',
+    method: 'Resend SDK Only'
   };
 };
 
