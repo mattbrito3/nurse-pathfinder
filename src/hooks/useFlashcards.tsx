@@ -248,30 +248,57 @@ export const useFlashcards = () => {
       return data || [];
     } else {
       // For learning/practice, get cards from specific category or all
-      let query = supabase
+      // 🔧 FIXED: Split into two queries and combine (more reliable than OR)
+      
+      // Query 1: Get public flashcards
+      let publicQuery = supabase
         .from('flashcards')
         .select('id, front, back, difficulty_level, category_id, category:flashcard_categories(name), created_by, is_public')
-        .or(`is_public.eq.true,and(is_public.eq.false,created_by.eq.${user.id})`);
+        .eq('is_public', true);
 
       if (categoryId) {
-        query = query.eq('category_id', categoryId);
-      } else {
-        // For random exploration, order by creation date and shuffle client-side
-        query = query.order('created_at', { ascending: false });
+        publicQuery = publicQuery.eq('category_id', categoryId);
       }
-      
-      query = query.limit(limit);
 
-      const { data, error } = await query;
-      
+      // Query 2: Get user's private flashcards
+      let privateQuery = supabase
+        .from('flashcards')
+        .select('id, front, back, difficulty_level, category_id, category:flashcard_categories(name), created_by, is_public')
+        .eq('is_public', false)
+        .eq('created_by', user.id);
+
+      if (categoryId) {
+        privateQuery = privateQuery.eq('category_id', categoryId);
+      }
+
+      // Execute both queries
+      const [publicResult, privateResult] = await Promise.all([
+        publicQuery,
+        privateQuery
+      ]);
+
+      if (publicResult.error) throw publicResult.error;
+      if (privateResult.error) throw privateResult.error;
+
+      // Combine results
+      const publicCards = publicResult.data || [];
+      const privateCards = privateResult.data || [];
+      const allCards = [...publicCards, ...privateCards];
+
+      // Shuffle and limit
+      const shuffledCards = categoryId ? allCards : shuffleArray(allCards);
+      const data = shuffledCards.slice(0, limit);
+
       // 🔍 DEBUG: Log what cards are being returned
-      console.log('🎯 getStudyCards DEBUG:', {
+      console.log('🎯 getStudyCards DEBUG (NEW APPROACH):', {
         sessionType,
         categoryId,
         limit,
         user_id: user.id,
+        public_cards_found: publicCards.length,
+        private_cards_found: privateCards.length,
         total_cards_found: data?.length || 0,
-        query_used: `is_public.eq.true,and(is_public.eq.false,created_by.eq.${user.id})`,
+        query_approach: 'separate queries combined',
         category_filter: categoryId ? `category_id = ${categoryId}` : 'no category filter',
         cards_detail: data?.map(card => ({
           id: card.id,
@@ -284,23 +311,15 @@ export const useFlashcards = () => {
       });
       
       // 🔍 DEBUG: Let's also check if your specific flashcard exists anywhere
-      console.log('🔍 Checking for user flashcards in this category...');
-      const { data: allUserCards, error: userCardsError } = await supabase
-        .from('flashcards')
-        .select('id, front, back, created_by, is_public, category_id')
-        .eq('created_by', user.id)
-        .eq('category_id', categoryId);
-        
-      console.log('🔍 User flashcards in this category:', {
-        total_user_cards: allUserCards?.length || 0,
-        user_cards: allUserCards?.map(card => ({
+      console.log('🔍 Private cards found:', {
+        total_private_cards: privateCards.length,
+        private_cards_detail: privateCards.map(card => ({
           id: card.id,
           front: card.front,
           is_public: card.is_public,
           category_id: card.category_id
         }))
       });
-      if (error) throw error;
 
       let mappedCards = data?.map((card, index) => ({
         flashcard_id: card.id || `card_${index}_${Date.now()}`,
