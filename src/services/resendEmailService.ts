@@ -10,8 +10,9 @@ interface EmailResponse {
   emailId?: string;
 }
 
-const RESEND_API_KEY = 're_auJbm1rY_AmScYpyomnG81PeHCGsRcq8v';
-const FROM_EMAIL = 'Nurse Pathfinder <delivered@resend.dev>'; // Resend's public domain for testing
+// ⚠️ SUBSTITUA PELA SUA API KEY QUANDO CRIAR
+const RESEND_API_KEY = 're_auJbm1rY_AmScYpyomnG81PeHCGsRcq8v'; // MUDE AQUI
+const FROM_EMAIL = 'delivered@resend.dev'; // Domínio de teste (funciona sem configuração)
 
 /**
  * 🚀 Send real email using Resend API
