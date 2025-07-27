@@ -7,9 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Heart, Loader2, Eye, EyeOff, Check, AlertCircle } from "lucide-react";
+import { Heart, Loader2, Eye, EyeOff, Check, AlertCircle, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useEmailValidation } from "@/hooks/useEmailValidation";
+import EmailVerification from "@/components/auth/EmailVerification";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,20 +17,11 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [signupEmail, setSignupEmail] = useState("");
+  const [showEmailVerification, setShowEmailVerification] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState("");
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Email validation for signup
-  const { 
-    isValidating: isValidatingEmail, 
-    isValid: isEmailValid, 
-    confidence: emailConfidence,
-    error: emailError, 
-    suggestion: emailSuggestion,
-    warning: emailWarning,
-    applySuggestion 
-  } = useEmailValidation(signupEmail);
 
   // Redirecionar se já estiver logado
   useEffect(() => {
@@ -71,21 +62,21 @@ const Auth = () => {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const email = signupEmail; // Use controlled email state
+    const email = verifiedEmail; // Use verified email
     const password = formData.get('password') as string;
     const fullName = formData.get('fullName') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
 
-    // Enhanced validation
-    if (!fullName.trim()) {
-      setError('Nome completo é obrigatório.');
+    // Check if email was verified
+    if (!verifiedEmail) {
+      setError('Email deve ser verificado primeiro.');
       setIsLoading(false);
       return;
     }
 
-    // Validate email before signup
-    if (isEmailValid === false) {
-      setError(emailError || 'Email inválido.');
+    // Enhanced validation
+    if (!fullName.trim()) {
+      setError('Nome completo é obrigatório.');
       setIsLoading(false);
       return;
     }
@@ -137,10 +128,38 @@ const Auth = () => {
     setIsLoading(false);
   };
 
+  const handleEmailVerified = (email: string) => {
+    setVerifiedEmail(email);
+    setShowEmailVerification(false);
+    toast({
+      title: "Email verificado!",
+      description: "Agora você pode completar seu cadastro.",
+    });
+  };
+
+  const handleStartSignup = () => {
+    setShowEmailVerification(true);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (showEmailVerification) {
+    return (
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
+        <EmailVerification
+          email={signupEmail}
+          onEmailChange={setSignupEmail}
+          onVerified={handleEmailVerified}
+          onBack={() => setShowEmailVerification(false)}
+          title="Verificar Email"
+          description="Para criar sua conta, primeiro precisamos verificar seu email"
+        />
       </div>
     );
   }
@@ -253,75 +272,33 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Input
-                        id="signup-email"
-                        name="email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        value={signupEmail}
-                        onChange={(e) => setSignupEmail(e.target.value)}
-                        required
-                        className={`pr-10 ${
-                          isEmailValid === true ? 'border-green-500 focus:border-green-500' :
-                          isEmailValid === false ? 'border-red-500 focus:border-red-500' : ''
-                        }`}
-                      />
-                      {/* Validation icons */}
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                        {isValidatingEmail && (
-                          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                        )}
-                        {!isValidatingEmail && isEmailValid === true && (
-                          <Check className="h-4 w-4 text-green-500" />
-                        )}
-                        {!isValidatingEmail && isEmailValid === false && signupEmail.includes('@') && (
-                          <AlertCircle className="h-4 w-4 text-red-500" />
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* Email validation feedback */}
-                    {emailError && !isValidatingEmail && (
-                      <div className="text-sm text-red-600 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        {emailError}
-                      </div>
-                    )}
-                    
-                    {/* Email suggestion */}
-                    {emailSuggestion && !isValidatingEmail && (
-                      <div className="text-sm">
-                        <span className="text-amber-600">{emailSuggestion}</span>
+                    {verifiedEmail ? (
+                      <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
+                        <div className="flex items-center gap-2">
+                          <Check className="h-4 w-4 text-green-600" />
+                          <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                            {verifiedEmail}
+                          </span>
+                        </div>
                         <Button
                           type="button"
-                          variant="link"
+                          variant="ghost"
                           size="sm"
-                          className="h-auto p-0 ml-2 text-blue-600"
-                          onClick={() => setSignupEmail(applySuggestion())}
+                          onClick={handleStartSignup}
                         >
-                          Usar sugestão
+                          Alterar
                         </Button>
                       </div>
-                    )}
-                    
-                    {isEmailValid === true && !isValidatingEmail && (
-                      <div className="space-y-1">
-                        <div className={`text-sm flex items-center gap-1 ${
-                          emailConfidence === 'high' ? 'text-green-600' : 
-                          emailConfidence === 'medium' ? 'text-yellow-600' : 'text-orange-600'
-                        }`}>
-                          <Check className="h-3 w-3" />
-                          Email válido {emailConfidence === 'high' ? '(Alta confiança)' : 
-                                        emailConfidence === 'medium' ? '(Média confiança)' : '(Baixa confiança)'}
-                        </div>
-                        {emailWarning && (
-                          <div className="text-xs text-yellow-600 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            {emailWarning}
-                          </div>
-                        )}
-                      </div>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleStartSignup}
+                      >
+                        <Mail className="mr-2 h-4 w-4" />
+                        Verificar Email
+                      </Button>
                     )}
                   </div>
                   <div className="space-y-2">

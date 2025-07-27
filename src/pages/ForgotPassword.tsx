@@ -1,47 +1,17 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Mail, Loader2, CheckCircle, AlertCircle, Check } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Link, useNavigate } from "react-router-dom";
+import EmailVerification from "@/components/auth/EmailVerification";
 import { supabase } from "@/integrations/supabase/client";
-import { useEmailValidation } from "@/hooks/useEmailValidation";
+import { useToast } from "@/hooks/use-toast";
 
 const ForgotPassword = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
   const { toast } = useToast();
-  
-  // Email validation
-  const { 
-    isValidating: isValidatingEmail, 
-    isValid: isEmailValid, 
-    confidence: emailConfidence,
-    error: emailError, 
-    suggestion: emailSuggestion,
-    warning: emailWarning,
-    applySuggestion 
-  } = useEmailValidation(email);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-
-    // Validate email before sending
-    if (isEmailValid === false) {
-      setError(emailError || 'Email inválido.');
-      setIsLoading(false);
-      return;
-    }
-
+  const handleEmailVerified = async (verifiedEmail: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      const { error } = await supabase.auth.resetPasswordForEmail(verifiedEmail, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
@@ -49,200 +19,36 @@ const ForgotPassword = () => {
         throw error;
       }
 
-      setSuccess(true);
       toast({
-        title: "Email enviado!",
+        title: "Email de recuperação enviado!",
         description: "Verifique sua caixa de entrada para redefinir sua senha.",
       });
+      
+      // Redirect to login after success
+      setTimeout(() => {
+        navigate('/auth');
+      }, 2000);
+      
     } catch (error: any) {
       console.error('Error sending reset email:', error);
-      setError(
-        error.message === 'For security purposes, a user can only be sent a password reset email once every 60 seconds'
-          ? 'Por segurança, você só pode solicitar um novo email a cada 60 segundos.'
-          : error.message === 'User not found'
-          ? 'Email não encontrado em nossa base de dados.'
-          : 'Erro ao enviar email. Tente novamente.'
-      );
+      toast({
+        title: "Erro",
+        description: "Erro ao enviar email de recuperação. Tente novamente.",
+        variant: "destructive"
+      });
     }
-
-    setIsLoading(false);
   };
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-4">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <CardTitle className="text-2xl">Email Enviado!</CardTitle>
-            <CardDescription>
-              Enviamos um link de recuperação para <strong>{email}</strong>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Alert>
-              <Mail className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Próximos passos:</strong>
-                <ol className="mt-2 ml-4 list-decimal text-sm space-y-1">
-                  <li>Verifique sua caixa de entrada</li>
-                  <li>Clique no link de recuperação</li>
-                  <li>Defina sua nova senha</li>
-                  <li>Faça login com a nova senha</li>
-                </ol>
-              </AlertDescription>
-            </Alert>
-            
-            <div className="text-center text-sm text-muted-foreground">
-              Não recebeu o email? Verifique sua pasta de spam ou 
-              <Button 
-                variant="link" 
-                className="p-0 h-auto font-normal"
-                onClick={() => setSuccess(false)}
-              >
-                tente novamente
-              </Button>
-            </div>
-
-            <div className="flex justify-center">
-              <Button variant="outline" asChild>
-                <Link to="/auth" className="flex items-center gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  Voltar ao Login
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mb-4">
-            <Mail className="h-6 w-6 text-blue-600" />
-          </div>
-          <CardTitle className="text-2xl">Esqueceu sua senha?</CardTitle>
-          <CardDescription>
-            Digite seu email e enviaremos um link para redefinir sua senha
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                  className={`pr-10 ${
-                    isEmailValid === true ? 'border-green-500 focus:border-green-500' :
-                    isEmailValid === false ? 'border-red-500 focus:border-red-500' : ''
-                  }`}
-                />
-                {/* Validation icons */}
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  {isValidatingEmail && (
-                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                  )}
-                  {!isValidatingEmail && isEmailValid === true && (
-                    <Check className="h-4 w-4 text-green-500" />
-                  )}
-                  {!isValidatingEmail && isEmailValid === false && email.includes('@') && (
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
-              </div>
-              
-              {/* Email validation feedback */}
-              {emailError && !isValidatingEmail && (
-                <div className="text-sm text-red-600 flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {emailError}
-                </div>
-              )}
-              
-              {/* Email suggestion */}
-              {emailSuggestion && !isValidatingEmail && (
-                <div className="text-sm">
-                  <span className="text-amber-600">{emailSuggestion}</span>
-                  <Button
-                    type="button"
-                    variant="link"
-                    size="sm"
-                    className="h-auto p-0 ml-2 text-blue-600"
-                    onClick={() => setEmail(applySuggestion())}
-                  >
-                    Usar sugestão
-                  </Button>
-                </div>
-              )}
-              
-              {isEmailValid === true && !isValidatingEmail && (
-                <div className="space-y-1">
-                  <div className={`text-sm flex items-center gap-1 ${
-                    emailConfidence === 'high' ? 'text-green-600' : 
-                    emailConfidence === 'medium' ? 'text-yellow-600' : 'text-orange-600'
-                  }`}>
-                    <Check className="h-3 w-3" />
-                    Email válido {emailConfidence === 'high' ? '(Alta confiança)' : 
-                                  emailConfidence === 'medium' ? '(Média confiança)' : '(Baixa confiança)'}
-                  </div>
-                  {emailWarning && (
-                    <div className="text-xs text-yellow-600 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      {emailWarning}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={isLoading || !email.trim() || isValidatingEmail || isEmailValid === false}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
-                </>
-              ) : (
-                <>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Enviar Link de Recuperação
-                </>
-              )}
-            </Button>
-
-            <div className="flex justify-center">
-              <Button variant="outline" asChild>
-                <Link to="/auth" className="flex items-center gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  Voltar ao Login
-                </Link>
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <EmailVerification
+        email={email}
+        onEmailChange={setEmail}
+        onVerified={handleEmailVerified}
+        onBack={() => navigate('/auth')}
+        title="Recuperar Senha"
+        description="Primeiro, vamos verificar que você tem acesso a este email"
+      />
     </div>
   );
 };
