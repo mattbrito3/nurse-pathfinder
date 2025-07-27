@@ -46,8 +46,7 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
     getStats,
     filterHistory,
     shareCalculation,
-    downloadReport,
-    downloadReportPDF
+    downloadReport
   } = useCalculationHistory(page);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -142,19 +141,7 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
     toast.success(`Relatório TXT baixado com ${itemsToDownload.length} cálculo(s)`);
   };
 
-  const handleDownloadPDF = () => {
-    const itemsToDownload = selectedItems.length > 0 
-      ? history.filter(item => selectedItems.includes(item.id))
-      : filteredHistory;
-    
-    if (itemsToDownload.length === 0) {
-      toast.error('Nenhum cálculo selecionado para download');
-      return;
-    }
-
-    downloadReportPDF(itemsToDownload);
-    toast.success(`Relatório PDF baixado com ${itemsToDownload.length} cálculo(s)`);
-  };
+  // PDF download removed - only TXT format available
 
   // Manter função legado para compatibilidade
   const handleDownload = handleDownloadTXT;
@@ -315,11 +302,7 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
                     <DropdownMenuContent>
                       <DropdownMenuItem onClick={handleDownloadTXT}>
                         <FileText className="h-4 w-4 mr-2" />
-                        Baixar como TXT
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleDownloadPDF}>
-                        <FileDown className="h-4 w-4 mr-2" />
-                        Baixar como PDF
+                        Baixar Relatório (TXT)
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -506,11 +489,7 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={handleDownloadTXT}>
                   <FileText className="h-4 w-4 mr-2" />
-                  Baixar como TXT
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleDownloadPDF}>
-                  <FileDown className="h-4 w-4 mr-2" />
-                  Baixar como PDF
+                  Baixar Relatório (TXT)
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

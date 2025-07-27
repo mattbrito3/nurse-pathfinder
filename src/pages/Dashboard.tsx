@@ -105,8 +105,8 @@ const Dashboard = () => {
               Olá, {user.user_metadata?.full_name || user.email}
             </span>
             <ThemeToggle />
-            <Button variant="ghost" size="icon">
-              <Settings className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={() => navigate('/profile')}>
+              <User className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />

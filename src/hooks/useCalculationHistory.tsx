@@ -835,12 +835,7 @@ export const useCalculationHistory = (page = 0) => {
     return pdf;
   };
 
-  // Download como arquivo PDF
-  const downloadReportPDF = (calculations: CalculationHistory[], filename?: string) => {
-    const pdf = exportToPDF(calculations);
-    const pdfFilename = filename || `calculos_medicamentosos_${new Date().toISOString().split('T')[0]}.pdf`;
-    pdf.save(pdfFilename);
-  };
+  // PDF download removed - only TXT format available
 
   // Download como arquivo de texto
   const downloadReport = (calculations: CalculationHistory[], filename?: string) => {
@@ -871,7 +866,6 @@ export const useCalculationHistory = (page = 0) => {
     exportToPDF,
     shareCalculation,
     downloadReport,
-    downloadReportPDF,
     hasNextPage,
     totalCount,
     // Função para limpar históricos antigos/órfãos (administrativa)
