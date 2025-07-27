@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Mail, Loader2, CheckCircle, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { sendBrowserCompatibleEmail } from '@/services/backendEmailService';
+import { sendProductionVerificationEmail } from '@/services/productionEmailService';
 
 interface EmailVerificationProps {
   email: string;
@@ -79,36 +79,37 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
       
       localStorage.setItem(`email_verification_${newVerificationId}`, JSON.stringify(verificationData));
       
-      // 📧 SEND EMAIL USING BROWSER COMPATIBLE SERVICE
-      const browserResult = await sendBrowserCompatibleEmail(
+      // 📧 SEND EMAIL USING PRODUCTION SERVICE (dosecerta.online)
+      const productionResult = await sendProductionVerificationEmail(
         email, 
         verificationCode, 
         'Usuário'
       );
       
-      if (browserResult.success) {
-        // 🎉 SUCCESS! Email sent via compatible method!
+      if (productionResult.success) {
+        // 🎉 SUCCESS! Production email sent to real inbox!
         toast({
-          title: "📧 Código de verificação enviado!",
-          description: `Método: ${browserResult.method}. Verifique o console para o código!`,
-          duration: 10000
+          title: "📧 Email enviado com sucesso!",
+          description: `Verifique sua caixa de entrada (${email}) para o código de verificação.`,
+          duration: 8000
         });
         
-        console.log(`✅ BROWSER COMPATIBLE EMAIL SENT!`);
+        console.log(`✅ PRODUCTION EMAIL SENT TO REAL INBOX!`);
         console.log(`📧 Email: ${email}`);
         console.log(`🔐 Code: ${verificationCode}`);
-        console.log(`📨 Method: ${browserResult.method}`);
-        if (browserResult.emailId) {
-          console.log(`📧 Email ID: ${browserResult.emailId}`);
+        console.log(`📨 Method: ${productionResult.method}`);
+        console.log(`🌐 Domain: dosecerta.online`);
+        if (productionResult.emailId) {
+          console.log(`📧 Email ID: ${productionResult.emailId}`);
         }
       } else {
-        // Show code in console as fallback
-        console.warn('Browser email failed:', browserResult.error);
+        // Production email failed - show detailed error
+        console.error('❌ PRODUCTION EMAIL FAILED:', productionResult.error);
         console.log(`🔐 VERIFICATION CODE FOR USER: ${verificationCode}`);
         
         toast({
-          title: "📱 Código de verificação",
-          description: `Código: ${verificationCode}. Use este código para verificar sua conta.`,
+          title: "⚠️ Erro no envio do email",
+          description: `Erro: ${productionResult.error}. Código: ${verificationCode}`,
           duration: 15000
         });
       }
