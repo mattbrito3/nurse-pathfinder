@@ -271,12 +271,33 @@ export const useFlashcards = () => {
         limit,
         user_id: user.id,
         total_cards_found: data?.length || 0,
+        query_used: `is_public.eq.true,and(is_public.eq.false,created_by.eq.${user.id})`,
+        category_filter: categoryId ? `category_id = ${categoryId}` : 'no category filter',
         cards_detail: data?.map(card => ({
           id: card.id,
-          front: card.front.substring(0, 30) + '...',
+          front: card.front.substring(0, 50),
           is_public: card.is_public,
           created_by: card.created_by,
-          is_mine: card.created_by === user.id
+          is_mine: card.created_by === user.id,
+          category_id: card.category_id
+        }))
+      });
+      
+      // 🔍 DEBUG: Let's also check if your specific flashcard exists anywhere
+      console.log('🔍 Checking for user flashcards in this category...');
+      const { data: allUserCards, error: userCardsError } = await supabase
+        .from('flashcards')
+        .select('id, front, back, created_by, is_public, category_id')
+        .eq('created_by', user.id)
+        .eq('category_id', categoryId);
+        
+      console.log('🔍 User flashcards in this category:', {
+        total_user_cards: allUserCards?.length || 0,
+        user_cards: allUserCards?.map(card => ({
+          id: card.id,
+          front: card.front,
+          is_public: card.is_public,
+          category_id: card.category_id
         }))
       });
       if (error) throw error;
