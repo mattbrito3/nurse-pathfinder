@@ -538,7 +538,19 @@ export const useFlashcards = () => {
 
       const newReview = nextReview[0];
       const nextReviewDate = new Date();
-      nextReviewDate.setDate(nextReviewDate.getDate() + newReview.new_interval);
+      
+      // 🛡️ SAFETY: Limit interval to max 365 days (1 year) to prevent timestamp overflow
+      const safeInterval = Math.min(newReview.new_interval, 365);
+      nextReviewDate.setDate(nextReviewDate.getDate() + safeInterval);
+      
+      // 🔍 DEBUG: Log interval safety check
+      if (newReview.new_interval > 365) {
+        console.warn('⚠️ INTERVAL CAPPED:', {
+          original_interval: newReview.new_interval,
+          capped_interval: safeInterval,
+          flashcard_id: flashcardId
+        });
+      }
 
       // 4. Update progress
       const qualityHistory = [...progress.quality_responses, response.quality].slice(-10); // Keep last 10
