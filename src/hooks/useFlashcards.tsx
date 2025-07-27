@@ -468,13 +468,17 @@ export const useFlashcards = () => {
       const newConsecutive = response.was_correct ? progress.consecutive_correct + 1 : 0;
       
       // 🎯 IMPROVED MASTERY ALGORITHM - More practical and faster progression
+      // Bonus progression for "Perfeito" (quality 5) responses
+      const perfectCount = qualityHistory.filter(q => q === 5).length;
+      const hasPerfectBonus = perfectCount >= 3; // 3+ "Perfeito" responses give bonus
+      
       let newMasteryLevel = 0;
-      if (newConsecutive >= 8) {
-        newMasteryLevel = 5; // DOMINADO after 8 consecutive
-      } else if (newConsecutive >= 6) {
-        newMasteryLevel = 4; // Avançado after 6 consecutive
-      } else if (newConsecutive >= 4) {
-        newMasteryLevel = 3; // Intermediário after 4 consecutive
+      if (newConsecutive >= 8 || (newConsecutive >= 6 && hasPerfectBonus)) {
+        newMasteryLevel = 5; // DOMINADO after 8 consecutive OR 6 consecutive with perfect bonus
+      } else if (newConsecutive >= 6 || (newConsecutive >= 5 && hasPerfectBonus)) {
+        newMasteryLevel = 4; // Avançado after 6 consecutive OR 5 with perfect bonus
+      } else if (newConsecutive >= 4 || (newConsecutive >= 3 && hasPerfectBonus)) {
+        newMasteryLevel = 3; // Intermediário after 4 consecutive OR 3 with perfect bonus
       } else if (newConsecutive >= 3) {
         newMasteryLevel = 2; // Básico after 3 consecutive
       } else if (newConsecutive >= 2) {
@@ -490,10 +494,13 @@ export const useFlashcards = () => {
         was_correct: response.was_correct,
         old_consecutive: progress.consecutive_correct,
         new_consecutive: newConsecutive,
+        perfect_count: perfectCount,
+        has_perfect_bonus: hasPerfectBonus,
         old_mastery: progress.mastery_level,
         new_mastery: newMasteryLevel,
         times_correct: progress.times_correct + (response.was_correct ? 1 : 0),
-        times_seen: progress.times_seen + 1
+        times_seen: progress.times_seen + 1,
+        quality_history: qualityHistory
       });
 
       const { error: updateError } = await supabase
