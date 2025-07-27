@@ -22,6 +22,9 @@ export interface FlashcardCategory {
   icon: string;
   created_at: string;
   updated_at: string;
+  // Calculated statistics
+  flashcard_count?: number;
+  avg_difficulty?: number | null;
 }
 
 export interface Flashcard {
@@ -85,21 +88,59 @@ export const useFlashcards = () => {
   const queryClient = useQueryClient();
   const [currentSession, setCurrentSession] = useState<StudySession | null>(null);
 
-  // Fetch all categories
+  // Fetch all categories with statistics
   const {
     data: categories = [],
     isLoading: categoriesLoading,
     error: categoriesError
   } = useQuery({
-    queryKey: ['flashcard-categories'],
+    queryKey: ['flashcard-categories', user?.id],
     queryFn: async () => {
+      // Get categories with flashcard statistics
       const { data, error } = await supabase
         .from('flashcard_categories')
-        .select('*')
+        .select(`
+          *,
+          flashcards(
+            id,
+            difficulty_level,
+            is_public,
+            created_by
+          )
+        `)
         .order('name');
       
       if (error) throw error;
-      return data as FlashcardCategory[];
+      
+             // Process categories to calculate statistics
+       return data.map(category => {
+         // Handle categories with no flashcards
+         const allFlashcards = category.flashcards || [];
+         
+         // Filter flashcards user can see (public + their private ones)
+         const visibleFlashcards = allFlashcards.filter(f => 
+           f.is_public || (user?.id && f.created_by === user.id)
+         );
+         
+         const flashcard_count = visibleFlashcards.length;
+         const avg_difficulty = flashcard_count > 0 
+           ? Math.round((visibleFlashcards.reduce((sum, f) => sum + f.difficulty_level, 0) / flashcard_count) * 10) / 10
+           : null;
+           
+         // 🔍 DEBUG: Log category statistics
+         console.log(`📊 Category "${category.name}":`, {
+           total_flashcards: allFlashcards.length,
+           visible_flashcards: flashcard_count,
+           avg_difficulty
+         });
+           
+         return {
+           ...category,
+           flashcard_count,
+           avg_difficulty,
+           flashcards: undefined // Remove to avoid circular data
+         };
+       }) as FlashcardCategory[];
     }
   });
 
