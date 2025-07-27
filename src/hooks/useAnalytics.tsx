@@ -136,6 +136,7 @@ export const useAnalytics = () => {
     isLoading: weeklyProgressLoading
   } = useQuery({
     queryKey: ['analytics-weekly-progress', user?.id],
+    staleTime: 0, // Force refresh for real-time updates
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -289,6 +290,7 @@ export const useAnalytics = () => {
     isLoading: studyStreakLoading
   } = useQuery({
     queryKey: ['analytics-study-streak', user?.id],
+    staleTime: 0, // Force refresh for real-time updates
     queryFn: async () => {
       if (!user?.id) return [];
 

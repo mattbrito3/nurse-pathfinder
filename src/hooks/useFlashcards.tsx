@@ -488,16 +488,40 @@ export const useFlashcards = () => {
       if (updateError) throw updateError;
 
       // 5. Update session stats
-      if (sessionId && currentSession) {
-        await supabase
+      if (sessionId) {
+        // Get current session stats from database to avoid state sync issues
+        const { data: currentSessionData } = await supabase
           .from('flashcard_study_sessions')
-          .update({
-            cards_studied: currentSession.cards_studied + 1,
-            cards_correct: currentSession.cards_correct + (response.was_correct ? 1 : 0),
-            cards_incorrect: currentSession.cards_incorrect + (response.was_correct ? 0 : 1),
-            total_time_seconds: currentSession.total_time_seconds + Math.floor(response.response_time_ms / 1000)
-          })
-          .eq('id', sessionId);
+          .select('cards_studied, cards_correct, cards_incorrect, total_time_seconds')
+          .eq('id', sessionId)
+          .single();
+
+        if (currentSessionData) {
+          const newStats = {
+            cards_studied: (currentSessionData.cards_studied || 0) + 1,
+            cards_correct: (currentSessionData.cards_correct || 0) + (response.was_correct ? 1 : 0),
+            cards_incorrect: (currentSessionData.cards_incorrect || 0) + (response.was_correct ? 0 : 1),
+            total_time_seconds: (currentSessionData.total_time_seconds || 0) + Math.floor(response.response_time_ms / 1000)
+          };
+
+          console.log('📊 Atualizando estatísticas da sessão:', {
+            sessionId,
+            before: currentSessionData,
+            after: newStats,
+            wasCorrect: response.was_correct
+          });
+
+          const { error: sessionUpdateError } = await supabase
+            .from('flashcard_study_sessions')
+            .update(newStats)
+            .eq('id', sessionId);
+
+          if (sessionUpdateError) {
+            console.error('❌ Erro ao atualizar estatísticas da sessão:', sessionUpdateError);
+          } else {
+            console.log('✅ Estatísticas da sessão atualizadas com sucesso!');
+          }
+        }
       }
 
       return { progress, nextReview: newReview };
@@ -505,6 +529,13 @@ export const useFlashcards = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['due-cards'] });
       queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+      queryClient.invalidateQueries({ queryKey: ['user-flashcard-stats'] });
+      // Invalidate analytics queries to update charts
+      queryClient.invalidateQueries({ queryKey: ['analytics-overall-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-weekly-progress'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-category-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-mastery-distribution'] });
+      queryClient.invalidateQueries({ queryKey: ['analytics-study-streak'] });
       refetchDueCards();
     }
   });
