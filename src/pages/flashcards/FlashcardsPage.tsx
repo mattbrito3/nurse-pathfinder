@@ -438,7 +438,8 @@ const FlashcardsPage = () => {
                 categories.map((category: FlashcardCategory) => (
                   <Card 
                     key={category.id} 
-                    className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 hover:border-primary/20"
+                    className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 hover:border-primary/20 hover:scale-[1.02] active:scale-[0.98]"
+                    onClick={() => handleBrowseCategory(category.id)}
                   >
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-3">
@@ -475,7 +476,10 @@ const FlashcardsPage = () => {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => handleBrowseCategory(category.id)}
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent double click
+                            handleBrowseCategory(category.id);
+                          }}
                           className="flex-1 group-hover:border-primary/40"
                         >
                           <BookOpen className="h-3 w-3 mr-1" />
