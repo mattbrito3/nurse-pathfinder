@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Calculator, BookOpen, Brain, FileText, User, Settings, LogOut, BarChart3 } from "lucide-react";
+import { useFormattedDashboardStats } from "@/hooks/useDashboardStats";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const { stats, isLoading: statsLoading, formatNumber, getDescription } = useFormattedDashboardStats();
 
   // Redirecionar se não estiver logado
   useEffect(() => {
@@ -132,8 +135,14 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">Em breve</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-16 mb-1" />
+              ) : (
+                <div className="text-2xl font-bold">{formatNumber(stats.calculationsPerformed)}</div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {getDescription('calculationsPerformed', stats.calculationsPerformed)}
+              </p>
             </CardContent>
           </Card>
           
@@ -144,8 +153,14 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">Em breve</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-16 mb-1" />
+              ) : (
+                <div className="text-2xl font-bold">{formatNumber(stats.termsStudied)}</div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {getDescription('termsStudied', stats.termsStudied)}
+              </p>
             </CardContent>
           </Card>
           
@@ -156,8 +171,14 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">Em breve</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-16 mb-1" />
+              ) : (
+                <div className="text-2xl font-bold">{formatNumber(stats.flashcardsReviewed)}</div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {getDescription('flashcardsReviewed', stats.flashcardsReviewed)}
+              </p>
             </CardContent>
           </Card>
           
@@ -168,8 +189,14 @@ const Dashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">1</div>
-              <p className="text-xs text-muted-foreground">Continue assim!</p>
+              {statsLoading ? (
+                <Skeleton className="h-8 w-16 mb-1" />
+              ) : (
+                <div className="text-2xl font-bold">{formatNumber(stats.studyDays)}</div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {getDescription('studyDays', stats.studyDays)}
+              </p>
             </CardContent>
           </Card>
         </div>
