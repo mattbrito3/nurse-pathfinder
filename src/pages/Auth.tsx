@@ -7,12 +7,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Heart, Loader2 } from "lucide-react";
+import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -61,14 +63,32 @@ const Auth = () => {
     const fullName = formData.get('fullName') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
 
-    if (password !== confirmPassword) {
-      setError('As senhas não coincidem');
+    // Enhanced validation
+    if (!fullName.trim()) {
+      setError('Nome completo é obrigatório.');
       setIsLoading(false);
       return;
     }
 
-    if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres');
+    if (password !== confirmPassword) {
+      setError('As senhas não coincidem.');
+      setIsLoading(false);
+      return;
+    }
+
+    if (password.length < 8) {
+      setError('A senha deve ter pelo menos 8 caracteres.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Check password strength
+    const hasLowercase = /[a-z]/.test(password);
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumbers = /\d/.test(password);
+    
+    if (!hasLowercase || !hasUppercase || !hasNumbers) {
+      setError('A senha deve conter pelo menos: uma letra maiúscula, uma minúscula e um número.');
       setIsLoading(false);
       return;
     }
@@ -76,10 +96,15 @@ const Auth = () => {
     const { error } = await signUp(email, password, fullName);
 
     if (error) {
+      console.error('Signup error:', error);
       if (error.message.includes('already registered')) {
         setError('Este email já está cadastrado. Tente fazer login.');
+      } else if (error.message.includes('Password should be at least')) {
+        setError('A senha deve ter pelo menos 8 caracteres.');
+      } else if (error.message.includes('Invalid email')) {
+        setError('Email inválido.');
       } else {
-        setError('Erro ao criar conta. Tente novamente.');
+        setError(error.message || 'Erro ao criar conta. Tente novamente.');
       }
     } else {
       toast({
@@ -146,13 +171,29 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Senha</Label>
-                    <Input
-                      id="signin-password"
-                      name="password"
-                      type="password"
-                      placeholder="Sua senha"
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="signin-password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Sua senha"
+                        required
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   <Button 
                     type="submit" 
@@ -166,6 +207,16 @@ const Auth = () => {
                     Entrar
                   </Button>
                 </form>
+                
+                <div className="text-center mt-4">
+                  <Button 
+                    variant="link" 
+                    className="p-0 h-auto font-normal text-sm text-muted-foreground hover:text-primary"
+                    onClick={() => navigate('/forgot-password')}
+                  >
+                    Esqueceu sua senha?
+                  </Button>
+                </div>
               </TabsContent>
 
               <TabsContent value="signup">
@@ -192,24 +243,56 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Senha</Label>
-                    <Input
-                      id="signup-password"
-                      name="password"
-                      type="password"
-                      placeholder="Mínimo 6 caracteres"
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="signup-password"
+                        name="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="Mínimo 8 caracteres (A-Z, a-z, 0-9)"
+                        required
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-confirm">Confirmar Senha</Label>
-                    <Input
-                      id="signup-confirm"
-                      name="confirmPassword"
-                      type="password"
-                      placeholder="Confirme sua senha"
-                      required
-                    />
-                  </div>
+                    <div className="relative">
+                      <Input
+                        id="signup-confirm"
+                        name="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        placeholder="Confirme sua senha"
+                        required
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                                             </Button>
+                     </div>
+                   </div>
                   <Button 
                     type="submit" 
                     variant="medical" 
