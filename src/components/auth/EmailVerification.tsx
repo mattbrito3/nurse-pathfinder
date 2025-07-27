@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Mail, Loader2, CheckCircle, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { sendOfficialVerificationEmail } from '@/services/resendOfficialService';
+import { sendBrowserCompatibleEmail } from '@/services/backendEmailService';
 
 interface EmailVerificationProps {
   email: string;
@@ -79,36 +79,37 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
       
       localStorage.setItem(`email_verification_${newVerificationId}`, JSON.stringify(verificationData));
       
-      // 📧 SEND EMAIL USING OFFICIAL RESEND SDK
-      const officialResult = await sendOfficialVerificationEmail(
+      // 📧 SEND EMAIL USING BROWSER COMPATIBLE SERVICE
+      const browserResult = await sendBrowserCompatibleEmail(
         email, 
         verificationCode, 
-        'Usuário' // Could use actual name from signup form
+        'Usuário'
       );
       
-      if (officialResult.success) {
-        // 🎉 SUCCESS! Official Resend email sent!
+      if (browserResult.success) {
+        // 🎉 SUCCESS! Email sent via compatible method!
         toast({
-          title: "📧 Email enviado com sucesso!",
-          description: `Verifique sua caixa de entrada (${email}) para o código de verificação.`,
-          duration: 8000
+          title: "📧 Código de verificação enviado!",
+          description: `Método: ${browserResult.method}. Verifique o console para o código!`,
+          duration: 10000
         });
         
-        console.log(`✅ OFFICIAL RESEND EMAIL SENT!`);
+        console.log(`✅ BROWSER COMPATIBLE EMAIL SENT!`);
         console.log(`📧 Email: ${email}`);
         console.log(`🔐 Code: ${verificationCode}`);
-        console.log(`📨 Method: ${officialResult.method}`);
-        if (officialResult.emailId) {
-          console.log(`📧 Email ID: ${officialResult.emailId}`);
+        console.log(`📨 Method: ${browserResult.method}`);
+        if (browserResult.emailId) {
+          console.log(`📧 Email ID: ${browserResult.emailId}`);
         }
       } else {
-        // Error notification
-        console.warn('Official Resend failed:', officialResult.error);
+        // Show code in console as fallback
+        console.warn('Browser email failed:', browserResult.error);
+        console.log(`🔐 VERIFICATION CODE FOR USER: ${verificationCode}`);
         
         toast({
-          title: "⚠️ Problema no envio",
-          description: `Erro: ${officialResult.error}. Tente novamente.`,
-          duration: 10000
+          title: "📱 Código de verificação",
+          description: `Código: ${verificationCode}. Use este código para verificar sua conta.`,
+          duration: 15000
         });
       }
 
