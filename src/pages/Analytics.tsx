@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { useFlashcards } from '@/hooks/useFlashcards';
-import { useGlossary } from '@/hooks/useGlossary';
+import { useAnalytics } from '@/hooks/useAnalytics';
 import {
   ArrowLeft,
   TrendingUp,
@@ -36,46 +35,24 @@ import {
 
 const Analytics: React.FC = () => {
   const navigate = useNavigate();
-  const { userStats, categories } = useFlashcards();
-  const { allTerms } = useGlossary();
   const [activeTab, setActiveTab] = useState<'overview' | 'progress' | 'categories'>('overview');
+  
+  const {
+    overallStats,
+    weeklyProgress,
+    categoryStats,
+    masteryDistribution,
+    studyStreak,
+    isLoading
+  } = useAnalytics();
 
-  // Mock data para demonstração - em produção viria do banco
-  const weeklyProgress = [
-    { day: 'Seg', flashcards: 12, accuracy: 85, timeSpent: 25 },
-    { day: 'Ter', flashcards: 18, accuracy: 78, timeSpent: 35 },
-    { day: 'Qua', flashcards: 15, accuracy: 92, timeSpent: 40 },
-    { day: 'Qui', flashcards: 22, accuracy: 88, timeSpent: 45 },
-    { day: 'Sex', flashcards: 8, accuracy: 95, timeSpent: 20 },
-    { day: 'Sáb', flashcards: 14, accuracy: 82, timeSpent: 30 },
-    { day: 'Dom', flashcards: 10, accuracy: 90, timeSpent: 25 }
-  ];
-
-  const categoryStats = categories.map(category => ({
-    name: category.name,
-    studied: Math.floor(Math.random() * 30) + 10,
-    mastered: Math.floor(Math.random() * 15) + 5,
-    accuracy: Math.floor(Math.random() * 30) + 70
-  }));
-
-  const masteryDistribution = [
-    { name: 'Novo', value: 45, color: '#ef4444' },
-    { name: 'Iniciante', value: 68, color: '#f97316' },
-    { name: 'Básico', value: 52, color: '#eab308' },
-    { name: 'Intermediário', value: 34, color: '#22c55e' },
-    { name: 'Avançado', value: 18, color: '#3b82f6' },
-    { name: 'Dominado', value: 12, color: '#8b5cf6' }
-  ];
-
-  const studyStreak = Array.from({ length: 30 }, (_, i) => ({
-    date: new Date(Date.now() - (29 - i) * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-    studied: Math.random() > 0.3 ? Math.floor(Math.random() * 25) + 5 : 0
-  }));
-
-  const totalFlashcards = userStats?.totalCards || 0;
-  const masteredCards = userStats?.masteredCards || 0;
-  const totalReviews = userStats?.totalReviews || 0;
-  const accuracy = userStats?.accuracy || 0;
+  // Safe defaults while loading
+  const totalFlashcards = overallStats?.totalFlashcards || 0;
+  const masteredCards = overallStats?.masteredCards || 0;
+  const totalReviews = overallStats?.totalReviews || 0;
+  const accuracy = overallStats?.accuracy || 0;
+  const currentStreak = overallStats?.currentStreak || 0;
+  const averageDaily = overallStats?.averageDaily || 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,9 +113,11 @@ const Analytics: React.FC = () => {
                   <Brain className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalFlashcards}</div>
+                  <div className="text-2xl font-bold">
+                    {isLoading ? <div className="h-8 w-16 bg-muted animate-pulse rounded"></div> : totalFlashcards}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +3 desde a última semana
+                    {averageDaily} estudos por dia em média
                   </p>
                 </CardContent>
               </Card>
@@ -149,7 +128,9 @@ const Analytics: React.FC = () => {
                   <Award className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{masteredCards}</div>
+                  <div className="text-2xl font-bold">
+                    {isLoading ? <div className="h-8 w-16 bg-muted animate-pulse rounded"></div> : masteredCards}
+                  </div>
                   <p className="text-xs text-muted-foreground">
                     {totalFlashcards > 0 ? Math.round((masteredCards / totalFlashcards) * 100) : 0}% do total
                   </p>
@@ -158,26 +139,30 @@ const Analytics: React.FC = () => {
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total de Revisões</CardTitle>
+                  <CardTitle className="text-sm font-medium">Sequência Atual</CardTitle>
                   <Target className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalReviews}</div>
+                  <div className="text-2xl font-bold">
+                    {isLoading ? <div className="h-8 w-16 bg-muted animate-pulse rounded"></div> : currentStreak}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +12 desde ontem
+                    dias consecutivos de estudo
                   </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Precisão</CardTitle>
+                  <CardTitle className="text-sm font-medium">Precisão Geral</CardTitle>
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{accuracy}%</div>
+                  <div className="text-2xl font-bold">
+                    {isLoading ? <div className="h-8 w-16 bg-muted animate-pulse rounded"></div> : `${accuracy}%`}
+                  </div>
                   <p className="text-xs text-muted-foreground">
-                    +2% desde a última semana
+                    {totalReviews} revisões totais
                   </p>
                 </CardContent>
               </Card>
@@ -190,22 +175,28 @@ const Analytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={weeklyProgress}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="day" />
-                      <YAxis />
-                      <Tooltip />
-                      <Area
-                        type="monotone"
-                        dataKey="flashcards"
-                        stroke="#3b82f6"
-                        fill="#3b82f6"
-                        fillOpacity={0.3}
-                        name="Flashcards Estudados"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={weeklyProgress}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="day" />
+                        <YAxis />
+                        <Tooltip />
+                        <Area
+                          type="monotone"
+                          dataKey="flashcards"
+                          stroke="#3b82f6"
+                          fill="#3b82f6"
+                          fillOpacity={0.3}
+                          name="Flashcards Estudados"
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -217,23 +208,33 @@ const Analytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <RechartsPieChart>
-                      <Pie
-                        data={masteryDistribution}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        dataKey="value"
-                        label={({ name, value }) => `${name}: ${value}`}
-                      >
-                        {masteryDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </RechartsPieChart>
-                  </ResponsiveContainer>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : masteryDistribution.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsPieChart>
+                        <Pie
+                          data={masteryDistribution}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          dataKey="value"
+                          label={({ name, value }) => `${name}: ${value}`}
+                        >
+                          {masteryDistribution.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </RechartsPieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <p>Comece a estudar para ver sua distribuição de domínio!</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -250,22 +251,28 @@ const Analytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={studyStreak}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line
-                        type="monotone"
-                        dataKey="studied"
-                        stroke="#22c55e"
-                        strokeWidth={2}
-                        dot={{ fill: '#22c55e' }}
-                        name="Cards Estudados"
-                      />
-                    </LineChart>
-                  </ResponsiveContainer>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={studyStreak}>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="date" />
+                        <YAxis />
+                        <Tooltip />
+                        <Line
+                          type="monotone"
+                          dataKey="studied"
+                          stroke="#22c55e"
+                          strokeWidth={2}
+                          dot={{ fill: '#22c55e' }}
+                          name="Cards Estudados"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -331,17 +338,27 @@ const Analytics: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="h-[400px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={categoryStats} layout="horizontal">
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" />
-                      <YAxis type="category" dataKey="name" width={100} />
-                      <Tooltip />
-                      <Legend />
-                      <Bar dataKey="studied" fill="#3b82f6" name="Estudados" />
-                      <Bar dataKey="mastered" fill="#22c55e" name="Dominados" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : categoryStats.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={categoryStats} layout="horizontal">
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis type="number" />
+                        <YAxis type="category" dataKey="name" width={100} />
+                        <Tooltip />
+                        <Legend />
+                        <Bar dataKey="studied" fill="#3b82f6" name="Estudados" />
+                        <Bar dataKey="mastered" fill="#22c55e" name="Dominados" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <p>Estude flashcards para ver a performance por categoria!</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
