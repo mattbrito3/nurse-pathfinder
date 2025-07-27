@@ -6,9 +6,9 @@
 import { Resend } from 'resend';
 import { VerificationEmailTemplate } from '@/components/EmailTemplate';
 
-// Production Configuration
+// Production Configuration - EXACT match with your Supabase setup
 const RESEND_API_KEY = 're_auJbm1rY_AmScYpyomnG81PeHCGsRcq8v';
-const FROM_EMAIL = 'Dose Certa <noreply@dosecerta.online>'; // Your verified domain
+const FROM_EMAIL = 'dosecertasmtp <team@dosecerta.online>'; // EXACT match with Supabase
 const DOMAIN = 'dosecerta.online';
 
 // Initialize Resend with your API key
@@ -46,8 +46,8 @@ export const sendProductionEmail = async (
         firstName: userName || 'Usuário',
         verificationCode: verificationCode
       }),
-      // Optional: Add reply-to
-      reply_to: 'support@dosecerta.online',
+      // Optional: Add reply-to (using same as from for consistency)
+      reply_to: 'team@dosecerta.online',
       // Optional: Add tags for tracking
       tags: [
         {

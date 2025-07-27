@@ -31,7 +31,7 @@ export function VerificationEmailTemplate({
             margin: '0', 
             fontSize: '28px' 
           }}>
-            🩺 Nurse Pathfinder
+                         🩺 Dose Certa
           </h1>
           <p style={{ 
             color: '#64748b', 
@@ -147,7 +147,7 @@ export function VerificationEmailTemplate({
             fontSize: '12px', 
             margin: '0' 
           }}>
-            © 2024 Nurse Pathfinder - Transformando o estudo de enfermagem
+                         © 2024 Dose Certa - Transformando o estudo de enfermagem
           </p>
         </div>
       </div>
