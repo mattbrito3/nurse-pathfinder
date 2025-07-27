@@ -51,6 +51,13 @@ const Analytics: React.FC = () => {
   // Enable real-time updates
   const { isSubscribed } = useRealtimeAnalytics();
 
+  // Debug categoryStats data
+  React.useEffect(() => {
+    if (categoryStats && categoryStats.length > 0) {
+      console.log('📊 Category Stats Debug:', categoryStats);
+    }
+  }, [categoryStats]);
+
   // Safe defaults while loading
   const totalFlashcards = overallStats?.totalFlashcards || 0;
   const masteredCards = overallStats?.masteredCards || 0;
@@ -348,21 +355,44 @@ const Analytics: React.FC = () => {
                 <CardTitle>Performance por Categoria</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[400px]">
+                <div className="h-[500px]">
                   {isLoading ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
                   ) : categoryStats.length > 0 ? (
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={categoryStats} layout="horizontal">
+                      <BarChart 
+                        data={categoryStats} 
+                        layout="vertical"
+                        margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                      >
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis type="number" />
-                        <YAxis type="category" dataKey="name" width={100} />
-                        <Tooltip />
+                        <YAxis 
+                          type="category" 
+                          dataKey="name" 
+                          width={120}
+                          tick={{ fontSize: 12 }}
+                          interval={0}
+                        />
+                        <Tooltip 
+                          formatter={(value, name) => [value, name]}
+                          labelFormatter={(label) => `Categoria: ${label}`}
+                        />
                         <Legend />
-                        <Bar dataKey="studied" fill="#3b82f6" name="Estudados" />
-                        <Bar dataKey="mastered" fill="#22c55e" name="Dominados" />
+                        <Bar 
+                          dataKey="studied" 
+                          fill="#3b82f6" 
+                          name="Estudados"
+                          minPointSize={5}
+                        />
+                        <Bar 
+                          dataKey="mastered" 
+                          fill="#22c55e" 
+                          name="Dominados"
+                          minPointSize={5}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
@@ -380,16 +410,47 @@ const Analytics: React.FC = () => {
                 <CardTitle>Precisão por Categoria</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={categoryStats}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis domain={[0, 100]} />
-                      <Tooltip formatter={(value) => [`${value}%`, 'Precisão']} />
-                      <Bar dataKey="accuracy" fill="#8b5cf6" name="Precisão (%)" />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="h-[400px]">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : categoryStats.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={categoryStats}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="name" 
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                          tick={{ fontSize: 12 }}
+                          interval={0}
+                        />
+                        <YAxis 
+                          domain={[0, 100]} 
+                          label={{ value: 'Precisão (%)', angle: -90, position: 'insideLeft' }}
+                        />
+                        <Tooltip 
+                          formatter={(value) => [`${value}%`, 'Precisão']}
+                          labelFormatter={(label) => `Categoria: ${label}`}
+                        />
+                        <Bar 
+                          dataKey="accuracy" 
+                          fill="#8b5cf6" 
+                          name="Precisão (%)"
+                          minPointSize={2}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      <p>Estude flashcards para ver a precisão por categoria!</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
