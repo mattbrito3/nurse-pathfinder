@@ -167,7 +167,9 @@ const CreateFlashcardPage: React.FC = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {categoriesLoading ? (
-                          <SelectItem value="" disabled>Carregando...</SelectItem>
+                          <div className="py-2 px-3 text-sm text-muted-foreground">Carregando categorias...</div>
+                        ) : categories.length === 0 ? (
+                          <div className="py-2 px-3 text-sm text-muted-foreground">Nenhuma categoria encontrada</div>
                         ) : (
                           categories.map((category) => (
                             <SelectItem key={category.id} value={category.id}>
