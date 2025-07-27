@@ -466,7 +466,22 @@ export const useFlashcards = () => {
       // 4. Update progress
       const qualityHistory = [...progress.quality_responses, response.quality].slice(-10); // Keep last 10
       const newConsecutive = response.was_correct ? progress.consecutive_correct + 1 : 0;
-      const newMasteryLevel = Math.min(5, Math.floor(newConsecutive / 3)); // Master after 3 consecutive correct
+      
+      // 🎯 IMPROVED MASTERY ALGORITHM - More practical and faster progression
+      let newMasteryLevel = 0;
+      if (newConsecutive >= 8) {
+        newMasteryLevel = 5; // DOMINADO after 8 consecutive
+      } else if (newConsecutive >= 6) {
+        newMasteryLevel = 4; // Avançado after 6 consecutive
+      } else if (newConsecutive >= 4) {
+        newMasteryLevel = 3; // Intermediário after 4 consecutive
+      } else if (newConsecutive >= 3) {
+        newMasteryLevel = 2; // Básico after 3 consecutive
+      } else if (newConsecutive >= 2) {
+        newMasteryLevel = 1; // Iniciante after 2 consecutive
+      } else {
+        newMasteryLevel = 0; // Novo
+      }
 
       // 🔍 DEBUG: Log mastery calculation
       console.log('🎯 MASTERY CALCULATION DEBUG:', {
