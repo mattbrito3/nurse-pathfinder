@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Mail, Loader2, CheckCircle, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { sendVerificationEmailReal } from '@/services/realEmailService';
 
 interface EmailVerificationProps {
   email: string;
@@ -78,32 +79,43 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
       
       localStorage.setItem(`email_verification_${newVerificationId}`, JSON.stringify(verificationData));
       
-      // Send email with verification code using Supabase Edge Function
-      const { error } = await supabase.functions.invoke('send-verification-email', {
-        body: {
-          email: email,
-          code: verificationCode,
-          type: 'email_verification'
-        }
-      });
-
-      if (error) {
-        // If edge function fails, simulate sending (for demo purposes)
-        console.warn('Edge function failed, simulating email send:', error);
-        
-        // Show the code in console for testing (remove in production)
-        console.log(`🔐 VERIFICATION CODE for ${email}: ${verificationCode}`);
-        
+      // Try to send real email first
+      const realEmailResult = await sendVerificationEmailReal(email, verificationCode);
+      
+      if (realEmailResult.success) {
+        // Real email sent successfully!
         toast({
-          title: "Código enviado! (Demo Mode)",
-          description: `Verifique o console para o código de verificação (${verificationCode})`,
-          duration: 8000
+          title: "📧 Email enviado!",
+          description: `Código enviado para ${email} via ${realEmailResult.method}`,
+          duration: 5000
         });
       } else {
-        toast({
-          title: "Código enviado!",
-          description: `Um código de 6 dígitos foi enviado para ${email}`,
+        // Fallback: Try Supabase Edge Function
+        const { error } = await supabase.functions.invoke('send-verification-email', {
+          body: {
+            email: email,
+            code: verificationCode,
+            type: 'email_verification'
+          }
         });
+
+        if (error) {
+          // Final fallback: Console mode (for development)
+          console.warn('All email services failed, using console mode:', error);
+          console.log(`🔐 VERIFICATION CODE for ${email}: ${verificationCode}`);
+          
+          toast({
+            title: "⚠️ Modo Demo Ativo",
+            description: `Código no console: ${verificationCode} (serviços de email indisponíveis)`,
+            duration: 10000
+          });
+        } else {
+          toast({
+            title: "📧 Email enviado!",
+            description: `Código enviado para ${email} via Supabase`,
+            duration: 5000
+          });
+        }
       }
 
       setVerificationId(newVerificationId);
