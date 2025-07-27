@@ -326,25 +326,28 @@ const MedicationCalculator = () => {
       {/* Header */}
       <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b border-border/40">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar ao Dashboard
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <Button variant="ghost" onClick={() => navigate('/dashboard')} size="sm">
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Voltar ao Dashboard</span>
             </Button>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                <Calculator className="h-4 w-4 text-blue-600" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                <Calculator className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
               </div>
-              <h1 className="text-xl font-bold text-foreground">Calculadora de Medicação</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
+                <span className="sm:hidden">Calculadora</span>
+                <span className="hidden sm:inline">Calculadora de Medicação</span>
+              </h1>
             </div>
           </div>
-          <Badge variant="secondary" className="hidden md:flex">
+          <Badge variant="secondary" className="hidden md:flex text-xs">
             Profissional
           </Badge>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto">
           {/* Alerta de segurança */}
           <Alert className="mb-6 border-red-200 bg-red-50">
@@ -355,14 +358,27 @@ const MedicationCalculator = () => {
           </Alert>
 
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CalculationType | 'history')}>
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="dosage">Dosagem</TabsTrigger>
-              <TabsTrigger value="infusion">Gotejamento</TabsTrigger>
-              <TabsTrigger value="conversion">Conversão</TabsTrigger>
-              <TabsTrigger value="concentration">Diluição</TabsTrigger>
-              <TabsTrigger value="history" className="flex items-center gap-2">
-                <History className="h-4 w-4" />
-                Histórico
+            <TabsList className="grid w-full grid-cols-5 h-auto">
+              <TabsTrigger value="dosage" className="text-xs sm:text-sm px-2 py-2">
+                <span className="sm:hidden">Dose</span>
+                <span className="hidden sm:inline">Dosagem</span>
+              </TabsTrigger>
+              <TabsTrigger value="infusion" className="text-xs sm:text-sm px-2 py-2">
+                <span className="sm:hidden">Gotej.</span>
+                <span className="hidden sm:inline">Gotejamento</span>
+              </TabsTrigger>
+              <TabsTrigger value="conversion" className="text-xs sm:text-sm px-2 py-2">
+                <span className="sm:hidden">Conv.</span>
+                <span className="hidden sm:inline">Conversão</span>
+              </TabsTrigger>
+              <TabsTrigger value="concentration" className="text-xs sm:text-sm px-2 py-2">
+                <span className="sm:hidden">Dil.</span>
+                <span className="hidden sm:inline">Diluição</span>
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex items-center gap-1 text-xs sm:text-sm px-2 py-2">
+                <History className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="sm:hidden">Hist.</span>
+                <span className="hidden sm:inline">Histórico</span>
               </TabsTrigger>
             </TabsList>
 
@@ -376,7 +392,7 @@ const MedicationCalculator = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="weight">Peso do Paciente (kg)</Label>
                       <Input

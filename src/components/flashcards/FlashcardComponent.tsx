@@ -155,19 +155,20 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
       )}
 
       {/* Card Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
           <Badge variant="outline" className="text-xs">
             {flashcard.category_name}
           </Badge>
           <Badge 
             className={cn("text-xs", difficultyColors[flashcard.difficulty_level as keyof typeof difficultyColors])}
           >
-            Nível {flashcard.difficulty_level}
+            <span className="sm:hidden">Nv.</span>
+            <span className="hidden sm:inline">Nível</span> {flashcard.difficulty_level}
           </Badge>
           <div className="flex items-center gap-1 text-xs">
             <Heart className={cn("h-3 w-3", masteryColors[(flashcard.progress?.mastery_level || flashcard.mastery_level || 0) as keyof typeof masteryColors])} />
-            <span className="text-muted-foreground">{getMasteryText(flashcard.progress?.mastery_level || flashcard.mastery_level || 0)}</span>
+            <span className="text-muted-foreground hidden sm:inline">{getMasteryText(flashcard.progress?.mastery_level || flashcard.mastery_level || 0)}</span>
           </div>
         </div>
         {showViewCount && (
@@ -248,7 +249,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
             </p>
           </div>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
             {qualityButtons.map((button) => {
               const IconComponent = button.icon;
               return (
@@ -257,15 +258,15 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
                   onClick={() => handleQualityResponse(button.value)}
                   disabled={isLoading}
                   className={cn(
-                    "flex flex-col items-center gap-2 h-auto py-4 px-3 text-white transition-all",
+                    "flex flex-col items-center gap-1 sm:gap-2 h-auto py-3 sm:py-4 px-2 sm:px-3 text-white transition-all",
                     button.color,
                     "hover:scale-105 active:scale-95"
                   )}
                 >
-                  <IconComponent className="h-5 w-5" />
+                  <IconComponent className="h-4 w-4 sm:h-5 sm:w-5" />
                   <div className="text-center">
                     <div className="font-semibold text-xs">{button.label}</div>
-                    <div className="text-xs opacity-90">{button.description}</div>
+                    <div className="text-xs opacity-90 hidden sm:block">{button.description}</div>
                   </div>
                 </Button>
               );

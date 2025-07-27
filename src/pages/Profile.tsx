@@ -256,25 +256,27 @@ const Profile = () => {
       {/* Header */}
       <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b border-border/40">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar ao Dashboard
+          <div className="flex items-center gap-2 sm:gap-4">
+            <Button variant="ghost" onClick={() => navigate('/dashboard')} size="sm">
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Voltar ao Dashboard</span>
             </Button>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                <User className="h-4 w-4 text-blue-600" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                <User className="h-3 w-3 sm:h-4 sm:w-4 text-blue-600" />
               </div>
-              <h1 className="text-xl font-bold text-foreground">Configurações do Perfil</h1>
+              <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
+                <span className="hidden sm:inline">Configurações do </span>Perfil
+              </h1>
             </div>
           </div>
-          <Badge variant="secondary" className="hidden md:flex">
+          <Badge variant="secondary" className="hidden md:flex text-xs">
             Conta Profissional
           </Badge>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto space-y-6">
           
           {/* Profile Picture Card */}
@@ -289,14 +291,14 @@ const Profile = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-6">
-                <Avatar className="h-24 w-24">
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                <Avatar className="h-20 w-20 sm:h-24 sm:w-24">
                   <AvatarImage src={profile.avatar_url} alt={profile.full_name} />
-                  <AvatarFallback className="text-lg">
+                  <AvatarFallback className="text-base sm:text-lg">
                     {getInitials(profile.full_name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="space-y-2">
+                <div className="space-y-3 text-center sm:text-left">
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -304,15 +306,16 @@ const Profile = () => {
                     onChange={handleImageUpload}
                     className="hidden"
                   />
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       variant="outline"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={isUploadingImage}
                       size="sm"
+                      className="w-full sm:w-auto"
                     >
-                      <Upload className="h-4 w-4 mr-2" />
-                      {isUploadingImage ? 'Enviando...' : 'Alterar Foto'}
+                      <Upload className="h-4 w-4 sm:mr-2" />
+                      <span className="sm:inline">{isUploadingImage ? 'Enviando...' : 'Alterar Foto'}</span>
                     </Button>
                     {profile.avatar_url && (
                       <Button
@@ -320,9 +323,10 @@ const Profile = () => {
                         onClick={handleRemoveImage}
                         disabled={isUploadingImage}
                         size="sm"
+                        className="w-full sm:w-auto"
                       >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Remover
+                        <Trash2 className="h-4 w-4 sm:mr-2" />
+                        <span className="sm:inline">Remover</span>
                       </Button>
                     )}
                   </div>

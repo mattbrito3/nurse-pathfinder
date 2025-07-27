@@ -120,22 +120,29 @@ const FlashcardsPage = () => {
       {/* Header */}
       <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b border-border/40">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
-              ← Dashboard
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <Button variant="ghost" onClick={() => navigate('/dashboard')} size="sm">
+              <span className="sm:hidden">←</span>
+              <span className="hidden sm:inline">← Dashboard</span>
             </Button>
             <div className="flex items-center gap-2">
-              <Brain className="h-6 w-6 text-primary" />
-              <h1 className="text-xl font-bold text-foreground">Flashcards Inteligentes</h1>
+              <Brain className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
+              <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
+                <span className="sm:hidden">Flashcards</span>
+                <span className="hidden sm:inline">Flashcards Inteligentes</span>
+              </h1>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+            <div className="hidden sm:block">
+              <ThemeToggle />
+            </div>
             <Button 
               variant="outline" 
               size="sm"
               onClick={() => navigate('/dashboard/flashcards/my')}
+              className="hidden md:flex"
             >
               <BookOpen className="h-4 w-4 mr-2" />
               Meus Flashcards
@@ -145,8 +152,8 @@ const FlashcardsPage = () => {
               size="sm"
               onClick={() => navigate('/dashboard/flashcards/create')}
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Criar Flashcard
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Criar Flashcard</span>
             </Button>
           </div>
         </div>

@@ -93,29 +93,33 @@ const Dashboard = () => {
       {/* Header */}
       <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b border-border/40">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/')}>
-              ← Voltar ao Site
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <Button variant="ghost" onClick={() => navigate('/')} size="sm" className="shrink-0">
+              <span className="sm:hidden">←</span>
+              <span className="hidden sm:inline">← Voltar ao Site</span>
             </Button>
-            <h1 className="text-xl font-bold text-foreground">Dashboard - Dose Certa</h1>
+            <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
+              <span className="sm:hidden">Dose Certa</span>
+              <span className="hidden sm:inline">Dashboard - Dose Certa</span>
+            </h1>
           </div>
           
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground hidden md:block">
-              Olá, {user.user_metadata?.full_name || user.email}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <span className="text-xs sm:text-sm text-muted-foreground hidden lg:block max-w-32 truncate">
+              Olá, {user.user_metadata?.full_name || user.email?.split('@')[0]}
             </span>
             <ThemeToggle />
-            <Button variant="ghost" size="icon" onClick={() => navigate('/profile')}>
+            <Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="shrink-0">
               <User className="h-4 w-4" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleSignOut}>
+            <Button variant="ghost" size="icon" onClick={handleSignOut} className="shrink-0">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-foreground mb-2">
@@ -127,7 +131,7 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -204,7 +208,7 @@ const Dashboard = () => {
         {/* Main Tools */}
         <div className="mb-8">
           <h3 className="text-2xl font-bold text-foreground mb-6">Suas Ferramentas</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {tools.map((tool, index) => (
               <Card 
                 key={index} 

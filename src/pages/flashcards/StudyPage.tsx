@@ -306,40 +306,42 @@ const StudyPage: React.FC = () => {
       {/* Header */}
       <header className="bg-background/80 backdrop-blur border-b sticky top-0 z-40">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <Button 
               variant="ghost" 
               size="sm"
               onClick={() => navigate('/dashboard/flashcards')}
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Sair do Estudo
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Sair do Estudo</span>
             </Button>
             <div className="flex items-center gap-2">
-              <Badge variant="outline">
+              <Badge variant="outline" className="text-xs">
                 {sessionData.session_type === 'review' ? 'Revisão' : 'Aprendizado'}
               </Badge>
-              <span className="text-sm text-muted-foreground">
-                {currentCardIndex + 1} de {studyCards.length}
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                {currentCardIndex + 1}/{studyCards.length}
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <ThemeToggle />
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+            <div className="hidden sm:block">
+              <ThemeToggle />
+            </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsPaused(!isPaused)}
             >
-              {isPaused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+              {isPaused ? <Play className="h-3 w-3 sm:h-4 sm:w-4" /> : <Pause className="h-3 w-3 sm:h-4 sm:w-4" />}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleSkipCard}
             >
-              <SkipForward className="h-4 w-4" />
+              <SkipForward className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
         </div>
