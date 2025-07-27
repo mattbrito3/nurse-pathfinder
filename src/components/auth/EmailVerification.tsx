@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Mail, Loader2, CheckCircle, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { sendUltimateEmail } from '@/services/ultimateEmailService';
+import { sendVerificationEmailReal } from '@/services/resendEmailService';
 
 interface EmailVerificationProps {
   email: string;
@@ -79,30 +79,32 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
       
       localStorage.setItem(`email_verification_${newVerificationId}`, JSON.stringify(verificationData));
       
-      // 🔥 USE THE ULTIMATE EMAIL SERVICE (GUARANTEED TO WORK)
-      const ultimateResult = await sendUltimateEmail(email, verificationCode);
+      // 📧 SEND REAL EMAIL TO INBOX USING RESEND
+      const resendResult = await sendVerificationEmailReal(email, verificationCode);
       
-      if (ultimateResult.success) {
-        // 🏆 ULTIMATE SUCCESS!
+      if (resendResult.success) {
+        // 🎉 SUCCESS! Real email sent to inbox!
         toast({
-          title: "🎯 Código de verificação enviado!",
-          description: `Método usado: ${ultimateResult.method}. Verifique o console para o código!`,
-          duration: 10000
+          title: "📧 Email enviado com sucesso!",
+          description: `Verifique sua caixa de entrada (${email}) para o código de verificação.`,
+          duration: 8000
         });
         
-        console.log(`🎉 ULTIMATE EMAIL SERVICE SUCCESS!`);
+        console.log(`✅ REAL EMAIL SENT TO INBOX!`);
         console.log(`📧 Email: ${email}`);
         console.log(`🔐 Code: ${verificationCode}`);
-        console.log(`🚀 Method: ${ultimateResult.method}`);
+        console.log(`📨 Method: ${resendResult.method}`);
+        if (resendResult.emailId) {
+          console.log(`📧 Email ID: ${resendResult.emailId}`);
+        }
       } else {
-        // This is literally impossible with our ultimate service
-        console.error('❌ IMPOSSIBLE: Ultimate service failed:', ultimateResult.error);
-        console.log(`🔐 EMERGENCY FALLBACK CODE: ${verificationCode}`);
+        // Fallback notification
+        console.warn('Resend failed:', resendResult.error);
         
         toast({
-          title: "🚨 Modo de Emergência",
-          description: `Código de emergência: ${verificationCode}`,
-          duration: 15000
+          title: "⚠️ Problema no envio",
+          description: `Erro: ${resendResult.error}. Tente novamente ou use outro email.`,
+          duration: 10000
         });
       }
 
