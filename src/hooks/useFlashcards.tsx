@@ -468,6 +468,19 @@ export const useFlashcards = () => {
       const newConsecutive = response.was_correct ? progress.consecutive_correct + 1 : 0;
       const newMasteryLevel = Math.min(5, Math.floor(newConsecutive / 3)); // Master after 3 consecutive correct
 
+      // 🔍 DEBUG: Log mastery calculation
+      console.log('🎯 MASTERY CALCULATION DEBUG:', {
+        flashcardId,
+        quality: response.quality,
+        was_correct: response.was_correct,
+        old_consecutive: progress.consecutive_correct,
+        new_consecutive: newConsecutive,
+        old_mastery: progress.mastery_level,
+        new_mastery: newMasteryLevel,
+        times_correct: progress.times_correct + (response.was_correct ? 1 : 0),
+        times_seen: progress.times_seen + 1
+      });
+
       const { error: updateError } = await supabase
         .from('user_flashcard_progress')
         .update({
