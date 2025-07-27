@@ -21,8 +21,10 @@ const ForgotPassword = () => {
   const { 
     isValidating: isValidatingEmail, 
     isValid: isEmailValid, 
+    confidence: emailConfidence,
     error: emailError, 
     suggestion: emailSuggestion,
+    warning: emailWarning,
     applySuggestion 
   } = useEmailValidation(email);
 
@@ -187,9 +189,21 @@ const ForgotPassword = () => {
               )}
               
               {isEmailValid === true && !isValidatingEmail && (
-                <div className="text-sm text-green-600 flex items-center gap-1">
-                  <Check className="h-3 w-3" />
-                  Email válido
+                <div className="space-y-1">
+                  <div className={`text-sm flex items-center gap-1 ${
+                    emailConfidence === 'high' ? 'text-green-600' : 
+                    emailConfidence === 'medium' ? 'text-yellow-600' : 'text-orange-600'
+                  }`}>
+                    <Check className="h-3 w-3" />
+                    Email válido {emailConfidence === 'high' ? '(Alta confiança)' : 
+                                  emailConfidence === 'medium' ? '(Média confiança)' : '(Baixa confiança)'}
+                  </div>
+                  {emailWarning && (
+                    <div className="text-xs text-yellow-600 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {emailWarning}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

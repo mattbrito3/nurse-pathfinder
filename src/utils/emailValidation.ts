@@ -48,8 +48,7 @@ export const isCommonDomain = (email: string): boolean => {
 };
 
 /**
- * Check if domain exists using DNS lookup (browser-compatible version)
- * This uses a public DNS-over-HTTPS service
+ * Check if domain exists and accepts email using DNS MX records
  */
 export const checkDomainExists = async (domain: string): Promise<boolean> => {
   try {
@@ -72,9 +71,121 @@ export const checkDomainExists = async (domain: string): Promise<boolean> => {
     return data.Status === 0 && data.Answer && data.Answer.length > 0;
   } catch (error) {
     console.warn('Domain check failed:', error);
-    // Fallback: if DNS check fails, allow the email (don't block legitimate users)
-    return true;
+    // Fallback: if DNS check fails, be more conservative
+    return false;
   }
+};
+
+/**
+ * Check for suspicious email patterns that are likely fake
+ */
+export const isSuspiciousEmail = (email: string): boolean => {
+  const [localPart, domain] = email.split('@');
+  if (!localPart || !domain) return true;
+  
+  // Patterns that are usually fake/test emails
+  const suspiciousPatterns = [
+    // Random numbers/letters (common fake patterns)
+    /^[a-z]+\d{5,}$/, // like: test12345, user123456, mateus123457
+    /^\d{5,}[a-z]*$/, // like: 12345test, 123456
+    /^[a-z]{1,4}\d{6,}$/, // like: ab123456, x1234567
+    
+    // Repeated patterns
+    /(.)\1{4,}/, // like: aaaaa, 11111
+    /^(ha){3,}/, // like: hahahaha, hahahahahah123
+    /^(he){3,}/, // like: hehehehe
+    /^(la){3,}/, // like: lalalala
+    /^(test|fake|example|sample|demo|temp|temporary)\d*$/, // test emails
+    
+    // Sequential patterns
+    /^(abc|123){2,}/, // like: abcabc, 123123
+    /^qwerty\d*$/, // like: qwerty123
+    /^asdf\d*$/, // like: asdf123
+    /^(password|admin|root|user)\d*$/, // obvious fake
+    
+    // Very long random strings without meaning
+    /^[a-z0-9]{15,}$/, // 15+ random chars
+    
+    // Common fake patterns for Gmail specifically
+    /^[a-z]+\d{6,}$/, // 6+ numbers at end (very suspicious)
+    /^(random|fake|dummy|none|null|void)\d*$/, // clearly fake
+    
+    // Keyboard mashing patterns
+    /^[qwertyuiop]{4,}/, // keyboard row
+    /^[asdfghjkl]{4,}/, // keyboard row
+    /^[zxcvbnm]{4,}/, // keyboard row
+  ];
+  
+  return suspiciousPatterns.some(pattern => pattern.test(localPart.toLowerCase()));
+};
+
+/**
+ * Enhanced email validation with stricter rules
+ */
+export const validateEmailStrict = async (email: string): Promise<{
+  isValid: boolean;
+  confidence: 'high' | 'medium' | 'low';
+  error?: string;
+  suggestion?: string;
+  warning?: string;
+}> => {
+  // Step 1: Basic format validation
+  if (!isValidEmailFormat(email)) {
+    return {
+      isValid: false,
+      confidence: 'high',
+      error: 'Formato de email inválido.'
+    };
+  }
+  
+  const domain = email.split('@')[1].toLowerCase();
+  
+  // Step 2: Check for obvious fake patterns
+  if (isSuspiciousEmail(email)) {
+    return {
+      isValid: false,
+      confidence: 'high',
+      error: 'Este email parece ser falso ou gerado aleatoriamente.',
+      suggestion: 'Use um email real que você tenha acesso.'
+    };
+  }
+  
+  // Step 3: Check for common typos and suggest corrections
+  const suggestion = suggestEmailCorrection(email);
+  if (suggestion && suggestion !== email) {
+    return {
+      isValid: false,
+      confidence: 'medium',
+      error: 'Possível erro de digitação no email.',
+      suggestion: `Você quis dizer: ${suggestion}?`
+    };
+  }
+  
+  // Step 4: Check if it's a common domain (high confidence)
+  if (isCommonDomain(email)) {
+    return { 
+      isValid: true, 
+      confidence: 'high',
+      warning: 'Lembre-se: você deve ter acesso a este email para confirmar sua conta.'
+    };
+  }
+  
+  // Step 5: For uncommon domains, check if they exist
+  const domainExists = await checkDomainExists(domain);
+  if (!domainExists) {
+    return {
+      isValid: false,
+      confidence: 'high',
+      error: 'Domínio de email não encontrado ou não aceita emails.'
+    };
+  }
+  
+  // Step 6: Uncommon but valid domain
+  return { 
+    isValid: true, 
+    confidence: 'medium',
+    warning: 'Domínio menos comum. Certifique-se de que o email está correto.'
+  };
 };
 
 /**

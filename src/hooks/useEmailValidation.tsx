@@ -1,19 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
-import { validateEmail, suggestEmailCorrection } from '@/utils/emailValidation';
+import { validateEmailStrict } from '@/utils/emailValidation';
 
 interface ValidationState {
   isValidating: boolean;
   isValid: boolean | null;
+  confidence: 'high' | 'medium' | 'low' | null;
   error: string | null;
   suggestion: string | null;
+  warning: string | null;
 }
 
 export const useEmailValidation = (email: string, debounceMs: number = 800) => {
   const [state, setState] = useState<ValidationState>({
     isValidating: false,
     isValid: null,
+    confidence: null,
     error: null,
-    suggestion: null
+    suggestion: null,
+    warning: null
   });
 
   const validateEmailDebounced = useCallback(async (emailToValidate: string) => {
@@ -21,8 +25,10 @@ export const useEmailValidation = (email: string, debounceMs: number = 800) => {
       setState({
         isValidating: false,
         isValid: null,
+        confidence: null,
         error: null,
-        suggestion: null
+        suggestion: null,
+        warning: null
       });
       return;
     }
@@ -30,19 +36,23 @@ export const useEmailValidation = (email: string, debounceMs: number = 800) => {
     setState(prev => ({ ...prev, isValidating: true }));
 
     try {
-      const result = await validateEmail(emailToValidate);
+      const result = await validateEmailStrict(emailToValidate);
       setState({
         isValidating: false,
         isValid: result.isValid,
+        confidence: result.confidence,
         error: result.error || null,
-        suggestion: result.suggestion || null
+        suggestion: result.suggestion || null,
+        warning: result.warning || null
       });
     } catch (error) {
       setState({
         isValidating: false,
         isValid: false,
+        confidence: 'high',
         error: 'Erro ao validar email. Tente novamente.',
-        suggestion: null
+        suggestion: null,
+        warning: null
       });
     }
   }, []);
