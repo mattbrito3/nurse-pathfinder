@@ -30,8 +30,11 @@ const EditFlashcardPage: React.FC = () => {
   const { flashcardId } = useParams<{ flashcardId: string }>();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { flashcards, flashcardsLoading, updateFlashcard, isUpdatingFlashcard } = useFlashcards();
+  const { useFlashcardsByCategory, updateFlashcard, isUpdatingFlashcard } = useFlashcards();
   const { categories, categoriesLoading } = useCategories();
+  
+  // Get all flashcards to find the one to edit
+  const { data: allFlashcards = [], isLoading: flashcardsLoading } = useFlashcardsByCategory();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -46,7 +49,7 @@ const EditFlashcardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Find the flashcard to edit
-  const flashcard = flashcards.find(f => f.id === flashcardId);
+  const flashcard = allFlashcards.find(f => f.id === flashcardId);
 
   // Difficulty options
   const difficultyOptions = [

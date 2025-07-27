@@ -35,19 +35,22 @@ const MyFlashcardsPage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { flashcards, flashcardsLoading, deleteFlashcard, isDeletingFlashcard } = useFlashcards();
+  const { useFlashcardsByCategory, deleteFlashcard, isDeletingFlashcard } = useFlashcards();
+  
+  // Get all flashcards (no category filter)
+  const { data: allFlashcards = [], isLoading: flashcardsLoading } = useFlashcardsByCategory();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
-  // Filter user's own flashcards
-  const myFlashcards = flashcards.filter(flashcard => flashcard.created_by === user?.id);
+  // Filter user's own flashcards (with safety check)
+  const myFlashcards = allFlashcards.filter(flashcard => flashcard.created_by === user?.id);
 
   // Apply search and category filters
   const filteredFlashcards = myFlashcards.filter(flashcard => {
     const matchesSearch = searchQuery === '' || 
-      flashcard.front.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      flashcard.back.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      flashcard.front?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      flashcard.back?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       flashcard.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCategory = selectedCategory === 'all' || flashcard.category_id === selectedCategory;
