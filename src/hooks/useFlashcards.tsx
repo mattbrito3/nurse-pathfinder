@@ -250,7 +250,7 @@ export const useFlashcards = () => {
       // For learning/practice, get cards from specific category or all
       let query = supabase
         .from('flashcards')
-        .select('id, front, back, difficulty_level, category_id, category:flashcard_categories(name)')
+        .select('id, front, back, difficulty_level, category_id, category:flashcard_categories(name), created_by, is_public')
         .or(`is_public.eq.true,and(is_public.eq.false,created_by.eq.${user.id})`);
 
       if (categoryId) {
@@ -263,6 +263,22 @@ export const useFlashcards = () => {
       query = query.limit(limit);
 
       const { data, error } = await query;
+      
+      // 🔍 DEBUG: Log what cards are being returned
+      console.log('🎯 getStudyCards DEBUG:', {
+        sessionType,
+        categoryId,
+        limit,
+        user_id: user.id,
+        total_cards_found: data?.length || 0,
+        cards_detail: data?.map(card => ({
+          id: card.id,
+          front: card.front.substring(0, 30) + '...',
+          is_public: card.is_public,
+          created_by: card.created_by,
+          is_mine: card.created_by === user.id
+        }))
+      });
       if (error) throw error;
 
       let mappedCards = data?.map((card, index) => ({
