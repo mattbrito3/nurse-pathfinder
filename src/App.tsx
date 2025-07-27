@@ -24,6 +24,8 @@ const FlashcardsPage = lazy(() => import("./pages/flashcards/FlashcardsPage"));
 const StudyPage = lazy(() => import("./pages/flashcards/StudyPage"));
 const BrowsePage = lazy(() => import("./pages/flashcards/BrowsePage"));
 const CreateFlashcardPage = lazy(() => import("./pages/flashcards/CreateFlashcardPage"));
+const MyFlashcardsPage = lazy(() => import("./pages/flashcards/MyFlashcardsPage"));
+const EditFlashcardPage = lazy(() => import("./pages/flashcards/EditFlashcardPage"));
 
 // Configuração otimizada do React Query
 const queryClient = new QueryClient({
@@ -83,6 +85,8 @@ const App = () => {
               <Route path="/dashboard/glossary" element={<MedicalGlossary />} />
                                       <Route path="/dashboard/flashcards" element={<FlashcardsPage />} />
             <Route path="/dashboard/flashcards/create" element={<CreateFlashcardPage />} />
+            <Route path="/dashboard/flashcards/my" element={<MyFlashcardsPage />} />
+            <Route path="/dashboard/flashcards/edit/:flashcardId" element={<EditFlashcardPage />} />
             <Route path="/dashboard/flashcards/browse" element={<BrowsePage />} />
             <Route path="/dashboard/flashcards/browse/favorites" element={<BrowsePage />} />
             <Route path="/dashboard/flashcards/browse/:categoryId" element={<BrowsePage />} />

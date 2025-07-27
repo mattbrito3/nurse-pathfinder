@@ -135,6 +135,14 @@ const FlashcardsPage = () => {
             <Button 
               variant="outline" 
               size="sm"
+              onClick={() => navigate('/dashboard/flashcards/my')}
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Meus Flashcards
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
               onClick={() => navigate('/dashboard/flashcards/create')}
             >
               <Plus className="h-4 w-4 mr-2" />

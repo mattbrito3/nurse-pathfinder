@@ -116,7 +116,7 @@ export const useFlashcards = () => {
             *,
             category:flashcard_categories(*)
           `)
-          .eq('is_public', true)
+          .or(`is_public.eq.true,and(is_public.eq.false,created_by.eq.${user.id})`)
           .order('created_at', { ascending: false });
 
         if (categoryId) {
@@ -176,7 +176,7 @@ export const useFlashcards = () => {
             *,
             category:flashcard_categories(*)
           `)
-          .eq('is_public', true)
+          .or(`is_public.eq.true,and(is_public.eq.false,created_by.eq.${user.id})`)
           .in('id', flashcardIds)
           .order('created_at', { ascending: false });
         
@@ -251,7 +251,7 @@ export const useFlashcards = () => {
       let query = supabase
         .from('flashcards')
         .select('id, front, back, difficulty_level, category_id, category:flashcard_categories(name)')
-        .eq('is_public', true);
+        .or(`is_public.eq.true,and(is_public.eq.false,created_by.eq.${user.id})`);
 
       if (categoryId) {
         query = query.eq('category_id', categoryId);
@@ -637,6 +637,60 @@ export const useFlashcards = () => {
     }
   });
 
+  // Update flashcard
+  const updateFlashcard = useMutation({
+    mutationFn: async ({
+      id,
+      updates
+    }: {
+      id: string;
+      updates: {
+        category_id?: string;
+        front?: string;
+        back?: string;
+        difficulty_level?: number;
+        tags?: string[];
+      };
+    }) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('flashcards')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('created_by', user.id) // Can only update own flashcards
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+    }
+  });
+
+  // Delete flashcard
+  const deleteFlashcard = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('flashcards')
+        .delete()
+        .eq('id', id)
+        .eq('created_by', user.id); // Can only delete own flashcards
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+    }
+  });
+
   // Get user statistics
   const {
     data: userStats,
@@ -699,12 +753,16 @@ export const useFlashcards = () => {
     markAsViewed: markAsViewed.mutateAsync,
     toggleFavorite: toggleFavorite.mutateAsync,
     createFlashcard: createFlashcard.mutateAsync,
+    updateFlashcard: updateFlashcard.mutateAsync,
+    deleteFlashcard: deleteFlashcard.mutateAsync,
     
     // Loading states for mutations
     isStartingSession: startStudySession.isPending,
     isSubmittingResponse: submitResponse.isPending,
     isMarkingAsViewed: markAsViewed.isPending,
     isTogglingFavorite: toggleFavorite.isPending,
-    isCreatingFlashcard: createFlashcard.isPending
+    isCreatingFlashcard: createFlashcard.isPending,
+    isUpdatingFlashcard: updateFlashcard.isPending,
+    isDeletingFlashcard: deleteFlashcard.isPending
   };
 };
