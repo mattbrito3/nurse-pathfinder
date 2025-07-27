@@ -15,6 +15,7 @@ interface EmailVerificationProps {
   onBack?: () => void;
   title?: string;
   description?: string;
+  startWithCode?: boolean; // Start directly with code step
 }
 
 const EmailVerification: React.FC<EmailVerificationProps> = ({
@@ -23,9 +24,10 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
   onVerified,
   onBack,
   title = "Verificar Email",
-  description = "Digite seu email e confirme com o código enviado"
+  description = "Digite seu email e confirme com o código enviado",
+  startWithCode = false
 }) => {
-  const [step, setStep] = useState<'email' | 'code'>('email');
+  const [step, setStep] = useState<'email' | 'code'>(startWithCode ? 'code' : 'email');
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -35,6 +37,13 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
   
   // Refs for code inputs
   const codeRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Auto-send code if starting with code step
+  useEffect(() => {
+    if (startWithCode && email && step === 'code' && !verificationId) {
+      sendVerificationCode();
+    }
+  }, [startWithCode, email, step]);
 
   // Countdown timer
   useEffect(() => {

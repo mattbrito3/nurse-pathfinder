@@ -16,9 +16,8 @@ const Auth = () => {
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [signupEmail, setSignupEmail] = useState("");
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [verifiedEmail, setVerifiedEmail] = useState("");
+  const [showCodeVerification, setShowCodeVerification] = useState(false);
+  const [pendingSignupData, setPendingSignupData] = useState<any>(null);
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -62,21 +61,20 @@ const Auth = () => {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const email = verifiedEmail; // Use verified email
+    const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     const fullName = formData.get('fullName') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
 
-    // Check if email was verified
-    if (!verifiedEmail) {
-      setError('Email deve ser verificado primeiro.');
+    // Enhanced validation
+    if (!fullName.trim()) {
+      setError('Nome completo é obrigatório.');
       setIsLoading(false);
       return;
     }
 
-    // Enhanced validation
-    if (!fullName.trim()) {
-      setError('Nome completo é obrigatório.');
+    if (!email.includes('@')) {
+      setError('Email inválido.');
       setIsLoading(false);
       return;
     }
@@ -104,41 +102,48 @@ const Auth = () => {
       return;
     }
 
-    const { error } = await signUp(email, password, fullName);
+    // Store signup data and show verification
+    setPendingSignupData({ email, password, fullName });
+    setShowCodeVerification(true);
+    setIsLoading(false);
 
-    if (error) {
-      console.error('Signup error:', error);
-      if (error.message.includes('already registered')) {
-        setError('Este email já está cadastrado. Tente fazer login.');
-      } else if (error.message.includes('Password should be at least')) {
-        setError('A senha deve ter pelo menos 8 caracteres.');
-      } else if (error.message.includes('Invalid email')) {
-        setError('Email inválido.');
+  };
+
+  const handleCodeVerified = async (verifiedEmail: string) => {
+    if (!pendingSignupData) return;
+
+    setIsLoading(true);
+    try {
+      const { email, password, fullName } = pendingSignupData;
+      
+      const { error } = await signUp(email, password, fullName);
+
+      if (error) {
+        console.error('Signup error:', error);
+        if (error.message.includes('already registered')) {
+          setError('Este email já está cadastrado. Tente fazer login.');
+        } else if (error.message.includes('Password should be at least')) {
+          setError('A senha deve ter pelo menos 8 caracteres.');
+        } else if (error.message.includes('Invalid email')) {
+          setError('Email inválido.');
+        } else {
+          setError(error.message || 'Erro ao criar conta. Tente novamente.');
+        }
+        setShowCodeVerification(false);
       } else {
-        setError(error.message || 'Erro ao criar conta. Tente novamente.');
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Bem-vindo ao Nurse Pathfinder!",
+        });
+        navigate('/');
       }
-    } else {
-      toast({
-        title: "Conta criada com sucesso!",
-        description: "Verifique seu email para confirmar sua conta.",
-      });
-      navigate('/');
+    } catch (error) {
+      console.error('Signup error:', error);
+      setError('Erro ao criar conta. Tente novamente.');
+      setShowCodeVerification(false);
     }
 
     setIsLoading(false);
-  };
-
-  const handleEmailVerified = (email: string) => {
-    setVerifiedEmail(email);
-    setShowEmailVerification(false);
-    toast({
-      title: "Email verificado!",
-      description: "Agora você pode completar seu cadastro.",
-    });
-  };
-
-  const handleStartSignup = () => {
-    setShowEmailVerification(true);
   };
 
   if (loading) {
@@ -149,16 +154,20 @@ const Auth = () => {
     );
   }
 
-  if (showEmailVerification) {
+  if (showCodeVerification && pendingSignupData) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
         <EmailVerification
-          email={signupEmail}
-          onEmailChange={setSignupEmail}
-          onVerified={handleEmailVerified}
-          onBack={() => setShowEmailVerification(false)}
+          email={pendingSignupData.email}
+          onEmailChange={() => {}} // Not editable at this stage
+          onVerified={handleCodeVerified}
+          onBack={() => {
+            setShowCodeVerification(false);
+            setPendingSignupData(null);
+          }}
           title="Verificar Email"
-          description="Para criar sua conta, primeiro precisamos verificar seu email"
+          description="Digite o código de 6 dígitos enviado para seu email"
+          startWithCode={true}
         />
       </div>
     );
@@ -272,34 +281,14 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
-                    {verifiedEmail ? (
-                      <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-md">
-                        <div className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-green-600" />
-                          <span className="text-sm font-medium text-green-800 dark:text-green-200">
-                            {verifiedEmail}
-                          </span>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={handleStartSignup}
-                        >
-                          Alterar
-                        </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full"
-                        onClick={handleStartSignup}
-                      >
-                        <Mail className="mr-2 h-4 w-4" />
-                        Verificar Email
-                      </Button>
-                    )}
+                    <Input
+                      id="signup-email"
+                      name="email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      required
+                      disabled={isLoading}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Senha</Label>
