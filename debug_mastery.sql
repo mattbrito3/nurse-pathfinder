@@ -19,8 +19,8 @@ ORDER BY p.mastery_level DESC, p.consecutive_correct DESC;
 SELECT 
   p.mastery_level,
   COUNT(*) as count,
-  ROUND(AVG(p.consecutive_correct), 1) as avg_consecutive,
-  ROUND(AVG(p.times_correct::float / NULLIF(p.times_seen, 0) * 100), 1) as accuracy_pct
+  ROUND(AVG(p.consecutive_correct)::numeric, 1) as avg_consecutive,
+  ROUND((AVG(p.times_correct::float / NULLIF(p.times_seen, 0)) * 100)::numeric, 1) as accuracy_pct
 FROM flashcards f
 JOIN flashcard_categories c ON f.category_id = c.id
 JOIN user_flashcard_progress p ON f.id = p.flashcard_id
