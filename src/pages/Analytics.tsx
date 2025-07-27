@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { useRealtimeAnalytics } from '@/hooks/useRealtimeAnalytics';
 import {
   ArrowLeft,
   TrendingUp,
@@ -13,7 +14,8 @@ import {
   Award,
   BarChart3,
   PieChart,
-  Activity
+  Activity,
+  Wifi
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -46,6 +48,9 @@ const Analytics: React.FC = () => {
     isLoading
   } = useAnalytics();
 
+  // Enable real-time updates
+  const { isSubscribed } = useRealtimeAnalytics();
+
   // Safe defaults while loading
   const totalFlashcards = overallStats?.totalFlashcards || 0;
   const masteredCards = overallStats?.masteredCards || 0;
@@ -67,6 +72,12 @@ const Analytics: React.FC = () => {
             <div className="flex items-center gap-2">
               <BarChart3 className="h-6 w-6 text-primary" />
               <h1 className="text-xl font-bold text-foreground">Analytics</h1>
+              {isSubscribed && (
+                <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-full">
+                  <Wifi className="h-3 w-3 text-green-600 dark:text-green-400" />
+                  <span className="text-xs text-green-600 dark:text-green-400 font-medium">Live</span>
+                </div>
+              )}
             </div>
           </div>
           <ThemeToggle />

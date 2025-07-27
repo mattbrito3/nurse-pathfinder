@@ -54,6 +54,8 @@ export const useAnalytics = () => {
     isLoading: overallStatsLoading
   } = useQuery({
     queryKey: ['analytics-overall-stats', user?.id],
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchInterval: 30000, // Refetch every 30 seconds
     queryFn: async () => {
       if (!user?.id) return null;
 
@@ -137,6 +139,8 @@ export const useAnalytics = () => {
   } = useQuery({
     queryKey: ['analytics-weekly-progress', user?.id],
     staleTime: 0, // Force refresh for real-time updates
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchInterval: 30000, // Refetch every 30 seconds
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -194,6 +198,8 @@ export const useAnalytics = () => {
     isLoading: categoryStatsLoading
   } = useQuery({
     queryKey: ['analytics-category-stats', user?.id],
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchInterval: 60000, // Refetch every 60 seconds (less frequent)
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -254,6 +260,8 @@ export const useAnalytics = () => {
     isLoading: masteryDistributionLoading
   } = useQuery({
     queryKey: ['analytics-mastery-distribution', user?.id],
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchInterval: 60000, // Refetch every 60 seconds (less frequent)
     queryFn: async () => {
       if (!user?.id) return [];
 
@@ -291,6 +299,8 @@ export const useAnalytics = () => {
   } = useQuery({
     queryKey: ['analytics-study-streak', user?.id],
     staleTime: 0, // Force refresh for real-time updates
+    refetchOnWindowFocus: true, // Refetch when user returns to tab
+    refetchInterval: 30000, // Refetch every 30 seconds
     queryFn: async () => {
       if (!user?.id) return [];
 
