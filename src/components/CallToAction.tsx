@@ -15,7 +15,7 @@ const CallToAction = () => {
             </h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
               Junte-se a centenas de estudantes e profissionais que já estão 
-              usando o EnfermagemPro para acelerar sua carreira na enfermagem.
+              usando o Dose Certa para acelerar sua carreira na enfermagem.
             </p>
           </div>
 

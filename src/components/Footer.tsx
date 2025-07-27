@@ -10,7 +10,7 @@ const Footer = () => {
               <div className="p-2 bg-gradient-primary rounded-lg">
                 <Heart className="h-5 w-5 text-white" />
               </div>
-              <h3 className="text-lg font-bold text-foreground">EnfermagemPro</h3>
+              <h3 className="text-lg font-bold text-foreground">Dose Certa</h3>
             </div>
             <p className="text-muted-foreground">
               Capacitando estudantes e profissionais de enfermagem com ferramentas 
@@ -58,7 +58,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-border/40 mt-8 pt-8 text-center text-muted-foreground">
-          <p>&copy; 2024 EnfermagemPro. Todos os direitos reservados.</p>
+          <p>&copy; 2024 Dose Certa. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
