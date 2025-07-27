@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Mail, Loader2, CheckCircle, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { sendVerificationEmailReal } from '@/services/resendEmailService';
+import { sendOfficialVerificationEmail } from '@/services/resendOfficialService';
 
 interface EmailVerificationProps {
   email: string;
@@ -79,31 +79,35 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
       
       localStorage.setItem(`email_verification_${newVerificationId}`, JSON.stringify(verificationData));
       
-      // 📧 SEND REAL EMAIL TO INBOX USING RESEND
-      const resendResult = await sendVerificationEmailReal(email, verificationCode);
+      // 📧 SEND EMAIL USING OFFICIAL RESEND SDK
+      const officialResult = await sendOfficialVerificationEmail(
+        email, 
+        verificationCode, 
+        'Usuário' // Could use actual name from signup form
+      );
       
-      if (resendResult.success) {
-        // 🎉 SUCCESS! Real email sent to inbox!
+      if (officialResult.success) {
+        // 🎉 SUCCESS! Official Resend email sent!
         toast({
           title: "📧 Email enviado com sucesso!",
           description: `Verifique sua caixa de entrada (${email}) para o código de verificação.`,
           duration: 8000
         });
         
-        console.log(`✅ REAL EMAIL SENT TO INBOX!`);
+        console.log(`✅ OFFICIAL RESEND EMAIL SENT!`);
         console.log(`📧 Email: ${email}`);
         console.log(`🔐 Code: ${verificationCode}`);
-        console.log(`📨 Method: ${resendResult.method}`);
-        if (resendResult.emailId) {
-          console.log(`📧 Email ID: ${resendResult.emailId}`);
+        console.log(`📨 Method: ${officialResult.method}`);
+        if (officialResult.emailId) {
+          console.log(`📧 Email ID: ${officialResult.emailId}`);
         }
       } else {
-        // Fallback notification
-        console.warn('Resend failed:', resendResult.error);
+        // Error notification
+        console.warn('Official Resend failed:', officialResult.error);
         
         toast({
           title: "⚠️ Problema no envio",
-          description: `Erro: ${resendResult.error}. Tente novamente ou use outro email.`,
+          description: `Erro: ${officialResult.error}. Tente novamente.`,
           duration: 10000
         });
       }
