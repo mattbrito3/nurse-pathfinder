@@ -40,13 +40,13 @@ const FlashcardsPage = () => {
   const handleStartReview = async () => {
     try {
       const session = await startStudySession({ 
-        sessionType: 'review',
+        sessionType: 'learning', // Changed from 'review' to 'learning'
         categoryId: selectedCategory || undefined
       });
       
       // Store session info for the study page
       sessionStorage.setItem(`study_session_${session.id}`, JSON.stringify({
-        sessionType: 'review',
+        sessionType: 'learning', // Changed from 'review' to 'learning'
         categoryId: selectedCategory
       }));
       

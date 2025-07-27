@@ -79,13 +79,24 @@ const StudyPage: React.FC = () => {
     try {
       // Get session info from localStorage or use defaults
       const sessionInfo = sessionStorage.getItem(`study_session_${sessionId}`);
-      let sessionType: 'review' | 'learning' | 'practice' = 'review';
+      let sessionType: 'review' | 'learning' | 'practice' = 'learning';
       let categoryId: string | undefined;
 
       if (sessionInfo) {
         const parsed = JSON.parse(sessionInfo);
-        sessionType = parsed.sessionType || 'review';
+        sessionType = parsed.sessionType || 'learning'; // Changed from 'review' to 'learning'
         categoryId = parsed.categoryId;
+        
+        // 🔍 DEBUG: Log session type and category
+        console.log('📚 STUDY SESSION DEBUG:', {
+          sessionType,
+          categoryId,
+          sessionInfo: parsed
+        });
+      } else {
+        // If no session info, default to learning
+        sessionType = 'learning';
+        console.log('📚 No session info found, defaulting to learning mode');
       }
 
       const isRandomExploration = !categoryId && sessionType === 'practice';
