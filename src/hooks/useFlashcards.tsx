@@ -296,20 +296,20 @@ export const useFlashcards = () => {
         // Fill remaining slots with public cards
         const selectedPublicCards = publicCards.slice(0, remainingSlots);
         
-        // Mix them together
+        // Mix them together and ALWAYS shuffle for better learning
         const mixedCards = [...guaranteedPrivateCards, ...selectedPublicCards];
-        finalCards = categoryId ? mixedCards : shuffleArray(mixedCards);
+        finalCards = shuffleArray(mixedCards); // 🎲 ALWAYS shuffle, regardless of category
       } else {
-        // No private cards, just use public ones
-        finalCards = publicCards.slice(0, limit);
-        if (!categoryId) finalCards = shuffleArray(finalCards);
+        // No private cards, just use public ones and shuffle
+        const selectedCards = publicCards.slice(0, limit);
+        finalCards = shuffleArray(selectedCards); // 🎲 ALWAYS shuffle for variety
       }
       
       const data = finalCards;
 
       // 🔍 DEBUG: Log what cards are being returned
       const privateCardsInFinal = data.filter(card => card.created_by === user.id).length;
-      console.log('🎯 getStudyCards DEBUG (SMART MIXING):', {
+      console.log('🎯 getStudyCards DEBUG (SMART MIXING + SHUFFLE):', {
         sessionType,
         categoryId,
         limit,
@@ -319,6 +319,7 @@ export const useFlashcards = () => {
         private_cards_included: privateCardsInFinal,
         total_cards_returned: data?.length || 0,
         mixing_strategy: privateCards.length > 0 ? '30% private guaranteed' : 'public only',
+        shuffle_applied: '🎲 Always shuffled for random order',
         category_filter: categoryId ? `category_id = ${categoryId}` : 'no category filter',
         cards_detail: data?.map(card => ({
           id: card.id,
