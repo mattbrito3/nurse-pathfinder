@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ArrowLeft, Mail, Loader2, CheckCircle } from "lucide-react";
+import { ArrowLeft, Mail, Loader2, CheckCircle, AlertCircle, Check } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useEmailValidation } from "@/hooks/useEmailValidation";
 
 const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -15,11 +16,27 @@ const ForgotPassword = () => {
   const [success, setSuccess] = useState(false);
   const [email, setEmail] = useState("");
   const { toast } = useToast();
+  
+  // Email validation
+  const { 
+    isValidating: isValidatingEmail, 
+    isValid: isEmailValid, 
+    error: emailError, 
+    suggestion: emailSuggestion,
+    applySuggestion 
+  } = useEmailValidation(email);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    // Validate email before sending
+    if (isEmailValid === false) {
+      setError(emailError || 'Email inválido.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -117,15 +134,64 @@ const ForgotPassword = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={isLoading}
-              />
+              <div className="relative">
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                  className={`pr-10 ${
+                    isEmailValid === true ? 'border-green-500 focus:border-green-500' :
+                    isEmailValid === false ? 'border-red-500 focus:border-red-500' : ''
+                  }`}
+                />
+                {/* Validation icons */}
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  {isValidatingEmail && (
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  )}
+                  {!isValidatingEmail && isEmailValid === true && (
+                    <Check className="h-4 w-4 text-green-500" />
+                  )}
+                  {!isValidatingEmail && isEmailValid === false && email.includes('@') && (
+                    <AlertCircle className="h-4 w-4 text-red-500" />
+                  )}
+                </div>
+              </div>
+              
+              {/* Email validation feedback */}
+              {emailError && !isValidatingEmail && (
+                <div className="text-sm text-red-600 flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  {emailError}
+                </div>
+              )}
+              
+              {/* Email suggestion */}
+              {emailSuggestion && !isValidatingEmail && (
+                <div className="text-sm">
+                  <span className="text-amber-600">{emailSuggestion}</span>
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 ml-2 text-blue-600"
+                    onClick={() => setEmail(applySuggestion())}
+                  >
+                    Usar sugestão
+                  </Button>
+                </div>
+              )}
+              
+              {isEmailValid === true && !isValidatingEmail && (
+                <div className="text-sm text-green-600 flex items-center gap-1">
+                  <Check className="h-3 w-3" />
+                  Email válido
+                </div>
+              )}
             </div>
 
             {error && (
@@ -137,7 +203,7 @@ const ForgotPassword = () => {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={isLoading || !email.trim()}
+              disabled={isLoading || !email.trim() || isValidatingEmail || isEmailValid === false}
             >
               {isLoading ? (
                 <>

@@ -7,17 +7,28 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Heart, Loader2, Eye, EyeOff } from "lucide-react";
+import { Heart, Loader2, Eye, EyeOff, Check, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useEmailValidation } from "@/hooks/useEmailValidation";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [signupEmail, setSignupEmail] = useState("");
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Email validation for signup
+  const { 
+    isValidating: isValidatingEmail, 
+    isValid: isEmailValid, 
+    error: emailError, 
+    suggestion: emailSuggestion,
+    applySuggestion 
+  } = useEmailValidation(signupEmail);
 
   // Redirecionar se já estiver logado
   useEffect(() => {
@@ -58,7 +69,7 @@ const Auth = () => {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get('email') as string;
+    const email = signupEmail; // Use controlled email state
     const password = formData.get('password') as string;
     const fullName = formData.get('fullName') as string;
     const confirmPassword = formData.get('confirmPassword') as string;
@@ -66,6 +77,13 @@ const Auth = () => {
     // Enhanced validation
     if (!fullName.trim()) {
       setError('Nome completo é obrigatório.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate email before signup
+    if (isEmailValid === false) {
+      setError(emailError || 'Email inválido.');
       setIsLoading(false);
       return;
     }
@@ -233,13 +251,64 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      name="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      required
-                    />
+                    <div className="relative">
+                      <Input
+                        id="signup-email"
+                        name="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
+                        required
+                        className={`pr-10 ${
+                          isEmailValid === true ? 'border-green-500 focus:border-green-500' :
+                          isEmailValid === false ? 'border-red-500 focus:border-red-500' : ''
+                        }`}
+                      />
+                      {/* Validation icons */}
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {isValidatingEmail && (
+                          <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                        )}
+                        {!isValidatingEmail && isEmailValid === true && (
+                          <Check className="h-4 w-4 text-green-500" />
+                        )}
+                        {!isValidatingEmail && isEmailValid === false && signupEmail.includes('@') && (
+                          <AlertCircle className="h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Email validation feedback */}
+                    {emailError && !isValidatingEmail && (
+                      <div className="text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        {emailError}
+                      </div>
+                    )}
+                    
+                    {/* Email suggestion */}
+                    {emailSuggestion && !isValidatingEmail && (
+                      <div className="text-sm">
+                        <span className="text-amber-600">{emailSuggestion}</span>
+                        <Button
+                          type="button"
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 ml-2 text-blue-600"
+                          onClick={() => setSignupEmail(applySuggestion())}
+                        >
+                          Usar sugestão
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {isEmailValid === true && !isValidatingEmail && (
+                      <div className="text-sm text-green-600 flex items-center gap-1">
+                        <Check className="h-3 w-3" />
+                        Email válido
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Senha</Label>
