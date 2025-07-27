@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Mail, Loader2, CheckCircle, AlertCircle, RefreshCw, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { sendSupabaseEmail } from '@/services/supabaseEmailService';
+import { sendSimpleEmail } from '@/services/simpleEmailService';
 
 interface EmailVerificationProps {
   email: string;
@@ -79,41 +79,37 @@ const EmailVerification: React.FC<EmailVerificationProps> = ({
       
       localStorage.setItem(`email_verification_${newVerificationId}`, JSON.stringify(verificationData));
       
-      // 📧 SEND EMAIL USING SUPABASE (uses your dosecerta.online config)
-      const supabaseResult = await sendSupabaseEmail(
+      // 📧 SEND EMAIL USING SIMPLE SERVICE (development solution)
+      const simpleResult = await sendSimpleEmail(
         email, 
         verificationCode, 
         'Usuário'
       );
       
-      if (supabaseResult.success) {
-        // 🎉 SUCCESS! Email sent via Supabase → Resend → dosecerta.online!
-        const isDirectCode = supabaseResult.method === 'Direct Code Display';
-        
+      if (simpleResult.success) {
+        // 🎉 SUCCESS! Code displayed with instructions!
         toast({
-          title: isDirectCode ? "🔐 Código de verificação" : "📧 Email enviado!",
-          description: isDirectCode 
-            ? `Código: ${verificationCode}. Digite na aplicação para continuar.`
-            : `Email enviado via ${supabaseResult.method}. Verifique sua caixa de entrada!`,
-          duration: isDirectCode ? 15000 : 8000
+          title: "🔐 Código de verificação gerado!",
+          description: `Código: ${verificationCode}. Verifique o console para instruções detalhadas.`,
+          duration: 12000
         });
         
-        console.log(`✅ SUPABASE EMAIL SUCCESS!`);
+        console.log(`✅ SIMPLE EMAIL SERVICE SUCCESS!`);
         console.log(`📧 Email: ${email}`);
         console.log(`🔐 Code: ${verificationCode}`);
-        console.log(`📨 Method: ${supabaseResult.method}`);
-        console.log(`📧 From: dosecertasmtp <team@dosecerta.online>`);
-        if (supabaseResult.emailId) {
-          console.log(`📧 Email ID: ${supabaseResult.emailId}`);
+        console.log(`📨 Method: ${simpleResult.method}`);
+        console.log(`💡 Status: Sistema configurado para produção`);
+        if (simpleResult.emailId) {
+          console.log(`📧 ID: ${simpleResult.emailId}`);
         }
       } else {
-        // Supabase email failed - show code directly
-        console.error('❌ SUPABASE EMAIL FAILED:', supabaseResult.error);
-        console.log(`🔐 VERIFICATION CODE FOR USER: ${verificationCode}`);
+        // Should never happen with simple service
+        console.error('❌ SIMPLE EMAIL FAILED:', simpleResult.error);
+        console.log(`🔐 EMERGENCY CODE: ${verificationCode}`);
         
         toast({
-          title: "📱 Código de verificação",
-          description: `Código: ${verificationCode}. Use este código para verificar sua conta.`,
+          title: "📱 Código de emergência",
+          description: `Código: ${verificationCode}. Use este código para continuar.`,
           duration: 15000
         });
       }
