@@ -8,17 +8,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Calculator, ArrowLeft, AlertTriangle, CheckCircle, Info, Clock, History } from "lucide-react";
+import { Calculator, ArrowLeft, AlertTriangle, CheckCircle, Info, Clock, History, X } from "lucide-react";
 import { calculateDosage, calculateInfusion, convertUnits, calculateConcentration } from "@/utils/medicationCalculations";
 import { useCalculationHistory } from "@/hooks/useCalculationHistory";
 import CalculationHistory from "@/components/calculator/CalculationHistory";
 import type { DosageCalculation, InfusionCalculation, UnitConversion, ConcentrationCalculation, CalculationType, CalculationHistory as CalculationHistoryType } from "@/types/calculator";
 import { toast } from "sonner";
+import { 
+  handleMedicationNameInput, 
+  handleNumericInput, 
+  validateDosageForm,
+  getMedicationSuggestions,
+  type ValidationResult 
+} from "@/utils/inputValidation";
 
 const MedicationCalculator = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<CalculationType | 'history'>('dosage');
   const { addCalculation } = useCalculationHistory();
+
+  // 🛡️ Validation states
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+  const [medicationSuggestions, setMedicationSuggestions] = useState<string[]>([]);
 
   // Estados para cada tipo de cálculo
   const [dosageData, setDosageData] = useState<DosageCalculation>({
@@ -52,7 +64,35 @@ const MedicationCalculator = () => {
   });
 
   const handleDosageCalculation = async () => {
-    // Validações antes do cálculo
+    // 🛡️ Comprehensive validation using our new system
+    const validation = validateDosageForm({
+      medicationName: dosageData.medicationName,
+      patientWeight: dosageData.patientWeight,
+      prescribedDose: dosageData.prescribedDose,
+      availableConcentration: dosageData.availableConcentration,
+      ampouleVolume: dosageData.ampouleVolume
+    });
+
+    // Update validation states
+    setValidationErrors(validation.errors);
+    setValidationWarnings(validation.warnings);
+
+    // Block calculation if there are errors
+    if (!validation.isValid) {
+      toast.error("Corrija os erros antes de calcular", {
+        description: validation.errors[0]
+      });
+      return;
+    }
+
+    // Show warnings if any
+    if (validation.warnings.length > 0) {
+      toast.warning("Atenção", {
+        description: validation.warnings[0]
+      });
+    }
+
+    // Original validation logic (keeping for additional checks)
     const errors: string[] = [];
     
     if (!dosageData.patientWeight || dosageData.patientWeight <= 0) {
@@ -341,31 +381,70 @@ const MedicationCalculator = () => {
                       <Label htmlFor="weight">Peso do Paciente (kg)</Label>
                       <Input
                         id="weight"
-                        type="number"
+                        type="text"
                         value={dosageData.patientWeight || ''}
-                        onChange={(e) => setDosageData({...dosageData, patientWeight: Number(e.target.value)})}
+                        onChange={(e) => handleNumericInput(
+                          e.target.value,
+                          'Peso do paciente',
+                          (value) => setDosageData({...dosageData, patientWeight: value})
+                        )}
                         placeholder="Ex: 70"
+                        className="text-right"
                       />
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="medication">Nome do Medicamento</Label>
-                      <Input
-                        id="medication"
-                        value={dosageData.medicationName}
-                        onChange={(e) => setDosageData({...dosageData, medicationName: e.target.value})}
-                        placeholder="Ex: Dipirona"
-                      />
+                      <div className="relative">
+                        <Input
+                          id="medication"
+                          value={dosageData.medicationName}
+                          onChange={(e) => {
+                            handleMedicationNameInput(
+                              e.target.value,
+                              (value) => {
+                                setDosageData({...dosageData, medicationName: value});
+                                const suggestions = getMedicationSuggestions(value);
+                                setMedicationSuggestions(suggestions);
+                              }
+                            );
+                          }}
+                          placeholder="Ex: Dipirona (apenas letras)"
+                          className="pr-8"
+                        />
+                        {/* Medication suggestions dropdown */}
+                        {medicationSuggestions.length > 0 && (
+                          <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg">
+                            {medicationSuggestions.map((med, index) => (
+                              <button
+                                key={index}
+                                className="w-full px-3 py-2 text-left hover:bg-muted transition-colors"
+                                onClick={() => {
+                                  setDosageData({...dosageData, medicationName: med});
+                                  setMedicationSuggestions([]);
+                                }}
+                              >
+                                {med}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="prescribed-dose">Dose Prescrita</Label>
                       <Input
                         id="prescribed-dose"
-                        type="number"
+                        type="text"
                         value={dosageData.prescribedDose || ''}
-                        onChange={(e) => setDosageData({...dosageData, prescribedDose: Number(e.target.value)})}
-                        placeholder="Ex: 15"
+                        onChange={(e) => handleNumericInput(
+                          e.target.value,
+                          'Dose prescrita',
+                          (value) => setDosageData({...dosageData, prescribedDose: value})
+                        )}
+                        placeholder="Ex: 15 (apenas números)"
+                        className="text-right"
                       />
                     </div>
 
@@ -389,10 +468,15 @@ const MedicationCalculator = () => {
                       <Label htmlFor="concentration">Concentração Disponível</Label>
                       <Input
                         id="concentration"
-                        type="number"
+                        type="text"
                         value={dosageData.availableConcentration || ''}
-                        onChange={(e) => setDosageData({...dosageData, availableConcentration: Number(e.target.value)})}
-                        placeholder="Ex: 500"
+                        onChange={(e) => handleNumericInput(
+                          e.target.value,
+                          'Concentração',
+                          (value) => setDosageData({...dosageData, availableConcentration: value})
+                        )}
+                        placeholder="Ex: 500 (apenas números)"
+                        className="text-right"
                       />
                     </div>
 
@@ -417,16 +501,60 @@ const MedicationCalculator = () => {
                         <Label htmlFor="ampoule-volume">Volume da Ampola (ml)</Label>
                         <Input
                           id="ampoule-volume"
-                          type="number"
+                          type="text"
                           value={dosageData.ampouleVolume || ''}
-                          onChange={(e) => setDosageData({...dosageData, ampouleVolume: Number(e.target.value)})}
-                          placeholder="Ex: 10"
+                          onChange={(e) => handleNumericInput(
+                            e.target.value,
+                            'Volume da ampola',
+                            (value) => setDosageData({...dosageData, ampouleVolume: value})
+                          )}
+                          placeholder="Ex: 10 (apenas números)"
+                          className="text-right"
                         />
                       </div>
                     )}
                   </div>
 
-                  <Button onClick={handleDosageCalculation} className="w-full" variant="medical">
+                  {/* 🚨 Validation Errors */}
+                  {validationErrors.length > 0 && (
+                    <Alert className="border-red-200 bg-red-50">
+                      <AlertTriangle className="h-4 w-4 text-red-600" />
+                      <AlertDescription className="text-red-800">
+                        <div className="space-y-1">
+                          {validationErrors.map((error, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <X className="h-3 w-3" />
+                              {error}
+                            </div>
+                          ))}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  {/* ⚠️ Validation Warnings */}
+                  {validationWarnings.length > 0 && (
+                    <Alert className="border-yellow-200 bg-yellow-50">
+                      <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                      <AlertDescription className="text-yellow-800">
+                        <div className="space-y-1">
+                          {validationWarnings.map((warning, index) => (
+                            <div key={index} className="flex items-center gap-2">
+                              <Info className="h-3 w-3" />
+                              {warning}
+                            </div>
+                          ))}
+                        </div>
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <Button 
+                    onClick={handleDosageCalculation} 
+                    className="w-full" 
+                    variant="medical"
+                    disabled={validationErrors.length > 0}
+                  >
                     Calcular Dosagem
                   </Button>
                 </CardContent>
@@ -450,10 +578,15 @@ const MedicationCalculator = () => {
                       <Label htmlFor="volume">Volume Total (ml)</Label>
                       <Input
                         id="volume"
-                        type="number"
+                        type="text"
                         value={infusionData.totalVolume || ''}
-                        onChange={(e) => setInfusionData({...infusionData, totalVolume: Number(e.target.value)})}
-                        placeholder="Ex: 500"
+                        onChange={(e) => handleNumericInput(
+                          e.target.value,
+                          'Volume total',
+                          (value) => setInfusionData({...infusionData, totalVolume: value})
+                        )}
+                        placeholder="Ex: 500 (apenas números)"
+                        className="text-right"
                       />
                     </div>
 
@@ -461,10 +594,15 @@ const MedicationCalculator = () => {
                       <Label htmlFor="time">Tempo Total</Label>
                       <Input
                         id="time"
-                        type="number"
+                        type="text"
                         value={infusionData.totalTime || ''}
-                        onChange={(e) => setInfusionData({...infusionData, totalTime: Number(e.target.value)})}
-                        placeholder="Ex: 6"
+                        onChange={(e) => handleNumericInput(
+                          e.target.value,
+                          'Tempo total',
+                          (value) => setInfusionData({...infusionData, totalTime: value})
+                        )}
+                        placeholder="Ex: 6 (apenas números)"
+                        className="text-right"
                       />
                     </div>
 
