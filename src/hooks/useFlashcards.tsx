@@ -280,25 +280,45 @@ export const useFlashcards = () => {
       if (publicResult.error) throw publicResult.error;
       if (privateResult.error) throw privateResult.error;
 
-      // Combine results
+      // Combine results with guaranteed private inclusion
       const publicCards = publicResult.data || [];
       const privateCards = privateResult.data || [];
-      const allCards = [...publicCards, ...privateCards];
-
-      // Shuffle and limit
-      const shuffledCards = categoryId ? allCards : shuffleArray(allCards);
-      const data = shuffledCards.slice(0, limit);
+      
+      // 🎯 SMART MIXING: Ensure private cards are always included
+      let finalCards = [];
+      
+      if (privateCards.length > 0) {
+        // Reserve spots for private cards (max 30% of limit)
+        const maxPrivateSlots = Math.max(1, Math.floor(limit * 0.3));
+        const guaranteedPrivateCards = privateCards.slice(0, maxPrivateSlots);
+        const remainingSlots = limit - guaranteedPrivateCards.length;
+        
+        // Fill remaining slots with public cards
+        const selectedPublicCards = publicCards.slice(0, remainingSlots);
+        
+        // Mix them together
+        const mixedCards = [...guaranteedPrivateCards, ...selectedPublicCards];
+        finalCards = categoryId ? mixedCards : shuffleArray(mixedCards);
+      } else {
+        // No private cards, just use public ones
+        finalCards = publicCards.slice(0, limit);
+        if (!categoryId) finalCards = shuffleArray(finalCards);
+      }
+      
+      const data = finalCards;
 
       // 🔍 DEBUG: Log what cards are being returned
-      console.log('🎯 getStudyCards DEBUG (NEW APPROACH):', {
+      const privateCardsInFinal = data.filter(card => card.created_by === user.id).length;
+      console.log('🎯 getStudyCards DEBUG (SMART MIXING):', {
         sessionType,
         categoryId,
         limit,
         user_id: user.id,
-        public_cards_found: publicCards.length,
-        private_cards_found: privateCards.length,
-        total_cards_found: data?.length || 0,
-        query_approach: 'separate queries combined',
+        public_cards_available: publicCards.length,
+        private_cards_available: privateCards.length,
+        private_cards_included: privateCardsInFinal,
+        total_cards_returned: data?.length || 0,
+        mixing_strategy: privateCards.length > 0 ? '30% private guaranteed' : 'public only',
         category_filter: categoryId ? `category_id = ${categoryId}` : 'no category filter',
         cards_detail: data?.map(card => ({
           id: card.id,
