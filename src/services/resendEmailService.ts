@@ -11,7 +11,7 @@ interface EmailResponse {
 }
 
 const RESEND_API_KEY = 're_auJbm1rY_AmScYpyomnG81PeHCGsRcq8v';
-const FROM_EMAIL = 'onboarding@resend.dev'; // Resend's verified domain
+const FROM_EMAIL = 'Nurse Pathfinder <delivered@resend.dev>'; // Resend's public domain for testing
 
 /**
  * 🚀 Send real email using Resend API
