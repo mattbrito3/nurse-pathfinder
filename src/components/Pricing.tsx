@@ -1,6 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Crown, Star, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const plans = [
   {
@@ -61,6 +64,22 @@ const plans = [
 ];
 
 const Pricing = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handlePlanClick = (planName: string, buttonText: string) => {
+    if (buttonText === "Começar Grátis") {
+      if (!user) {
+        navigate('/auth');
+      } else {
+        navigate('/dashboard');
+      }
+    } else {
+      // Redirect to pricing page for paid plans
+      navigate('/pricing');
+    }
+  };
+
   return (
     <section id="planos" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -113,6 +132,7 @@ const Pricing = () => {
                 <Button 
                   variant={plan.buttonVariant}
                   className={`w-full py-6 text-lg ${plan.popular ? 'shadow-soft' : ''}`}
+                  onClick={() => handlePlanClick(plan.name, plan.buttonText)}
                 >
                   {plan.buttonText}
                 </Button>
