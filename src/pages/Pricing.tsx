@@ -18,11 +18,7 @@ import {
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-<<<<<<< HEAD
-import SimpleCheckout from '@/components/stripe/SimpleCheckout';
-=======
 import SubscribeButton from '@/components/stripe/SubscribeButton';
->>>>>>> 0f69f8ff984523d33e0b11c3d630429bcf1ada15
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -33,11 +29,7 @@ const Pricing = () => {
     currentSubscription,
     plansLoading,
     formatPrice,
-    hasPremiumAccess,
-    showCheckout,
-    selectedPlan,
-    handleCheckoutSuccess,
-    handleCheckoutClose
+    hasPremiumAccess
   } = useSubscription();
 
   // Handle payment status from URL params
@@ -55,27 +47,10 @@ const Pricing = () => {
     }
   }, [searchParams, navigate]);
 
-<<<<<<< HEAD
-  const handleSubscribe = (planId: string) => {
-    if (!user) {
-      toast.info('Faça login para continuar', {
-        description: 'Você precisa estar logado para assinar um plano'
-      });
-      navigate('/auth');
-      return;
-    }
-
-    console.log('🔥 CLICOU ASSINAR - planId:', planId);
-    console.log('🔥 showCheckout antes:', showCheckout);
-    console.log('🔥 selectedPlan antes:', selectedPlan);
-    
-    subscribe(planId);
-=======
   // Helper function to map plan to type
   const getPlanType = (planName: string): 'professional' | 'annual' => {
     if (planName.toLowerCase().includes('anual')) return 'annual';
     return 'professional';
->>>>>>> 0f69f8ff984523d33e0b11c3d630429bcf1ada15
   };
 
   const getCurrentPlanName = () => {
@@ -363,20 +338,6 @@ const Pricing = () => {
           </div>
         </div>
       </div>
-
-      {/* Mock Checkout Modal */}
-      {(() => {
-        console.log('🎯 RENDERIZANDO - showCheckout:', showCheckout, 'selectedPlan:', selectedPlan);
-                 return showCheckout && selectedPlan ? (
-           <SimpleCheckout
-             planType={selectedPlan.type}
-             planName={selectedPlan.name}
-             planPrice={selectedPlan.price}
-             onClose={handleCheckoutClose}
-             onSuccess={handleCheckoutSuccess}
-           />
-         ) : null;
-      })()}
     </div>
   );
 };
