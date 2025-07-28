@@ -9,14 +9,20 @@
 🌐 https://dashboard.stripe.com/test/products
 ```
 
-#### **🎯 ENCONTRE SEUS PRODUTOS:**
-- **Produto 1:** `prod_SlTelkFBR9PDEc` (R$ 19,90)
-- **Produto 2:** `prod_SlTek9OQfCZwSA` (R$ 199,00)
+#### **🎯 SEUS PRODUTOS:**
+- **Produto 1:** `prod_SlTelkFBR9PDEc` (R$ 19,90/mês) ✅
+- **Produto 2:** `prod_SlTek9OQfCZwSA` (R$ 199,00/ano) ✅
 
 #### **📝 COPIE OS PRICE IDs:**
 ```
-✅ Clique no produto
+🌐 https://dashboard.stripe.com/test/products/prod_SlTelkFBR9PDEc
+✅ Clique no produto R$ 19,90
 ✅ Na seção "Pricing" copie o Price ID 
+✅ Ele começa com "price_"
+
+🌐 https://dashboard.stripe.com/test/products/prod_SlTek9OQfCZwSA  
+✅ Clique no produto R$ 199,00
+✅ Na seção "Pricing" copie o Price ID
 ✅ Ele começa com "price_"
 ```
 
@@ -26,13 +32,13 @@
 
 **🔧 SUBSTITUA nas linhas 47-48:**
 ```typescript
-// SUBSTITUIR ESTES:
-'professional': 'price_1QdLUFB2FIOsvy1C8gBhTNxY', // ← SEU PRICE ID REAL
-'annual': 'price_1QdLVKB2FIOsvy1CcK7vWPJu',      // ← SEU PRICE ID REAL
+// ENCONTRE OS PRICE IDs DOS SEUS PRODUTOS:
+'professional': 'price_ENCONTRAR_NO_PRODUTO_prod_SlTelkFBR9PDEc', // R$ 19,90/mês
+'annual': 'price_ENCONTRAR_NO_PRODUTO_prod_SlTek9OQfCZwSA',       // R$ 199,00/ano
 
-// PELOS SEUS PRICE IDs REAIS:
-'professional': 'price_XXXXXXXXXXXXXXXXX', // ← Cole seu Price ID do plano R$ 19,90
-'annual': 'price_YYYYYYYYYYYYYYYYY',       // ← Cole seu Price ID do plano R$ 199,00
+// SUBSTITUA PELOS PRICE IDs REAIS (começam com "price_"):
+'professional': 'price_XXXXXXXXXXXXXXXXXXXXX', // ← Cole o Price ID do prod_SlTelkFBR9PDEc
+'annual': 'price_YYYYYYYYYYYYYYYYYYYYY',       // ← Cole o Price ID do prod_SlTek9OQfCZwSA
 ```
 
 ### **3. 🚀 DEPLOY DAS EDGE FUNCTIONS**

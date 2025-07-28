@@ -52,10 +52,10 @@ serve(async (req) => {
     }
 
     // Map planType to actual Stripe Price IDs
-    // VOCÊ PRECISA SUBSTITUIR ESTES IDs PELOS SEUS PRICE IDs REAIS DO STRIPE
+    // CONFIGURADO COM SEUS PRODUTOS - VOCÊ PRECISA COMPLETAR COM OS PRICE IDs
     const priceMapping = {
-      'professional': 'price_1QdLUFB2FIOsvy1C8gBhTNxY', // Substitua pelo seu Price ID real
-      'annual': 'price_1QdLVKB2FIOsvy1CcK7vWPJu',      // Substitua pelo seu Price ID real
+      'professional': 'price_ENCONTRAR_NO_PRODUTO_prod_SlTelkFBR9PDEc', // R$ 19,90/mês
+      'annual': 'price_ENCONTRAR_NO_PRODUTO_prod_SlTek9OQfCZwSA',       // R$ 199,00/ano
     }
 
     const priceId = priceMapping[planType as keyof typeof priceMapping]
