@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { handleSubscriptionFlow, simulateCheckout, createBillingPortalSession } from '@/services/stripeService';
 import type { 
   SubscriptionPlan, 
   UserSubscription, 
@@ -131,33 +132,61 @@ export const useSubscription = () => {
 
   // Create checkout session
   const createCheckoutSession = useMutation({
-    mutationFn: async (planId: string): Promise<CheckoutSession> => {
+    mutationFn: async (planId: string): Promise<any> => {
       if (!user?.id) throw new Error('User not authenticated');
 
       setPaymentStatus('loading');
+      
+      console.log('🛒 Creating checkout session for plan:', planId);
+      
+      // Map planId to our plan types
+      let planType: 'professional' | 'annual';
+      if (planId.includes('professional') || planId.includes('19')) {
+        planType = 'professional';
+      } else if (planId.includes('annual') || planId.includes('199')) {
+        planType = 'annual';
+      } else {
+        throw new Error('Invalid plan selected');
+      }
 
-      // Call Supabase Edge Function to create Stripe checkout session
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { 
-          planId,
-          userId: user.id,
-          userEmail: user.email,
-          successUrl: `${window.location.origin}/dashboard?payment=success`,
-          cancelUrl: `${window.location.origin}/pricing?payment=canceled`
-        }
-      });
-
-      if (error) throw error;
-
-      setPaymentStatus('succeeded');
-      return data;
+      // For development, use simulation. In production, this would use real Stripe
+      const isDevelopment = window.location.hostname === 'localhost';
+      
+      if (isDevelopment) {
+        console.log('🧪 Running in development mode - simulating checkout');
+        toast.loading('Simulando pagamento...', { id: 'checkout' });
+        const result = await simulateCheckout(planType, user.id);
+        setPaymentStatus('succeeded');
+        return result;
+      } else {
+        // Production - real Stripe integration
+        console.log('🚀 Running in production mode - real Stripe checkout');
+        const result = await handleSubscriptionFlow(planType, user.id);
+        setPaymentStatus('succeeded');
+        return result;
+      }
     },
     onSuccess: (data) => {
-      // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      console.log('🚀 Checkout process completed:', data);
+      
+      if (data.success) {
+        toast.success('Processo de pagamento iniciado!', { id: 'checkout' });
+        
+        // In development, show simulation message
+        if (window.location.hostname === 'localhost') {
+          toast.info('💡 Pagamento simulado. Em produção seria real!', { duration: 5000 });
+        }
+        
+        // Refresh subscription data
+        queryClient.invalidateQueries({ queryKey: ['user-subscription'] });
+        queryClient.invalidateQueries({ queryKey: ['payment-history'] });
+      } else if (data.url) {
+        // Real Stripe redirect
+        window.location.href = data.url;
+      }
     },
     onError: (error: any) => {
-      console.error('Checkout error:', error);
+      console.error('❌ Checkout error:', error);
       setPaymentStatus('failed');
       toast.error('Erro ao processar pagamento', {
         description: error.message || 'Tente novamente'
