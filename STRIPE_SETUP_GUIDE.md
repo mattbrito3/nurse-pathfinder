@@ -30,15 +30,15 @@
 
 #### **📁 Arquivo:** `supabase/functions/create-checkout-session/index.ts`
 
-**🔧 SUBSTITUA nas linhas 47-48:**
+**✅ CONFIGURADO COM SEUS PRICE IDs REAIS:**
 ```typescript
-// ENCONTRE OS PRICE IDs DOS SEUS PRODUTOS:
-'professional': 'price_ENCONTRAR_NO_PRODUTO_prod_SlTelkFBR9PDEc', // R$ 19,90/mês
-'annual': 'price_ENCONTRAR_NO_PRODUTO_prod_SlTek9OQfCZwSA',       // R$ 199,00/ano
+// PRICE IDs CONFIGURADOS ✅
+'professional': 'price_1RpwgqB2FIOsvy1CyGL5KoiS', // R$ 19,90/mês ✅
+'annual': 'price_1RpwhNB2FIOsvy1C8XVwDTt6',       // R$ 199,00/ano ✅
 
-// SUBSTITUA PELOS PRICE IDs REAIS (começam com "price_"):
-'professional': 'price_XXXXXXXXXXXXXXXXXXXXX', // ← Cole o Price ID do prod_SlTelkFBR9PDEc
-'annual': 'price_YYYYYYYYYYYYYYYYYYYYY',       // ← Cole o Price ID do prod_SlTek9OQfCZwSA
+// PRODUTOS MAPEADOS:
+// prod_SlTelkFBR9PDEc → price_1RpwgqB2FIOsvy1CyGL5KoiS (R$ 19,90)
+// prod_SlTek9OQfCZwSA → price_1RpwhNB2FIOsvy1C8XVwDTt6 (R$ 199,00)
 ```
 
 ### **3. 🚀 DEPLOY DAS EDGE FUNCTIONS**

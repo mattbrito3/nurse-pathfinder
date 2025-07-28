@@ -51,11 +51,10 @@ serve(async (req) => {
       throw new Error('Missing required parameters: planType, userId')
     }
 
-    // Map planType to actual Stripe Price IDs
-    // CONFIGURADO COM SEUS PRODUTOS - VOCÊ PRECISA COMPLETAR COM OS PRICE IDs
+    // Map planType to actual Stripe Price IDs - CONFIGURADO COM SEUS PRICE IDs REAIS!
     const priceMapping = {
-      'professional': 'price_ENCONTRAR_NO_PRODUTO_prod_SlTelkFBR9PDEc', // R$ 19,90/mês
-      'annual': 'price_ENCONTRAR_NO_PRODUTO_prod_SlTek9OQfCZwSA',       // R$ 199,00/ano
+      'professional': 'price_1RpwgqB2FIOsvy1CyGL5KoiS', // R$ 19,90/mês ✅
+      'annual': 'price_1RpwhNB2FIOsvy1C8XVwDTt6',       // R$ 199,00/ano ✅
     }
 
     const priceId = priceMapping[planType as keyof typeof priceMapping]
