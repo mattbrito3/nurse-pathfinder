@@ -21,6 +21,8 @@ export const useSubscription = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('idle');
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{ type: 'professional' | 'annual', name: string, price: string } | null>(null);
 
   // Get available subscription plans
   const {
@@ -149,15 +151,27 @@ export const useSubscription = () => {
         throw new Error('Invalid plan selected');
       }
 
-      // For development, use simulation. In production, this would use real Stripe
+      // Get plan details for the checkout UI
+      const planDetails = plans.find(p => 
+        (planType === 'professional' && p.name.includes('Profissional')) ||
+        (planType === 'annual' && p.name.includes('Anual'))
+      );
+
+      const planName = planDetails?.name || (planType === 'professional' ? 'Plano Profissional' : 'Plano Anual');
+      const planPrice = planDetails ? formatPrice(planDetails.price) : (planType === 'professional' ? 'R$ 19,90' : 'R$ 199,00');
+
+      // For development, show visual checkout. In production, this would use real Stripe
       const isDevelopment = window.location.hostname === 'localhost';
       
       if (isDevelopment) {
-        console.log('🧪 Running in development mode - simulating checkout');
-        toast.loading('Simulando pagamento...', { id: 'checkout' });
-        const result = await simulateCheckout(planType, user.id);
-        setPaymentStatus('succeeded');
-        return result;
+        console.log('🧪 Running in development mode - showing visual checkout');
+        
+        // Set selected plan and show checkout modal
+        setSelectedPlan({ type: planType, name: planName, price: planPrice });
+        setShowCheckout(true);
+        setPaymentStatus('loading');
+        
+        return { success: true, visual: true };
       } else {
         // Production - real Stripe integration
         console.log('🚀 Running in production mode - real Stripe checkout');
@@ -170,16 +184,21 @@ export const useSubscription = () => {
       console.log('🚀 Checkout process completed:', data);
       
       if (data.success) {
-        toast.success('Processo de pagamento iniciado!', { id: 'checkout' });
-        
-        // In development, show simulation message
-        if (window.location.hostname === 'localhost') {
-          toast.info('💡 Pagamento simulado. Em produção seria real!', { duration: 5000 });
+        if (data.visual) {
+          // Visual checkout opened - no toast needed yet
+          console.log('🎨 Visual checkout modal opened');
+        } else {
+          toast.success('Processo de pagamento iniciado!', { id: 'checkout' });
+          
+          // In development, show simulation message
+          if (window.location.hostname === 'localhost') {
+            toast.info('💡 Pagamento simulado. Em produção seria real!', { duration: 5000 });
+          }
+          
+          // Refresh subscription data
+          queryClient.invalidateQueries({ queryKey: ['user-subscription'] });
+          queryClient.invalidateQueries({ queryKey: ['payment-history'] });
         }
-        
-        // Refresh subscription data
-        queryClient.invalidateQueries({ queryKey: ['user-subscription'] });
-        queryClient.invalidateQueries({ queryKey: ['payment-history'] });
       } else if (data.url) {
         // Real Stripe redirect
         window.location.href = data.url;
@@ -279,6 +298,23 @@ export const useSubscription = () => {
     return statusMap[status as keyof typeof statusMap] || status;
   };
 
+  // Checkout modal handlers
+  const handleCheckoutSuccess = () => {
+    setShowCheckout(false);
+    setSelectedPlan(null);
+    setPaymentStatus('succeeded');
+    
+    // Refresh subscription data
+    queryClient.invalidateQueries({ queryKey: ['user-subscription'] });
+    queryClient.invalidateQueries({ queryKey: ['payment-history'] });
+  };
+
+  const handleCheckoutClose = () => {
+    setShowCheckout(false);
+    setSelectedPlan(null);
+    setPaymentStatus('idle');
+  };
+
   return {
     // Data
     plans,
@@ -303,6 +339,12 @@ export const useSubscription = () => {
     subscribe: createCheckoutSession.mutate,
     manageBilling: createBillingPortalSession.mutate,
     cancelSubscription: cancelSubscription.mutate,
+    
+    // Checkout modal
+    showCheckout,
+    selectedPlan,
+    handleCheckoutSuccess,
+    handleCheckoutClose,
     
     // Utilities
     formatPrice,

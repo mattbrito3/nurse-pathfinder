@@ -18,6 +18,7 @@ import {
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import MockCheckout from '@/components/stripe/MockCheckout';
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -30,7 +31,11 @@ const Pricing = () => {
     subscribe,
     isCreatingCheckout,
     formatPrice,
-    hasPremiumAccess
+    hasPremiumAccess,
+    showCheckout,
+    selectedPlan,
+    handleCheckoutSuccess,
+    handleCheckoutClose
   } = useSubscription();
 
   // Handle payment status from URL params
@@ -353,6 +358,17 @@ const Pricing = () => {
           </div>
         </div>
       </div>
+
+      {/* Mock Checkout Modal */}
+      {showCheckout && selectedPlan && (
+        <MockCheckout
+          planType={selectedPlan.type}
+          planName={selectedPlan.name}
+          planPrice={selectedPlan.price}
+          onClose={handleCheckoutClose}
+          onSuccess={handleCheckoutSuccess}
+        />
+      )}
     </div>
   );
 };
