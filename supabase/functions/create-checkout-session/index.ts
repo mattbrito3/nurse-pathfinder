@@ -13,6 +13,13 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  if (req.method !== 'POST') {
+    return new Response('Method Not Allowed', { 
+      status: 405, 
+      headers: corsHeaders 
+    })
+  }
+
   try {
     // Get environment variables
     const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY')
@@ -44,10 +51,11 @@ serve(async (req) => {
       throw new Error('Missing required parameters: planType, userId')
     }
 
-    // Define price mapping (these should match your Stripe dashboard)
+    // Map planType to actual Stripe Price IDs
+    // VOCÊ PRECISA SUBSTITUIR ESTES IDs PELOS SEUS PRICE IDs REAIS DO STRIPE
     const priceMapping = {
-      professional: 'price_professional_monthly', // Replace with your actual price ID
-      annual: 'price_annual_yearly', // Replace with your actual price ID
+      'professional': 'price_1QdLUFB2FIOsvy1C8gBhTNxY', // Substitua pelo seu Price ID real
+      'annual': 'price_1QdLVKB2FIOsvy1CcK7vWPJu',      // Substitua pelo seu Price ID real
     }
 
     const priceId = priceMapping[planType as keyof typeof priceMapping]
@@ -61,6 +69,8 @@ serve(async (req) => {
       throw new Error('User not found')
     }
 
+    console.log('💳 Creating Stripe checkout for user:', userData.user.email)
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer_email: userData.user.email,
@@ -71,8 +81,8 @@ serve(async (req) => {
         },
       ],
       mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
+      success_url: successUrl || `${req.headers.get('origin')}/pricing?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: cancelUrl || `${req.headers.get('origin')}/pricing?payment=canceled`,
       metadata: {
         userId: userId,
         planType: planType,
@@ -83,6 +93,8 @@ serve(async (req) => {
           planType: planType,
         },
       },
+      allow_promotion_codes: true,
+      billing_address_collection: 'required',
     })
 
     console.log('✅ Checkout session created:', session.id)
