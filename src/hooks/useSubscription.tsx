@@ -167,7 +167,9 @@ export const useSubscription = () => {
         console.log('🧪 Running in development mode - showing visual checkout');
         
         // Set selected plan and show checkout modal
+        console.log('🚀 DEFININDO PLAN:', { type: planType, name: planName, price: planPrice });
         setSelectedPlan({ type: planType, name: planName, price: planPrice });
+        console.log('🚀 ABRINDO CHECKOUT MODAL');
         setShowCheckout(true);
         setPaymentStatus('loading');
         

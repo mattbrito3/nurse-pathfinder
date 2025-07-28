@@ -18,7 +18,7 @@ import {
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import MockCheckout from '@/components/stripe/MockCheckout';
+import SimpleCheckout from '@/components/stripe/SimpleCheckout';
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -62,6 +62,10 @@ const Pricing = () => {
       return;
     }
 
+    console.log('🔥 CLICOU ASSINAR - planId:', planId);
+    console.log('🔥 showCheckout antes:', showCheckout);
+    console.log('🔥 selectedPlan antes:', selectedPlan);
+    
     subscribe(planId);
   };
 
@@ -360,15 +364,18 @@ const Pricing = () => {
       </div>
 
       {/* Mock Checkout Modal */}
-      {showCheckout && selectedPlan && (
-        <MockCheckout
-          planType={selectedPlan.type}
-          planName={selectedPlan.name}
-          planPrice={selectedPlan.price}
-          onClose={handleCheckoutClose}
-          onSuccess={handleCheckoutSuccess}
-        />
-      )}
+      {(() => {
+        console.log('🎯 RENDERIZANDO - showCheckout:', showCheckout, 'selectedPlan:', selectedPlan);
+                 return showCheckout && selectedPlan ? (
+           <SimpleCheckout
+             planType={selectedPlan.type}
+             planName={selectedPlan.name}
+             planPrice={selectedPlan.price}
+             onClose={handleCheckoutClose}
+             onSuccess={handleCheckoutSuccess}
+           />
+         ) : null;
+      })()}
     </div>
   );
 };
