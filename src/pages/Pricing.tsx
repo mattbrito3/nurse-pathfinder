@@ -18,7 +18,11 @@ import {
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+<<<<<<< HEAD
 import SimpleCheckout from '@/components/stripe/SimpleCheckout';
+=======
+import SubscribeButton from '@/components/stripe/SubscribeButton';
+>>>>>>> 0f69f8ff984523d33e0b11c3d630429bcf1ada15
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -28,8 +32,6 @@ const Pricing = () => {
     plans,
     currentSubscription,
     plansLoading,
-    subscribe,
-    isCreatingCheckout,
     formatPrice,
     hasPremiumAccess,
     showCheckout,
@@ -53,6 +55,7 @@ const Pricing = () => {
     }
   }, [searchParams, navigate]);
 
+<<<<<<< HEAD
   const handleSubscribe = (planId: string) => {
     if (!user) {
       toast.info('Faça login para continuar', {
@@ -67,6 +70,12 @@ const Pricing = () => {
     console.log('🔥 selectedPlan antes:', selectedPlan);
     
     subscribe(planId);
+=======
+  // Helper function to map plan to type
+  const getPlanType = (planName: string): 'professional' | 'annual' => {
+    if (planName.toLowerCase().includes('anual')) return 'annual';
+    return 'professional';
+>>>>>>> 0f69f8ff984523d33e0b11c3d630429bcf1ada15
   };
 
   const getCurrentPlanName = () => {
@@ -234,23 +243,15 @@ const Pricing = () => {
                           Começar Grátis
                         </Button>
                       ) : (
-                        <Button 
+                        <SubscribeButton
+                          planType={getPlanType(plan.name)}
+                          planName={plan.name}
+                          planPrice={formatPrice(plan.price)}
                           className={`w-full ${isPopular ? 'bg-primary hover:bg-primary/90' : ''}`}
-                          onClick={() => handleSubscribe(plan.id)}
-                          disabled={isCreatingCheckout}
                         >
-                          {isCreatingCheckout ? (
-                            <>
-                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                              Processando...
-                            </>
-                          ) : (
-                            <>
-                              <CreditCard className="h-4 w-4 mr-2" />
-                              {hasPremiumAccess ? 'Trocar Plano' : 'Assinar Agora'}
-                            </>
-                          )}
-                        </Button>
+                          <CreditCard className="h-4 w-4 mr-2" />
+                          {hasPremiumAccess ? 'Trocar Plano' : 'Assinar Agora'}
+                        </SubscribeButton>
                       )}
                     </div>
                   </CardContent>
