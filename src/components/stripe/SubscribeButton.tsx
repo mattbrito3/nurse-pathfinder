@@ -33,7 +33,6 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = ({
     }
 
     setIsLoading(true);
-    console.log('🚀 Starting checkout process for:', planType);
 
     try {
       // Call Supabase Edge Function to create checkout session
@@ -55,16 +54,12 @@ const SubscribeButton: React.FC<SubscribeButtonProps> = ({
         throw new Error('No session ID received from server');
       }
 
-      console.log('✅ Checkout session created:', data.sessionId);
-
       // Redirect to Stripe Checkout using the sessionId
       const stripe = await getStripe();
       
       if (!stripe) {
         throw new Error('Stripe failed to load');
       }
-
-      console.log('🔄 Redirecting to Stripe Checkout...');
       
       const { error: stripeError } = await stripe.redirectToCheckout({
         sessionId: data.sessionId,

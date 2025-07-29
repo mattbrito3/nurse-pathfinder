@@ -1,5 +1,15 @@
+// @ts-ignore: Deno is available in Supabase Edge Functions
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined;
+  };
+};
+
+// @ts-ignore: Deno supports URL imports
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+// @ts-ignore: Deno supports URL imports
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+// @ts-ignore: Deno supports URL imports
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 
 const corsHeaders = {
@@ -53,14 +63,16 @@ serve(async (req) => {
 
     // Map planType to actual Stripe Price IDs - CONFIGURADO COM SEUS PRICE IDs REAIS!
     const priceMapping = {
-      'professional': 'price_1RpwgqB2FIOsvy1CyGL5KoiS', // R$ 19,90/mês ✅
-      'annual': 'price_1RpwhNB2FIOsvy1C8XVwDTt6',       // R$ 199,00/ano ✅
+      'professional': 'price_1RpwgqB2FIOsvy1CyGL5KoiS', // R$ 29,00/mês (Estudante) ✅
+      'annual': 'price_1RpwhNB2FIOsvy1C8XVwDTt6',       // R$ 59,00/mês (Profissional) ✅
     }
 
     const priceId = priceMapping[planType as keyof typeof priceMapping]
     if (!priceId) {
       throw new Error(`Invalid plan type: ${planType}`)
     }
+
+    console.log('💳 Using Price ID:', priceId, 'for plan:', planType)
 
     // Get user data
     const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId)
@@ -69,6 +81,8 @@ serve(async (req) => {
     }
 
     console.log('💳 Creating Stripe checkout for user:', userData.user.email)
+    console.log('🔑 Stripe key configured:', stripeSecretKey ? 'YES' : 'NO')
+    console.log('🔑 Stripe key length:', stripeSecretKey?.length || 0)
 
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({

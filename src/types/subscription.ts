@@ -30,6 +30,14 @@ export interface UserSubscription {
   cancel_at_period_end: boolean;
   created_at: string;
   updated_at: string;
+  subscription_plans?: {
+    name: string;
+    features: string[];
+    max_flashcards?: number;
+    max_calculations?: number;
+    advanced_analytics?: boolean;
+    priority_support?: boolean;
+  };
 }
 
 export interface PaymentIntent {

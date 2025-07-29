@@ -8,7 +8,7 @@ export const runGlossaryMigrations = async () => {
 
     // 1. Verificar se já existem dados
     const { data: existingCategories } = await supabase
-      .from('glossary_categories')
+      .from('glossary_categories' as any)
       .select('id')
       .limit(1) as { data: Pick<GlossaryCategory, 'id'>[] | null };
 
@@ -28,7 +28,7 @@ export const runGlossaryMigrations = async () => {
       ];
 
       const { error: categoriesError } = await supabase
-        .from('glossary_categories')
+        .from('glossary_categories' as any)
         .insert(categoriesData) as { error: any };
 
       if (categoriesError) {
@@ -39,24 +39,24 @@ export const runGlossaryMigrations = async () => {
       console.log('✅ Categorias inseridas');
 
       // 3. Buscar categorias para obter IDs
-      const { data: categories } = await supabase
-        .from('glossary_categories')
-        .select('id, name') as { data: Pick<GlossaryCategory, 'id' | 'name'>[] | null };
+      const { data: categories, error: fetchCategoriesError } = await supabase
+        .from('glossary_categories' as any)
+        .select('id, name');
 
-      if (!categories) {
-        console.error('Erro ao buscar categorias');
+      if (fetchCategoriesError || !categories) {
+        console.error('Erro ao buscar categorias:', fetchCategoriesError);
         return false;
       }
 
       // 4. Inserir termos médicos básicos
-      const anatomiaId = categories.find(c => c.name === 'Anatomia')?.id;
-      const fisiologiaId = categories.find(c => c.name === 'Fisiologia')?.id;
-      const farmacologiaId = categories.find(c => c.name === 'Farmacologia')?.id;
-      const patologiaId = categories.find(c => c.name === 'Patologia')?.id;
-      const procedimentosId = categories.find(c => c.name === 'Procedimentos')?.id;
-      const emergenciaId = categories.find(c => c.name === 'Emergência')?.id;
-      const materiaisId = categories.find(c => c.name === 'Materiais')?.id;
-      const sinaisVitaisId = categories.find(c => c.name === 'Sinais Vitais')?.id;
+      const anatomiaId = (categories as any).find((c: any) => c.name === 'Anatomia')?.id;
+      const fisiologiaId = (categories as any).find((c: any) => c.name === 'Fisiologia')?.id;
+      const farmacologiaId = (categories as any).find((c: any) => c.name === 'Farmacologia')?.id;
+      const patologiaId = (categories as any).find((c: any) => c.name === 'Patologia')?.id;
+      const procedimentosId = (categories as any).find((c: any) => c.name === 'Procedimentos')?.id;
+      const emergenciaId = (categories as any).find((c: any) => c.name === 'Emergência')?.id;
+      const materiaisId = (categories as any).find((c: any) => c.name === 'Materiais')?.id;
+      const sinaisVitaisId = (categories as any).find((c: any) => c.name === 'Sinais Vitais')?.id;
 
       const terms = [
         // Anatomia
@@ -180,9 +180,10 @@ export const runGlossaryMigrations = async () => {
 
       console.log('📝 Inserindo termos médicos...');
       
+      // Corrigindo o tipo para uso com Supabase gerado pelo typescript
       const { error: termsError } = await supabase
-        .from('medical_terms')
-        .insert(terms as MedicalTermInsert[]) as { error: any };
+        .from('medical_terms' as any)
+        .insert(terms);
 
       if (termsError) {
         console.error('Erro ao inserir termos:', termsError);

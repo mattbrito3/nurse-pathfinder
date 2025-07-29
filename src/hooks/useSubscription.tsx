@@ -29,14 +29,14 @@ export const useSubscription = () => {
     queryKey: ['subscription-plans'],
     queryFn: async (): Promise<SubscriptionPlan[]> => {
       const { data, error } = await supabase
-        .from('subscription_plans')
+        .from('subscription_plans' as any)
         .select('*')
         .eq('active', true)
         .order('price', { ascending: true });
 
       if (error) throw error;
       
-      return data.map(plan => ({
+      return (data as any[]).map((plan: any) => ({
         ...plan,
         features: Array.isArray(plan.features) ? plan.features : []
       }));
@@ -54,7 +54,7 @@ export const useSubscription = () => {
       if (!user?.id) return null;
 
       const { data, error } = await supabase
-        .from('user_subscriptions')
+        .from('user_subscriptions' as any)
         .select(`
           *,
           subscription_plans (
@@ -72,7 +72,7 @@ export const useSubscription = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
-      return data;
+      return data as any;
     },
     enabled: !!user?.id
   });
@@ -87,14 +87,14 @@ export const useSubscription = () => {
       if (!user?.id) return [];
 
       const { data, error } = await supabase
-        .from('payment_history')
+        .from('payment_history' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(20);
 
       if (error) throw error;
-      return data;
+      return data as any[];
     },
     enabled: !!user?.id
   });
@@ -132,13 +132,13 @@ export const useSubscription = () => {
   const createBillingPortalSession = useMutation({
     mutationFn: async (): Promise<BillingPortalSession> => {
       if (!user?.id) throw new Error('User not authenticated');
-      if (!currentSubscription?.stripe_customer_id) {
+      if (!(currentSubscription as any)?.stripe_customer_id) {
         throw new Error('No active subscription found');
       }
 
       const { data, error } = await supabase.functions.invoke('create-billing-portal-session', {
         body: { 
-          customerId: currentSubscription.stripe_customer_id,
+          customerId: (currentSubscription as any).stripe_customer_id,
           returnUrl: `${window.location.origin}/dashboard`
         }
       });

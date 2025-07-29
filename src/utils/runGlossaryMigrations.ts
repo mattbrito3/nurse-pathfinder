@@ -7,12 +7,12 @@ export const runGlossaryDataMigrations = async (): Promise<void> => {
   try {
     // Verificar se já temos dados nas tabelas
     const { data: existingCategories } = await supabase
-      .from('glossary_categories')
+      .from('glossary_categories' as any)
       .select('id')
       .limit(1);
 
     const { data: existingTerms } = await supabase
-      .from('medical_terms')
+      .from('medical_terms' as any)
       .select('id')
       .limit(1);
 
@@ -40,7 +40,7 @@ export const runGlossaryDataMigrations = async (): Promise<void> => {
     ];
 
     const { data: insertedCategories, error: categoriesError } = await supabase
-      .from('glossary_categories')
+      .from('glossary_categories' as any)
       .insert(categoriesData)
       .select('id, name');
 
@@ -53,7 +53,7 @@ export const runGlossaryDataMigrations = async (): Promise<void> => {
 
     // Criar mapa de categorias para busca rápida
     const categoryMap = new Map();
-    insertedCategories?.forEach(cat => {
+    (insertedCategories as any)?.forEach((cat: any) => {
       categoryMap.set(cat.name, cat.id);
     });
 
@@ -346,7 +346,7 @@ export const runGlossaryDataMigrations = async (): Promise<void> => {
       const batch = termsData.slice(i, i + batchSize);
       
       const { data, error } = await supabase
-        .from('medical_terms')
+        .from('medical_terms' as any)
         .insert(batch)
         .select('id');
 
