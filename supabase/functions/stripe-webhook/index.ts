@@ -188,7 +188,7 @@ serve(async (req: Request) => {
             user_id: userId,
             amount: session.amount_total! / 100, // Convert from cents
             currency: session.currency || 'brl',
-            status: 'completed',
+            status: 'succeeded', // ✅ Corrigido: usar 'succeeded' em vez de 'completed'
             stripe_payment_intent_id: session.payment_intent as string,
             created_at: new Date().toISOString()
           })
@@ -207,14 +207,22 @@ serve(async (req: Request) => {
         console.log('🔄 New status:', subscription.status)
         
         // Update subscription status in database
+        const updateData: any = {
+          status: subscription.status,
+          updated_at: new Date().toISOString()
+        }
+
+        // ✅ Safely handle timestamps that might be null/undefined
+        if (subscription.current_period_start) {
+          updateData.current_period_start = new Date(subscription.current_period_start * 1000).toISOString()
+        }
+        if (subscription.current_period_end) {
+          updateData.current_period_end = new Date(subscription.current_period_end * 1000).toISOString()
+        }
+
         const { error } = await supabase
           .from('user_subscriptions')
-          .update({
-            status: subscription.status,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
-            updated_at: new Date().toISOString()
-          })
+          .update(updateData)
           .eq('stripe_subscription_id', subscription.id)
 
         if (error) {
