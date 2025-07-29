@@ -1,73 +1,269 @@
-# Welcome to your Lovable project
+# 💊 Dose Certa - Plataforma de Estudo para Enfermagem
 
-## Project info
+Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profissionais de enfermagem, oferecendo ferramentas essenciais para cálculos de medicação, estudo de termos médicos e gestão de conhecimento.
 
-**URL**: https://lovable.dev/projects/b8edf788-c042-4ee9-99a4-09880f434fce
+![React](https://img.shields.io/badge/React-18.3.1-blue.svg)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)
+![Supabase](https://img.shields.io/badge/Supabase-2.52.0-green.svg)
+![Stripe](https://img.shields.io/badge/Stripe-18.3.0-purple.svg)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.11-cyan.svg)
 
-## How can I edit this code?
+## ✨ Funcionalidades
 
-There are several ways of editing your application.
+### 🧮 **Calculadora de Medicação**
+- **Dosagem por peso**: Cálculos precisos baseados no peso do paciente
+- **Taxa de infusão**: Cálculo de gotejamento e velocidade de infusão
+- **Conversão de unidades**: Conversões entre diferentes unidades médicas
+- **Concentração de soluções**: Cálculos de diluição e concentração
+- **Histórico de cálculos**: Salve e consulte cálculos anteriores
 
-**Use Lovable**
+### 📚 **Glossário Médico Interativo**
+- **Mais de 270+ termos médicos** organizados por categorias
+- **Sistema de busca avançada** com filtros por dificuldade
+- **Categorias especializadas**: Cardiovascular, Respiratório, Neurológico, etc.
+- **Favoritos**: Marque termos importantes para estudo rápido
+- **Definições completas** com sinônimos e termos relacionados
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b8edf788-c042-4ee9-99a4-09880f434fce) and start prompting.
+### 🎯 **Sistema de Flashcards**
+- **Criação de flashcards personalizados** para estudo
+- **Flashcards pré-criados** com conteúdo profissional
+- **Sistema de revisão espaçada** para otimizar o aprendizado
+- **Filtros por categoria e dificuldade**
+- **Estatísticas de progresso** de estudos
 
-Changes made via Lovable will be committed automatically to this repo.
+### 💳 **Sistema de Assinatura**
+- **Plano Gratuito**: Acesso limitado à calculadora (7 usos/dia, apenas dosagem)
+- **Plano Estudante (R$ 29/mês)**: Acesso completo às funcionalidades
+- **Plano Profissional (R$ 59/mês)**: Recursos avançados + suporte prioritário
+- **Pagamentos seguros** via Stripe
 
-**Use your preferred IDE**
+### 👤 **Gestão de Usuário**
+- **Autenticação segura** com Supabase Auth
+- **Perfis personalizados** com estatísticas de uso
+- **Dashboard analítico** com métricas de progresso
+- **Histórico completo** de atividades
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 🛠️ Tecnologias Utilizadas
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### **Frontend**
+- **React 18.3.1** - Framework principal
+- **TypeScript** - Tipagem estática
+- **Vite** - Build tool e dev server
+- **TailwindCSS** - Estilização utilitária
+- **shadcn/ui** - Componentes de UI modernos
+- **React Query** - Gerenciamento de estado servidor
+- **React Hook Form** - Formulários performáticos
+- **React Router** - Roteamento SPA
 
-Follow these steps:
+### **Backend & Database**
+- **Supabase** - Backend as a Service
+- **PostgreSQL** - Banco de dados principal
+- **Row Level Security (RLS)** - Segurança granular
+- **Edge Functions** - Serverless functions
+- **Real-time subscriptions** - Atualizações em tempo real
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### **Pagamentos & Autenticação**
+- **Stripe** - Processamento de pagamentos
+- **Supabase Auth** - Sistema de autenticação
+- **JWT** - Tokens de autenticação
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### **Ferramentas de Desenvolvimento**
+- **ESLint** - Linting de código
+- **TypeScript ESLint** - Regras específicas para TS
+- **PostCSS** - Processamento de CSS
+- **Autoprefixer** - Prefixos CSS automáticos
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 🚀 Instalação e Configuração
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### **Pré-requisitos**
+- Node.js 18+ 
+- npm ou yarn
+- Conta Supabase
+- Conta Stripe (para pagamentos)
+
+### **1. Clone o repositório**
+```bash
+git clone https://github.com/seu-usuario/nurse-pathfinder.git
+cd nurse-pathfinder
+```
+
+### **2. Instale as dependências**
+```bash
+npm install
+```
+
+### **3. Configuração das variáveis de ambiente**
+
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+# Supabase
+VITE_SUPABASE_URL=sua_supabase_url
+VITE_SUPABASE_ANON_KEY=sua_supabase_anon_key
+
+# Stripe
+VITE_STRIPE_PUBLISHABLE_KEY=sua_stripe_publishable_key
+```
+
+### **4. Configuração do Supabase**
+
+#### **4.1. Execute as migrações do banco**
+No Supabase Dashboard > SQL Editor, execute os arquivos de migração em ordem:
+
+```sql
+-- Execute os arquivos em supabase/migrations/ na ordem:
+-- 20250122000001_create_medical_glossary.sql
+-- 20250122000002_insert_initial_glossary_data.sql
+-- 20250123000001_create_flashcards_system.sql
+-- 20250126200000_create_user_profiles.sql
+-- 20250126210000_create_subscription_system.sql
+-- 20250128000001_create_calculator_usage.sql
+```
+
+#### **4.2. Configure os secrets do Supabase**
+No Supabase Dashboard > Edge Functions > Settings:
+
+```
+STRIPE_SECRET_KEY=sua_stripe_secret_key
+SUPABASE_URL=sua_supabase_url
+SUPABASE_SERVICE_ROLE_KEY=sua_supabase_service_role_key
+```
+
+#### **4.3. Deploy das Edge Functions**
+```bash
+npx supabase functions deploy create-checkout-session
+npx supabase functions deploy stripe-webhook
+```
+
+### **5. Configuração do Stripe**
+
+1. **Configure os produtos no Stripe Dashboard**
+2. **Configure os webhooks** para o endpoint das Edge Functions
+3. **Anote os Price IDs** dos produtos criados
+
+### **6. Inicie o servidor de desenvolvimento**
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+A aplicação estará disponível em `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Estrutura do Projeto
 
-**Use GitHub Codespaces**
+```
+src/
+├── components/          # Componentes React reutilizáveis
+│   ├── auth/           # Componentes de autenticação
+│   ├── calculator/     # Componentes da calculadora
+│   ├── flashcards/     # Componentes de flashcards
+│   ├── stripe/         # Componentes de pagamento
+│   └── ui/            # Componentes de UI (shadcn)
+├── hooks/              # React Hooks customizados
+├── pages/              # Páginas da aplicação
+├── contexts/           # React Contexts
+├── types/              # Definições TypeScript
+├── utils/              # Funções utilitárias
+├── integrations/       # Integrações externas
+└── data/              # Dados estáticos
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+supabase/
+├── functions/          # Edge Functions
+│   ├── create-checkout-session/
+│   └── stripe-webhook/
+└── migrations/         # Migrações do banco
+```
 
-## What technologies are used for this project?
+## 🎯 Scripts Disponíveis
 
-This project is built with:
+```bash
+# Desenvolvimento
+npm run dev              # Inicia servidor de desenvolvimento
+npm run dev:clean        # Inicia removendo processos anteriores
+npm run dev:port         # Inicia na porta 8080
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+# Build
+npm run build            # Build para produção
+npm run build:dev        # Build para desenvolvimento
+npm run preview          # Preview do build
 
-## How can I deploy this project?
+# Qualidade de código
+npm run lint             # Executa ESLint
 
-Simply open [Lovable](https://lovable.dev/projects/b8edf788-c042-4ee9-99a4-09880f434fce) and click on Share -> Publish.
+# Utilitários
+npm run stop             # Para processos Vite
+```
 
-## Can I connect a custom domain to my Lovable project?
+## 🧪 Funcionalidades Principais
 
-Yes, you can!
+### **Calculadora de Medicação**
+- Suporte a múltiplos tipos de cálculo
+- Validação de entrada em tempo real
+- Histórico de cálculos persistente
+- Limitações baseadas no plano de assinatura
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### **Glossário Médico**
+- Base de conhecimento com 270+ termos
+- Sistema de busca inteligente
+- Categorização por especialidade
+- Níveis de dificuldade (básico, intermediário, avançado)
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### **Sistema de Flashcards**
+- Algoritmo de repetição espaçada
+- Criação de conteúdo personalizado
+- Tracking de progresso de estudos
+- Análise de performance
+
+### **Sistema de Assinatura**
+- Integração completa com Stripe
+- Webhooks para sincronização de status
+- Portal de gerenciamento de cobrança
+- Diferentes níveis de acesso
+
+## 🔒 Segurança
+
+- **Row Level Security (RLS)** habilitado em todas as tabelas
+- **Autenticação JWT** via Supabase Auth
+- **Validação de entrada** em todas as operações
+- **HTTPS** obrigatório em produção
+- **Sanitização** de dados de entrada
+
+## 🤝 Contribuição
+
+1. **Fork** o projeto
+2. **Crie** uma branch para sua feature (`git checkout -b feature/MinhaFeature`)
+3. **Commit** suas mudanças (`git commit -m 'Add: Minha nova feature'`)
+4. **Push** para a branch (`git push origin feature/MinhaFeature`)
+5. **Abra** um Pull Request
+
+### **Padrões de Commit**
+- `feat:` - Nova funcionalidade
+- `fix:` - Correção de bug
+- `docs:` - Documentação
+- `style:` - Formatação de código
+- `refactor:` - Refatoração
+- `test:` - Testes
+- `chore:` - Manutenção
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+## 👥 Autores
+
+- **Mateus Brito** - *Desenvolvedor Principal* - [@matheusbrito](https://github.com/matheusbrito)
+
+## 🆘 Suporte
+
+Para suporte e dúvidas:
+- 📧 Email: matheusbrito.oo@gmail.com
+- 🐛 Issues: [GitHub Issues](https://github.com/seu-usuario/nurse-pathfinder/issues)
+
+## 🙏 Agradecimentos
+
+- Comunidade de enfermagem pela validação das funcionalidades
+- Equipe shadcn/ui pelos componentes excepcionais
+- Supabase e Stripe pelas ferramentas robustas
+
+---
+
+**💡 Dose Certa** - Transformando o estudo de enfermagem através da tecnologia.
