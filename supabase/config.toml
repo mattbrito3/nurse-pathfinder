@@ -1,1 +1,7 @@
 project_id = "epjfoteyvejoqnigijrz"
+
+[functions]
+# Configure Edge Functions
+[functions.stripe-webhook]
+# Allow public access without authentication
+verify_jwt = false
