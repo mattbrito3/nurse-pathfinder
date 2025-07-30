@@ -1,10 +1,10 @@
--- Add missing columns to payment_history table for AbacatePay integration
+-- Add missing columns to payment_history table for external payment integrations
 
 -- Add payment_provider column
 ALTER TABLE payment_history 
 ADD COLUMN IF NOT EXISTS payment_provider TEXT;
 
--- Add payment_id column (for external payment IDs like AbacatePay IDs)
+-- Add payment_id column (for external payment IDs)
 ALTER TABLE payment_history 
 ADD COLUMN IF NOT EXISTS payment_id TEXT;
 
@@ -29,6 +29,6 @@ CREATE INDEX IF NOT EXISTS idx_payment_history_provider ON payment_history(payme
 CREATE INDEX IF NOT EXISTS idx_payment_history_payment_id ON payment_history(payment_id);
 
 -- Add comments
-COMMENT ON COLUMN payment_history.payment_provider IS 'Payment provider (stripe, abacatepay, etc.)';
+COMMENT ON COLUMN payment_history.payment_provider IS 'Payment provider (stripe, etc.)';
 COMMENT ON COLUMN payment_history.payment_id IS 'External payment ID from payment provider';
 COMMENT ON COLUMN payment_history.metadata IS 'Additional payment data stored as JSON';
