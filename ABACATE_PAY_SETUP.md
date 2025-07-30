@@ -27,6 +27,7 @@ npx supabase secrets set ABACATE_PAY_WEBHOOK_SECRET=seu_webhook_secret_aqui
 npx supabase functions deploy abacatepay-pix
 npx supabase functions deploy abacatepay-status
 npx supabase functions deploy abacatepay-webhook
+npx supabase functions deploy abacatepay-simulate
 ```
 
 ### 3. Configurar Webhook no Dashboard da AbacatePay
@@ -57,6 +58,13 @@ A AbacatePay oferece ambiente de sandbox para testes:
 3. Selecione "PIX"
 4. Gere o QR Code
 5. Use o app PIX para pagar (ou simule no sandbox)
+
+### Teste com Simulação (Desenvolvimento)
+
+1. Gere um QR Code PIX
+2. Clique no botão "🎮 Simular Pagamento (Dev)"
+3. O pagamento será simulado automaticamente
+4. A assinatura será ativada imediatamente
 
 ## 📊 Monitoramento
 

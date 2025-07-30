@@ -186,23 +186,48 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
             </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button 
-              onClick={openPixApp}
-              className="flex-1"
-              variant="outline"
-            >
-              <ExternalLink className="h-4 w-4 mr-2" />
-              Abrir App PIX
-            </Button>
-            <Button 
-              onClick={copyPixCode}
-              className="flex-1"
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              Copiar Código
-            </Button>
-          </div>
+                     <div className="flex gap-2">
+             <Button 
+               onClick={openPixApp}
+               className="flex-1"
+               variant="outline"
+             >
+               <ExternalLink className="h-4 w-4 mr-2" />
+               Abrir App PIX
+             </Button>
+             <Button 
+               onClick={copyPixCode}
+               className="flex-1"
+             >
+               <Copy className="h-4 w-4 mr-2" />
+               Copiar Código
+             </Button>
+           </div>
+           
+           {/* Botão de simulação apenas para desenvolvimento */}
+           {process.env.NODE_ENV === 'development' && (
+             <Button 
+               onClick={async () => {
+                 try {
+                   const { data, error } = await supabase.functions.invoke('abacatepay-simulate', {
+                     body: { paymentId: pixData.paymentId }
+                   });
+                   
+                   if (error) {
+                     toast.error('Erro ao simular pagamento');
+                   } else {
+                     toast.success('Pagamento simulado com sucesso!');
+                   }
+                 } catch (error) {
+                   toast.error('Erro ao simular pagamento');
+                 }
+               }}
+               variant="outline"
+               className="w-full bg-yellow-50 border-yellow-200 text-yellow-800 hover:bg-yellow-100"
+             >
+               🎮 Simular Pagamento (Dev)
+             </Button>
+           )}
 
           <div className="text-center">
             <Badge variant="secondary" className="text-xs">

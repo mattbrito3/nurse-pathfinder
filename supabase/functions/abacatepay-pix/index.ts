@@ -50,10 +50,10 @@ serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        amount: Math.round(amount * 100), // Converter para centavos
-        expiresIn: 1800, // 30 minutos
-        description: description || `Plano ${planType} - Nurse Pathfinder`,
-        customer: customer
+        amount: Math.round(amount * 100), // Converter para centavos (obrigatório)
+        expiresIn: 1800, // 30 minutos (opcional)
+        description: description || `Plano ${planType} - Nurse Pathfinder`, // opcional, max 140 chars
+        customer: customer // obrigatório se fornecido
       })
     })
 

@@ -8,3 +8,6 @@ verify_jwt = false
 [functions.abacatepay-webhook]
 # Allow public access without authentication
 verify_jwt = false
+[functions.abacatepay-simulate]
+# Allow public access without authentication
+verify_jwt = false
