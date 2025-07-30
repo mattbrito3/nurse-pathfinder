@@ -167,6 +167,9 @@ serve(async (req) => {
     // Verificar se tem Resend API Key
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     
+    console.log('🔍 VERIFICANDO RESEND_API_KEY:')
+    console.log(`RESEND_API_KEY: ${resendApiKey ? '✅ ENCONTRADO (' + resendApiKey.substring(0, 8) + '...)' : '❌ NÃO ENCONTRADO'}`)
+    
     if (resendApiKey) {
       console.log('📧 Enviando email via Resend API...')
       
