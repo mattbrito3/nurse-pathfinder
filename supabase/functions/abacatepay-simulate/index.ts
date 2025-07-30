@@ -21,100 +21,131 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const abacatePayApiKey = Deno.env.get('ABACATE_PAY_API_KEY')!
     
+    console.log('🔧 Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      hasAbacatePayKey: !!abacatePayApiKey
+    })
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    const { paymentId } = await req.json()
-
+    const body = await req.json()
+    const { paymentId } = body
+    
+    console.log('📥 Request body:', body)
     console.log('🎮 Simulating AbacatePay payment for:', paymentId)
 
     if (!paymentId) {
       throw new Error('Payment ID is required')
     }
 
-    // Simular pagamento via AbacatePay API (apenas para desenvolvimento)
-    const simulateResponse = await fetch(`https://api.abacatepay.com/v1/pixQrCode/simulate-payment?id=${paymentId}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${abacatePayApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        metadata: {
-          simulated: true,
-          simulatedAt: new Date().toISOString()
-        }
-      })
-    })
+    // Simular pagamento diretamente (desenvolvimento)
+    console.log('🎮 Simulating payment directly - marking as PAID')
+    
+    // Processar o pagamento simulado diretamente
+    // Buscar o pagamento no banco
+    const { data: paymentData, error: fetchError } = await supabase
+      .from('payment_history')
+      .select('*')
+      .eq('payment_id', paymentId)
+      .single()
 
-    if (!simulateResponse.ok) {
-      const errorData = await simulateResponse.json()
-      console.error('❌ AbacatePay simulate error:', errorData)
-      throw new Error(`AbacatePay API error: ${errorData.error || simulateResponse.statusText}`)
+    if (fetchError) {
+      console.error('❌ Error fetching payment:', fetchError)
+      throw new Error('Payment not found in database')
     }
 
-    const simulateData = await simulateResponse.json()
-    console.log('✅ Payment simulated successfully:', simulateData)
+    console.log('📄 Payment data found:', paymentData)
 
-    // Processar o pagamento simulado
-    if (simulateData.data?.status === 'PAID') {
-      // Buscar o pagamento no banco
-      const { data: paymentData, error: fetchError } = await supabase
-        .from('payment_history')
+    // Atualizar status do pagamento
+    const { error: updateError } = await supabase
+      .from('payment_history')
+      .update({
+        status: 'succeeded',
+        updated_at: new Date().toISOString()
+      })
+      .eq('payment_id', paymentId)
+
+    if (updateError) {
+      console.error('❌ Error updating payment status:', updateError)
+      throw new Error('Failed to update payment status')
+    }
+
+    // Primeiro, verificar se já existe uma subscription ativa para este usuário
+    const { data: existingSubscription, error: checkError } = await supabase
+      .from('user_subscriptions')
+      .select('*')
+      .eq('user_id', paymentData.user_id)
+      .eq('status', 'active')
+      .single()
+
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('❌ Error checking existing subscription:', checkError)
+    }
+
+    if (existingSubscription) {
+      console.log('✅ User already has active subscription:', existingSubscription.id)
+    } else {
+      // Buscar o plano correto
+      const { data: plans, error: plansError } = await supabase
+        .from('subscription_plans')
         .select('*')
-        .eq('payment_id', paymentId)
-        .single()
+        .eq('active', true)
+        .order('price', { ascending: true })
 
-      if (fetchError) {
-        console.error('❌ Error fetching payment:', fetchError)
-        throw new Error('Payment not found in database')
+      if (plansError) {
+        console.error('❌ Error fetching plans:', plansError)
+        throw new Error('Failed to fetch subscription plans')
       }
 
-      // Atualizar status do pagamento
-      const { error: updateError } = await supabase
-        .from('payment_history')
-        .update({
-          status: 'succeeded',
-          updated_at: new Date().toISOString()
-        })
-        .eq('payment_id', paymentId)
+      console.log('📋 Available plans:', plans.map(p => ({ id: p.id, name: p.name, interval: p.interval })))
 
-      if (updateError) {
-        console.error('❌ Error updating payment status:', updateError)
-        throw new Error('Failed to update payment status')
+      // Determinar o plano baseado no planType
+      let selectedPlan = plans[0] // Default para o primeiro plano
+      if (paymentData.metadata?.planType === 'annual') {
+        selectedPlan = plans.find(p => p.interval === 'year') || plans[1] || plans[0]
+      } else {
+        selectedPlan = plans.find(p => p.interval === 'month') || plans[0]
       }
+
+      console.log('🎯 Creating subscription with plan:', selectedPlan.name, '(ID:', selectedPlan.id, ')')
 
       // Ativar assinatura do usuário
-      const { error: subscriptionError } = await supabase
+      const { data: newSubscription, error: subscriptionError } = await supabase
         .from('user_subscriptions')
         .insert({
           user_id: paymentData.user_id,
-          plan_id: paymentData.metadata?.planType === 'annual' ? 2 : 1, // 1 = professional, 2 = annual
+          plan_id: selectedPlan.id,
           stripe_customer_id: null,
           stripe_subscription_id: null,
           status: 'active',
           current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + (paymentData.metadata?.planType === 'annual' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString()
+          current_period_end: new Date(Date.now() + (selectedPlan.interval === 'year' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString(),
         })
+        .select()
+        .single()
 
       if (subscriptionError) {
         console.error('❌ Error creating subscription:', subscriptionError)
-        // Não falhar se já existe uma assinatura ativa
-        if (!subscriptionError.message.includes('duplicate key')) {
-          throw new Error('Failed to create subscription')
-        }
+        throw new Error('Failed to create subscription')
       }
 
-      console.log('✅ Simulated payment processed and subscription activated')
+      console.log('✅ Successfully created subscription:', newSubscription.id)
     }
+
+    console.log('✅ Simulated payment processed and subscription activated')
 
     return new Response(
       JSON.stringify({
         success: true,
         message: 'Payment simulated successfully',
-        data: simulateData.data
+        data: {
+          status: 'PAID',
+          paymentId: paymentId,
+          simulatedAt: new Date().toISOString()
+        }
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

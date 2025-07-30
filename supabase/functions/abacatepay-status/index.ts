@@ -21,12 +21,20 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const abacatePayApiKey = Deno.env.get('ABACATE_PAY_API_KEY')!
     
+    console.log('🔧 Environment check:', {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey,
+      hasAbacatePayKey: !!abacatePayApiKey
+    })
+    
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    const { paymentId } = await req.json()
-
+    const body = await req.json()
+    const { paymentId } = body
+    
+    console.log('📥 Request body:', body)
     console.log('🔍 Checking AbacatePay status for:', paymentId)
 
     if (!paymentId) {
