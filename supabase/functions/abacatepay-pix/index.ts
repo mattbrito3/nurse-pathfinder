@@ -32,8 +32,8 @@ serve(async (req) => {
     console.log('🔍 Full request body:', requestBody)
 
     // Validar dados obrigatórios
-    if (!amount) {
-      throw new Error('Amount is required')
+    if (!amount || isNaN(amount) || amount <= 0) {
+      throw new Error(`Invalid amount: ${amount}. Must be a positive number.`)
     }
     
     if (!customerData) {

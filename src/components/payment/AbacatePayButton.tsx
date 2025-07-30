@@ -38,20 +38,49 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
     try {
       setIsLoading(true);
 
+      // Calcular amount corretamente - remover R$ e normalizar formato
+      let priceValue = planPrice.replace('R$ ', '').trim();
+      
+      // Normalizar formato de número (BR ou US)
+      if (priceValue.includes(',') && !priceValue.includes('.')) {
+        // Formato brasileiro: 29,90 -> 29.90
+        priceValue = priceValue.replace(',', '.');
+      } else if (priceValue.includes(',') && priceValue.includes('.')) {
+        // Formato brasileiro com milhares: 1.234,50 -> 1234.50
+        priceValue = priceValue.replace(/\./g, '').replace(',', '.');
+      }
+      
+      const amount = parseFloat(priceValue);
+      
+      console.log('💰 Price processing:', {
+        planPrice,
+        priceValue,
+        amount,
+        isValidAmount: !isNaN(amount) && amount > 0
+      });
+
+      if (isNaN(amount) || amount <= 0) {
+        throw new Error(`Invalid amount: ${planPrice} -> ${amount}`);
+      }
+
+      const requestBody = {
+        planType: 'professional', // TODO: Passar planType dinamicamente
+        userId: user?.id,
+        amount: amount,
+        description: `Plano ${planName} - Nurse Pathfinder`,
+        customerData: {
+          name: customerData.name,
+          email: customerData.email,
+          cellphone: customerData.cellphone,
+          taxId: customerData.taxId
+        }
+      };
+
+      console.log('📤 Sending to abacatepay-pix:', requestBody);
+
       // Call Supabase Edge Function to generate PIX
       const { data, error } = await supabase.functions.invoke('abacatepay-pix', {
-        body: {
-          planType: 'professional', // TODO: Passar planType dinamicamente
-          userId: user?.id,
-          amount: parseFloat(planPrice.replace('R$ ', '').replace(',', '.')),
-          description: `Plano ${planName} - Nurse Pathfinder`,
-          customerData: {
-            name: customerData.name,
-            email: customerData.email,
-            cellphone: customerData.cellphone,
-            taxId: customerData.taxId
-          }
-        },
+        body: requestBody,
       });
 
       if (error) {
