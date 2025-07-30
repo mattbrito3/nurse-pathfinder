@@ -95,6 +95,12 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
           clearInterval(interval);
           setIsPaid(true);
           toast.success('Pagamento aprovado! Redirecionando...');
+          
+          // Invalidar cache da subscription para forçar reload
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+          
           onSuccess?.({ paymentId, method: 'pix' });
         } else if (data.status === 'EXPIRED') {
           clearInterval(interval);

@@ -101,8 +101,14 @@ serve(async (req) => {
           currency: 'brl',
           status: 'pending',
           payment_method: 'pix',
+          payment_provider: 'abacatepay',
+          payment_id: pixData.data.id,
           description: `PIX ${planType} - ${pixData.data.id}`,
-          stripe_payment_intent_id: pixData.data.id  // Temporariamente usando este campo para o ID do PIX
+          metadata: {
+            planType: planType,
+            customerData: customer,
+            abacatePayResponse: pixData.data
+          }
         })
         .select()
 

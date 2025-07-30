@@ -86,26 +86,64 @@ serve(async (req) => {
         throw new Error('Failed to update payment status')
       }
 
-      // Ativar assinatura do usuário
-      const { error: subscriptionError } = await supabase
+      // Primeiro, verificar se já existe uma subscription ativa para este usuário
+      const { data: existingSubscription, error: checkError } = await supabase
         .from('user_subscriptions')
-        .insert({
-          user_id: paymentData.user_id,
-          plan_id: paymentData.metadata?.planType === 'annual' ? 2 : 1, // 1 = professional, 2 = annual
-          stripe_customer_id: null,
-          stripe_subscription_id: null,
-          status: 'active',
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + (paymentData.metadata?.planType === 'annual' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .select('*')
+        .eq('user_id', paymentData.user_id)
+        .eq('status', 'active')
+        .single()
 
-      if (subscriptionError) {
-        console.error('❌ Error creating subscription:', subscriptionError)
-        // Não falhar se já existe uma assinatura ativa
-        if (!subscriptionError.message.includes('duplicate key')) {
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('❌ Error checking existing subscription:', checkError)
+      }
+
+      if (existingSubscription) {
+        console.log('✅ User already has active subscription:', existingSubscription.id)
+      } else {
+        // Buscar o plano correto
+        const { data: plans, error: plansError } = await supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('active', true)
+          .order('price', { ascending: true })
+
+        if (plansError) {
+          console.error('❌ Error fetching plans:', plansError)
+          throw new Error('Failed to fetch subscription plans')
+        }
+
+        // Determinar o plano baseado no planType
+        let selectedPlan = plans[0] // Default para o primeiro plano
+        if (paymentData.metadata?.planType === 'annual') {
+          selectedPlan = plans.find(p => p.interval === 'year') || plans[1] || plans[0]
+        } else {
+          selectedPlan = plans.find(p => p.interval === 'month') || plans[0]
+        }
+
+        console.log('🎯 Creating subscription with plan:', selectedPlan.name, '(ID:', selectedPlan.id, ')')
+
+        // Ativar assinatura do usuário
+        const { data: newSubscription, error: subscriptionError } = await supabase
+          .from('user_subscriptions')
+          .insert({
+            user_id: paymentData.user_id,
+            plan_id: selectedPlan.id,
+            stripe_customer_id: null,
+            stripe_subscription_id: null,
+            status: 'active',
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(Date.now() + (selectedPlan.interval === 'year' ? 365 : 30) * 24 * 60 * 60 * 1000).toISOString(),
+          })
+          .select()
+          .single()
+
+        if (subscriptionError) {
+          console.error('❌ Error creating subscription:', subscriptionError)
           throw new Error('Failed to create subscription')
         }
+
+        console.log('✅ Successfully created subscription:', newSubscription.id)
       }
 
       console.log('✅ Payment processed and subscription activated')

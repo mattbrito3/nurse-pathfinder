@@ -17,3 +17,6 @@ verify_jwt = false
 [functions.abacatepay-simulate]
 # Allow public access without authentication
 verify_jwt = false
+[functions.debug-subscription]
+# Allow public access without authentication
+verify_jwt = false
