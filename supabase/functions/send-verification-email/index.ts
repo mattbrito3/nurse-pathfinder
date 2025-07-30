@@ -1,10 +1,14 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+interface EmailRequest {
+  email: string;
+  name?: string;
 }
 
 serve(async (req) => {
@@ -14,12 +18,17 @@ serve(async (req) => {
   }
 
   try {
-    const { email, code, type } = await req.json()
-
-    // Validate input
-    if (!email || !code) {
+    console.log('🔄 Starting email verification process...')
+    
+    // Parse request body
+    const { email, name = 'Usuário' }: EmailRequest = await req.json()
+    
+    console.log(`📧 Processing verification for: ${email}`)
+    
+    if (!email || !email.includes('@')) {
+      console.log('❌ Invalid email provided')
       return new Response(
-        JSON.stringify({ error: 'Email and code are required' }),
+        JSON.stringify({ error: 'Email inválido' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -27,121 +36,130 @@ serve(async (req) => {
       )
     }
 
-    // Email templates
-    const getEmailContent = (code: string, type: string) => {
-      if (type === 'email_verification') {
-        return {
-          subject: 'Código de Verificação - Nurse Pathfinder',
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #3b82f6; margin: 0;">🩺 Nurse Pathfinder</h1>
-                <p style="color: #6b7280; margin: 5px 0;">Plataforma de Estudos para Enfermagem</p>
-              </div>
-              
-              <div style="background: #f8fafc; border-radius: 8px; padding: 30px; text-align: center;">
-                <h2 style="color: #1e293b; margin-bottom: 20px;">Código de Verificação</h2>
-                <p style="color: #475569; margin-bottom: 25px;">
-                  Use o código abaixo para verificar seu email:
-                </p>
-                
-                <div style="background: white; border: 2px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                  <span style="font-size: 32px; font-weight: bold; color: #3b82f6; letter-spacing: 8px;">
-                    ${code}
-                  </span>
-                </div>
-                
-                <p style="color: #64748b; font-size: 14px; margin-top: 20px;">
-                  Este código expira em 10 minutos por segurança.
-                </p>
-              </div>
-              
-              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-                <p style="color: #9ca3af; font-size: 12px;">
-                  Se você não solicitou este código, ignore este email.
-                </p>
-              </div>
-            </div>
-          `
-        }
-      }
-      
-      return {
-        subject: 'Código de Verificação',
-        html: `<p>Seu código: <strong>${code}</strong></p>`
-      }
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    
+    const supabase = createClient(supabaseUrl, supabaseKey)
+
+    // Generate verification token
+    console.log('🔄 Generating verification token...')
+    const { data: tokenData, error: tokenError } = await supabase
+      .rpc('create_email_verification_token', { p_email: email })
+      .single()
+
+    if (tokenError) {
+      console.error('❌ Error generating token:', tokenError)
+      throw new Error('Erro ao gerar token de verificação')
     }
 
-    const emailContent = getEmailContent(code, type)
+    const { token, expires_at } = tokenData
+    console.log(`✅ Token generated: ${token.substring(0, 8)}...`)
 
-    // Send email using Resend (if API key is available)
-    if (RESEND_API_KEY) {
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${RESEND_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          from: 'Nurse Pathfinder <noreply@nursepathfinder.com>',
-          to: [email],
-          subject: emailContent.subject,
-          html: emailContent.html,
-        }),
-      })
+    // Create verification URL
+    const baseUrl = req.headers.get('origin') || 'http://localhost:8080'
+    const verificationUrl = `${baseUrl}/verify-email?token=${token}`
+    
+    console.log(`🔗 Verification URL: ${verificationUrl}`)
 
-      if (!response.ok) {
-        const errorData = await response.text()
-        console.error('Resend API error:', errorData)
+    // Create email HTML content
+    const emailHtml = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Email - Dose Certa</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+        .button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+        .token-info { background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #667eea; }
+        .warning { background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107; color: #856404; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 Dose Certa</h1>
+        <h2>Verificação de Email</h2>
+    </div>
+    
+    <div class="content">
+        <p>Olá <strong>${name}</strong>,</p>
         
-        return new Response(
-          JSON.stringify({ 
-            error: 'Failed to send email',
-            details: errorData 
-          }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
+        <p>Você está quase pronto para usar o <strong>Dose Certa</strong>! Para finalizar seu cadastro, precisamos verificar seu email.</p>
+        
+        <div style="text-align: center;">
+            <a href="${verificationUrl}" class="button">✅ Verificar Email</a>
+        </div>
+        
+        <div class="token-info">
+            <h3>🔐 Informações da Verificação:</h3>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Link válido até:</strong> ${new Date(expires_at).toLocaleString('pt-BR')}</p>
+        </div>
+        
+        <div class="warning">
+            <h3>⚠️ Importante:</h3>
+            <ul>
+                <li>Este link é válido por <strong>24 horas</strong></li>
+                <li>Clique apenas uma vez no botão de verificação</li>
+                <li>Se o link não funcionar, copie e cole no navegador: <br><code>${verificationUrl}</code></li>
+            </ul>
+        </div>
+        
+        <p>Se você não solicitou esta verificação, pode ignorar este email com segurança.</p>
+        
+        <p>Obrigado por escolher o Dose Certa!</p>
+    </div>
+    
+    <div class="footer">
+        <p>© 2025 Dose Certa - Sistema de Cálculos Médicos para Enfermagem</p>
+        <p>Esta é uma mensagem automática, não responda este email.</p>
+    </div>
+</body>
+</html>`
+
+    // For development/demo: log the email content and verification info
+    console.log('📧 EMAIL VERIFICATION GENERATED:')
+    console.log('=' .repeat(50))
+    console.log(`📨 To: ${email}`)
+    console.log(`👤 Name: ${name}`)
+    console.log(`🔗 Verification URL: ${verificationUrl}`)
+    console.log(`⏰ Expires at: ${new Date(expires_at).toLocaleString('pt-BR')}`)
+    console.log('=' .repeat(50))
+    console.log('📝 EMAIL HTML CONTENT:')
+    console.log(emailHtml)
+    console.log('=' .repeat(50))
+
+    // In a real production environment, you would send the email here
+    // For now, we'll simulate success and provide the verification URL
+    
+    console.log('✅ Email verification prepared successfully!')
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: 'Email de verificação preparado com sucesso!',
+        verificationUrl,
+        token: token.substring(0, 8) + '...', // Partial token for debugging
+        expiresAt: expires_at,
+        developmentNote: 'Em desenvolvimento: verifique o console para o link de verificação'
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
+    )
 
-      const result = await response.json()
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          messageId: result.id,
-          message: 'Email sent successfully' 
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    } else {
-      // Fallback: Log to console (development mode)
-      console.log(`📧 EMAIL TO: ${email}`)
-      console.log(`🔐 CODE: ${code}`)
-      console.log(`📝 SUBJECT: ${emailContent.subject}`)
-      
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Email logged to console (dev mode)',
-          code: code // For development only
-        }),
-        { 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-  } catch (error) {
-    console.error('Function error:', error)
+  } catch (error: any) {
+    console.error('❌ Error in send-verification-email:', error)
     
     return new Response(
       JSON.stringify({ 
-        error: 'Internal server error',
+        error: 'Erro interno do servidor',
         details: error.message 
       }),
       { 

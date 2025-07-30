@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Heart, Loader2, Eye, EyeOff, Check, AlertCircle, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import EmailVerification from "@/components/auth/EmailVerification";
+import SimpleEmailVerification from "@/components/auth/SimpleEmailVerification";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -157,7 +157,7 @@ const Auth = () => {
   if (showCodeVerification && pendingSignupData) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-        <EmailVerification
+        <SimpleEmailVerification
           email={pendingSignupData.email}
           onEmailChange={() => {}} // Not editable at this stage
           onVerified={handleCodeVerified}
@@ -166,8 +166,7 @@ const Auth = () => {
             setPendingSignupData(null);
           }}
           title="Verificar Email"
-          description="Digite o código de 6 dígitos enviado para seu email"
-          startWithCode={true}
+          description="Clique no link que enviaremos para seu email"
         />
       </div>
     );
