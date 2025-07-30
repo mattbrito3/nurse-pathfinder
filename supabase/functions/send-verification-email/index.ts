@@ -15,10 +15,20 @@ interface EmailRequest {
 async function sendEmailViaGmail(to: string, subject: string, html: string) {
   const smtpUser = Deno.env.get('SMTP_USER')
   const smtpPass = Deno.env.get('SMTP_PASS')
+  const smtpHost = Deno.env.get('SMTP_HOST')
+  const smtpPort = Deno.env.get('SMTP_PORT')
   const fromName = Deno.env.get('FROM_NAME') || 'Dose Certa'
 
+  // 🔍 DEBUG: Verificar se as variáveis estão sendo lidas
+  console.log('🔍 VERIFICANDO VARIÁVEIS SMTP:')
+  console.log(`SMTP_HOST: ${smtpHost ? '✅ OK' : '❌ NÃO ENCONTRADO'}`)
+  console.log(`SMTP_PORT: ${smtpPort ? '✅ OK' : '❌ NÃO ENCONTRADO'}`)
+  console.log(`SMTP_USER: ${smtpUser ? '✅ OK (' + smtpUser + ')' : '❌ NÃO ENCONTRADO'}`)
+  console.log(`SMTP_PASS: ${smtpPass ? '✅ OK (****)' : '❌ NÃO ENCONTRADO'}`)
+  console.log(`FROM_NAME: ${fromName}`)
+
   if (!smtpUser || !smtpPass) {
-    throw new Error('SMTP credentials not configured')
+    throw new Error('SMTP credentials not configured - variáveis não encontradas')
   }
 
   console.log(`📧 Enviando email para ${to} via Gmail SMTP`)
