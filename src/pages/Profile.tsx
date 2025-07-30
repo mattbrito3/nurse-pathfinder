@@ -77,7 +77,7 @@ const Profile = () => {
       
       // Get or create profile
       let { data, error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('*')
         .eq('id', user!.id)
         .single();
@@ -93,7 +93,7 @@ const Profile = () => {
         };
 
         const { data: createdProfile, error: createError } = await supabase
-          .from('user_profiles')
+          .from('profiles')
           .insert([newProfile])
           .select()
           .single();
@@ -104,7 +104,7 @@ const Profile = () => {
         throw error;
       }
 
-      setProfile(data);
+      setProfile(data as any);
     } catch (error: any) {
       console.error('Error loading profile:', error);
       toast.error('Erro ao carregar perfil');
@@ -212,7 +212,7 @@ const Profile = () => {
       setIsSaving(true);
 
       const { error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .upsert({
           ...profile,
           updated_at: new Date().toISOString()
