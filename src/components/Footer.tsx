@@ -24,7 +24,7 @@ const Footer = () => {
               <li><a href="#" className="hover:text-foreground transition-colors">Calculadora de Medicação</a></li>
               <li><a href="#" className="hover:text-foreground transition-colors">Glossário Médico</a></li>
               <li><a href="#" className="hover:text-foreground transition-colors">Flashcards</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">PDFs Premium</a></li>
+              
             </ul>
           </div>
 

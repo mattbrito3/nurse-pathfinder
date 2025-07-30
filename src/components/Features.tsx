@@ -25,13 +25,6 @@ const features = [
     bgColor: "bg-medical-light-blue"
   },
   {
-    icon: FileText,
-    title: "PDFs Premium",
-    description: "Conteúdo educativo exclusivo e materiais de referência para download.",
-    color: "text-secondary",
-    bgColor: "bg-medical-light-green"
-  },
-  {
     icon: Shield,
     title: "Conteúdo Confiável",
     description: "Todo conteúdo revisado por enfermeiros especialistas e atualizado regularmente.",

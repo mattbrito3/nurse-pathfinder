@@ -141,7 +141,7 @@ const CalculationHistory = ({ onReloadCalculation }: CalculationHistoryProps) =>
     toast.success(`Relatório TXT baixado com ${itemsToDownload.length} cálculo(s)`);
   };
 
-  // PDF download removed - only TXT format available
+  
 
   // Manter função legado para compatibilidade
   const handleDownload = handleDownloadTXT;

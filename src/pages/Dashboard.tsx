@@ -76,15 +76,6 @@ const Dashboard = () => {
       color: "text-indigo-600",
       bgColor: "bg-indigo-50",
       available: true
-    },
-    {
-      icon: FileText,
-      title: "PDFs Premium",
-      description: "Conteúdo educativo exclusivo para download",
-      href: "/dashboard/pdfs",
-      color: "text-orange-600",
-      bgColor: "bg-orange-50",
-      available: false
     }
   ];
 

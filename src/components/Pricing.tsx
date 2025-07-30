@@ -33,7 +33,6 @@ const plans = [
       "Calculadora avançada de medicação",
       "Acesso completo ao glossário",
       "Flashcards ilimitados",
-      "5 PDFs premium por mês",
       "Suporte prioritário",
       "Acesso offline",
       "Histórico de progresso"
@@ -50,7 +49,6 @@ const plans = [
     icon: Crown,
     features: [
       "Todas as funcionalidades do Estudante",
-      "PDFs premium ilimitados",
       "Calculadora com protocolos avançados",
       "Simulados personalizados",
       "Certificados de conclusão",
