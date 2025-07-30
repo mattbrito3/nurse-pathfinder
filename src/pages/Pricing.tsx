@@ -18,7 +18,7 @@ import {
 import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-import SubscribeButton from '@/components/stripe/SubscribeButton';
+import UnifiedPaymentButton from '@/components/payment/UnifiedPaymentButton';
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -221,15 +221,16 @@ const Pricing = () => {
                           Começar Grátis
                         </Button>
                       ) : (
-                        <SubscribeButton
+                        <UnifiedPaymentButton
                           planType={getPlanType(plan.name)}
                           planName={plan.name}
                           planPrice={formatPrice(plan.price)}
+                          planPeriod="/mês"
                           className={`w-full ${isPopular ? 'bg-primary hover:bg-primary/90' : ''}`}
                         >
                           <CreditCard className="h-4 w-4 mr-2" />
                           {hasPremiumAccess ? 'Trocar Plano' : 'Assinar Agora'}
-                        </SubscribeButton>
+                        </UnifiedPaymentButton>
                       )}
                     </div>
                   </CardContent>
