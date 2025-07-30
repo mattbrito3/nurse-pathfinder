@@ -4,6 +4,7 @@ import { Check, Crown, Star, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import UnifiedPaymentButton from "@/components/payment/UnifiedPaymentButton";
 
 const plans = [
   {
@@ -127,13 +128,25 @@ const Pricing = () => {
               </CardHeader>
 
               <CardContent className="space-y-6">
-                <Button 
-                  variant={plan.buttonVariant}
-                  className={`w-full py-6 text-lg ${plan.popular ? 'shadow-soft' : ''}`}
-                  onClick={() => handlePlanClick(plan.name, plan.buttonText)}
-                >
-                  {plan.buttonText}
-                </Button>
+                {plan.name === "Gratuito" ? (
+                  <Button 
+                    variant={plan.buttonVariant}
+                    className={`w-full py-6 text-lg ${plan.popular ? 'shadow-soft' : ''}`}
+                    onClick={() => handlePlanClick(plan.name, plan.buttonText)}
+                  >
+                    {plan.buttonText}
+                  </Button>
+                ) : (
+                  <UnifiedPaymentButton
+                    planType={plan.name === "Estudante" ? "professional" : "annual"}
+                    planName={plan.name}
+                    planPrice={plan.price}
+                    planPeriod={plan.period}
+                    className={`w-full py-6 text-lg ${plan.popular ? 'shadow-soft' : ''}`}
+                  >
+                    {plan.buttonText}
+                  </UnifiedPaymentButton>
+                )}
 
                 <ul className="space-y-3">
                   {plan.features.map((feature, featureIndex) => (

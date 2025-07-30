@@ -32,8 +32,6 @@ const Footer = () => {
             <h4 className="font-semibold text-foreground mb-4">Suporte</h4>
             <ul className="space-y-2 text-muted-foreground">
               <li><a href="#" className="hover:text-foreground transition-colors">Central de Ajuda</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Tutoriais</a></li>
-              <li><a href="#" className="hover:text-foreground transition-colors">FAQ</a></li>
               <li><a href="#" className="hover:text-foreground transition-colors">Contato</a></li>
             </ul>
           </div>
@@ -43,11 +41,11 @@ const Footer = () => {
             <ul className="space-y-3 text-muted-foreground">
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <span>contato@enfermagem.pro</span>
+                <span>mateusbritocontact@gmail.com</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <span>(11) 9999-9999</span>
+                <span>(11) 91988-6846</span>
               </li>
               <li className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
