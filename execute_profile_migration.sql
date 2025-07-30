@@ -1,3 +1,6 @@
+-- Execute profile columns migration
+-- Run this in your Supabase SQL Editor
+
 -- Add missing columns to profiles table for complete user profile
 
 -- Professional information
@@ -42,3 +45,10 @@ COMMENT ON COLUMN public.profiles.timezone IS 'User timezone';
 COMMENT ON COLUMN public.profiles.email_notifications IS 'Enable email notifications';
 COMMENT ON COLUMN public.profiles.push_notifications IS 'Enable push notifications';
 COMMENT ON COLUMN public.profiles.dark_mode IS 'Dark mode preference';
+
+-- Verify the changes
+SELECT column_name, data_type, is_nullable, column_default
+FROM information_schema.columns 
+WHERE table_name = 'profiles' 
+  AND table_schema = 'public'
+ORDER BY ordinal_position;
