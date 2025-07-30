@@ -5,6 +5,12 @@ project_id = "epjfoteyvejoqnigijrz"
 [functions.stripe-webhook]
 # Allow public access without authentication
 verify_jwt = false
+[functions.abacatepay-pix]
+# Allow public access without authentication
+verify_jwt = false
+[functions.abacatepay-status]
+# Allow public access without authentication
+verify_jwt = false
 [functions.abacatepay-webhook]
 # Allow public access without authentication
 verify_jwt = false

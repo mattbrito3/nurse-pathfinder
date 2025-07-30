@@ -45,11 +45,12 @@ serve(async (req) => {
     }
 
     // Preparar dados do cliente para AbacatePay
+    // Para desenvolvimento, usar CPF de teste válido
     const customer = {
       name: customerData.name || 'Cliente Nurse Pathfinder',
       cellphone: customerData.cellphone || '(11) 99999-9999',
       email: customerData.email || 'cliente@nursepathfinder.com',
-      taxId: customerData.taxId || '123.456.789-01'
+      taxId: customerData.taxId || '111.444.777-35' // CPF de teste válido
     }
 
     // Criar QR Code PIX via AbacatePay API
@@ -80,27 +81,44 @@ serve(async (req) => {
       throw new Error('No PIX data received from AbacatePay')
     }
 
-    // Salvar dados do pagamento no banco
-    const { error: dbError } = await supabase
-      .from('payment_history')
-      .insert({
+    // Salvar dados do pagamento no banco (só se userId não for de teste)
+    if (userId && userId !== '12345678-1234-1234-1234-123456789abc') {
+      console.log('💾 Tentando salvar no banco:', {
         user_id: userId,
         amount: amount,
         currency: 'brl',
         status: 'pending',
         payment_method: 'pix',
-        payment_provider: 'abacatepay',
-        payment_id: pixData.data.id,
-        metadata: {
-          planType,
-          pixData: pixData.data,
-          customer: customer
-        }
+        description: `PIX ${planType} - ${pixData.data.id}`,
+        stripe_payment_intent_id: pixData.data.id
       })
 
-    if (dbError) {
-      console.error('❌ Database error:', dbError)
-      throw new Error('Failed to save payment data')
+      const { data: insertData, error: dbError } = await supabase
+        .from('payment_history')
+        .insert({
+          user_id: userId,
+          amount: amount,
+          currency: 'brl',
+          status: 'pending',
+          payment_method: 'pix',
+          description: `PIX ${planType} - ${pixData.data.id}`,
+          stripe_payment_intent_id: pixData.data.id  // Temporariamente usando este campo para o ID do PIX
+        })
+        .select()
+
+      if (dbError) {
+        console.error('❌ Database error details:', {
+          code: dbError.code,
+          message: dbError.message,
+          details: dbError.details,
+          hint: dbError.hint
+        })
+        throw new Error(`Database error: ${dbError.message}`)
+      }
+
+      console.log('✅ Dados salvos no banco:', insertData)
+    } else {
+      console.log('🧪 Pulando salvamento no banco (usuário de teste)')
     }
 
     console.log('✅ PIX payment saved to database:', pixData.data.id)
