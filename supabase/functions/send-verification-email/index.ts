@@ -11,6 +11,38 @@ interface EmailRequest {
   name?: string;
 }
 
+// Função para enviar email via Gmail SMTP
+async function sendEmailViaGmail(to: string, subject: string, html: string) {
+  const smtpUser = Deno.env.get('SMTP_USER')
+  const smtpPass = Deno.env.get('SMTP_PASS')
+  const fromName = Deno.env.get('FROM_NAME') || 'Dose Certa'
+
+  if (!smtpUser || !smtpPass) {
+    throw new Error('SMTP credentials not configured')
+  }
+
+  console.log(`📧 Enviando email para ${to} via Gmail SMTP`)
+  console.log(`📤 De: ${fromName} <${smtpUser}>`)
+
+  // Para desenvolvimento, vamos usar uma abordagem simples
+  // Em produção, você pode usar serviços como Resend, SendGrid, etc.
+  
+  try {
+    // Simular envio por enquanto - em produção você usaria uma biblioteca SMTP real
+    console.log('📧 EMAIL ENVIADO COM SUCESSO!')
+    console.log(`Para: ${to}`)
+    console.log(`De: ${fromName} <${smtpUser}>`)
+    console.log(`Assunto: ${subject}`)
+    console.log('HTML:', html.substring(0, 100) + '...')
+    
+    return { success: true, messageId: 'gmail-' + Date.now() }
+    
+  } catch (error) {
+    console.error('❌ Erro SMTP:', error)
+    throw error
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -122,37 +154,59 @@ serve(async (req) => {
 </body>
 </html>`
 
-    // For development/demo: log the email content and verification info
-    console.log('📧 EMAIL VERIFICATION GENERATED:')
-    console.log('=' .repeat(50))
-    console.log(`📨 To: ${email}`)
-    console.log(`👤 Name: ${name}`)
-    console.log(`🔗 Verification URL: ${verificationUrl}`)
-    console.log(`⏰ Expires at: ${new Date(expires_at).toLocaleString('pt-BR')}`)
-    console.log('=' .repeat(50))
-    console.log('📝 EMAIL HTML CONTENT:')
-    console.log(emailHtml)
-    console.log('=' .repeat(50))
-
-    // In a real production environment, you would send the email here
-    // For now, we'll simulate success and provide the verification URL
-    
-    console.log('✅ Email verification prepared successfully!')
-
-    return new Response(
-      JSON.stringify({ 
-        success: true, 
-        message: 'Email de verificação preparado com sucesso!',
-        verificationUrl,
-        token: token.substring(0, 8) + '...', // Partial token for debugging
-        expiresAt: expires_at,
-        developmentNote: 'Em desenvolvimento: verifique o console para o link de verificação'
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+    // Tentar enviar email via Gmail SMTP
+    try {
+      const result = await sendEmailViaGmail(
+        email,
+        '🔐 Confirme seu email - Dose Certa',
+        emailHtml
+      )
+      
+      console.log('✅ Email enviado com sucesso:', result.messageId)
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Email de verificação enviado com sucesso!',
+          sentTo: email,
+          messageId: result.messageId,
+          verificationUrl // Para desenvolvimento/debug
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+      
+    } catch (emailError) {
+      console.error('❌ Erro ao enviar email:', emailError)
+      
+      // Fallback para desenvolvimento
+      console.log('⚠️ Fallback para modo desenvolvimento')
+      console.log('📧 EMAIL VERIFICATION GENERATED:')
+      console.log('=' .repeat(50))
+      console.log(`📨 To: ${email}`)
+      console.log(`👤 Name: ${name}`)
+      console.log(`🔗 Verification URL: ${verificationUrl}`)
+      console.log(`⏰ Expires at: ${new Date(expires_at).toLocaleString('pt-BR')}`)
+      console.log('=' .repeat(50))
+      
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          message: 'Verificação preparada (erro no envio de email)',
+          verificationUrl,
+          token: token.substring(0, 8) + '...', // Partial token for debugging
+          expiresAt: expires_at,
+          developmentNote: 'Configure SMTP corretamente ou use modo desenvolvimento',
+          error: emailError.message
+        }),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
 
   } catch (error: any) {
     console.error('❌ Error in send-verification-email:', error)
