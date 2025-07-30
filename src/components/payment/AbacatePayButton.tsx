@@ -48,7 +48,7 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
           customerData: {
             name: customerData.name,
             email: customerData.email,
-            phone: customerData.cellphone,
+            cellphone: customerData.cellphone,
             taxId: customerData.taxId
           }
         },

@@ -25,21 +25,31 @@ serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    const { planType, userId, amount, description, customerData } = await req.json()
+    const requestBody = await req.json()
+    const { planType, userId, amount, description, customerData } = requestBody
 
     console.log('🔍 AbacatePay PIX Request:', { planType, userId, amount, description, customerData })
+    console.log('🔍 Full request body:', requestBody)
 
     // Validar dados obrigatórios
-    if (!amount || !customerData) {
-      throw new Error('Amount and customer data are required')
+    if (!amount) {
+      throw new Error('Amount is required')
+    }
+    
+    if (!customerData) {
+      throw new Error('Customer data is required')
+    }
+
+    if (!customerData.name || !customerData.email || !customerData.cellphone || !customerData.taxId) {
+      throw new Error('All customer fields (name, email, cellphone, taxId) are required')
     }
 
     // Preparar dados do cliente para AbacatePay
     const customer = {
       name: customerData.name || 'Cliente Nurse Pathfinder',
-      cellphone: customerData.phone || '(11) 99999-9999',
-      email: customerData.email,
-      taxId: customerData.taxId || '123.456.789-01' // TODO: Implementar validação de CPF
+      cellphone: customerData.cellphone || '(11) 99999-9999',
+      email: customerData.email || 'cliente@nursepathfinder.com',
+      taxId: customerData.taxId || '123.456.789-01'
     }
 
     // Criar QR Code PIX via AbacatePay API
