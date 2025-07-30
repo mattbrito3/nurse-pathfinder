@@ -6,6 +6,7 @@ import { QrCode, Copy, Check, Loader2, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import CustomerDataForm from './CustomerDataForm';
 
 interface AbacatePayButtonProps {
   planName: string;
@@ -24,6 +25,7 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [showCustomerForm, setShowCustomerForm] = useState(true);
   const [pixData, setPixData] = useState<{
     qrCode: string;
     qrCodeText: string;
@@ -32,7 +34,7 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
   } | null>(null);
   const [isPaid, setIsPaid] = useState(false);
 
-  const handlePixPayment = async () => {
+  const handlePixPayment = async (customerData: any) => {
     try {
       setIsLoading(true);
 
@@ -44,10 +46,10 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
           amount: parseFloat(planPrice.replace('R$ ', '').replace(',', '.')),
           description: `Plano ${planName} - Nurse Pathfinder`,
           customerData: {
-            name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Cliente',
-            email: user?.email,
-            phone: user?.user_metadata?.phone || '(11) 99999-9999',
-            taxId: user?.user_metadata?.taxId || '123.456.789-01'
+            name: customerData.name,
+            email: customerData.email,
+            phone: customerData.cellphone,
+            taxId: customerData.taxId
           }
         },
       });
@@ -62,6 +64,7 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
       }
 
       setPixData(data.pixData);
+      setShowCustomerForm(false);
       
       // Iniciar polling para verificar pagamento
       startPaymentPolling(data.pixData.paymentId);
@@ -126,6 +129,20 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
     const pixUrl = `pix://${pixData.qrCodeText}`;
     window.open(pixUrl, '_blank');
   };
+
+  // Mostrar formulário de dados do cliente
+  if (showCustomerForm) {
+    return (
+      <CustomerDataForm
+        planName={planName}
+        planPrice={planPrice}
+        planPeriod={planPeriod}
+        onSubmit={handlePixPayment}
+        onBack={() => window.history.back()}
+        isLoading={isLoading}
+      />
+    );
+  }
 
   if (isPaid) {
     return (
@@ -239,24 +256,16 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
     );
   }
 
+  // Este ponto não deveria ser alcançado, mas deixamos como fallback
   return (
     <Button
-      onClick={handlePixPayment}
+      onClick={() => setShowCustomerForm(true)}
       disabled={isLoading}
       size="lg"
       className="w-full bg-green-600 hover:bg-green-700 text-white"
     >
-      {isLoading ? (
-        <>
-          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          Gerando PIX...
-        </>
-      ) : (
-        <>
-          <QrCode className="h-4 w-4 mr-2" />
-          Pagar com PIX - {planPrice}{planPeriod}
-        </>
-      )}
+      <QrCode className="h-4 w-4 mr-2" />
+      Pagar com PIX - {planPrice}{planPeriod}
     </Button>
   );
 };

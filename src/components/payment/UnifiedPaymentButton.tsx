@@ -28,7 +28,7 @@ const UnifiedPaymentButton: React.FC<UnifiedPaymentButtonProps> = ({
 }) => {
   const { user } = useAuth();
   const [showMethodSelector, setShowMethodSelector] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('stripe');
+  const [selectedMethod, setSelectedMethod] = useState<PaymentMethod | null>(null);
   const [isProcessingStripe, setIsProcessingStripe] = useState(false);
 
   const handleStripeCheckout = async () => {
@@ -110,7 +110,7 @@ const UnifiedPaymentButton: React.FC<UnifiedPaymentButtonProps> = ({
   };
 
   // Se o método selecionado for Stripe, processar checkout
-  if (selectedMethod === 'stripe' && !showMethodSelector) {
+  if (selectedMethod === 'stripe') {
     return (
       <Button
         onClick={handleStripeCheckout}
@@ -135,7 +135,7 @@ const UnifiedPaymentButton: React.FC<UnifiedPaymentButtonProps> = ({
   }
 
   // Se o método selecionado for AbacatePay, mostrar componente PIX
-  if (selectedMethod === 'abacatepay' && !showMethodSelector) {
+  if (selectedMethod === 'abacatepay') {
     return (
       <AbacatePayButton
         planName={planName}
