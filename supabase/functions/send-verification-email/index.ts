@@ -164,6 +164,54 @@ serve(async (req) => {
 </body>
 </html>`
 
+    // Verificar se tem Resend API Key
+    const resendApiKey = Deno.env.get('RESEND_API_KEY')
+    
+    if (resendApiKey) {
+      console.log('📧 Enviando email via Resend API...')
+      
+      try {
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'Dose Certa <noreply@resend.dev>',
+            to: email,
+            subject: '🔐 Confirme seu email - Dose Certa',
+            html: emailHtml
+          })
+        })
+
+        if (response.ok) {
+          const result = await response.json()
+          console.log('✅ Email enviado via Resend:', result.id)
+          
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: 'Email de verificação enviado com sucesso!',
+              sentTo: email,
+              messageId: result.id,
+              verificationUrl
+            }),
+            { 
+              status: 200, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          )
+        } else {
+          console.error('❌ Erro Resend:', await response.text())
+          throw new Error('Erro no Resend')
+        }
+      } catch (emailError) {
+        console.error('❌ Erro ao enviar via Resend:', emailError)
+        // Continua para tentar SMTP
+      }
+    }
+
     // Tentar enviar email via Gmail SMTP
     try {
       const result = await sendEmailViaGmail(
