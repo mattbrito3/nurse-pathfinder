@@ -155,7 +155,6 @@ const Pricing = () => {
           </p>
           <div className="flex justify-center items-center gap-6 text-sm text-muted-foreground">
             <span>✓ Sem taxas de cancelamento</span>
-            <span>✓ Suporte em português</span>
             <span>✓ Atualizações gratuitas</span>
           </div>
         </div>

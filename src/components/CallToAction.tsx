@@ -19,7 +19,7 @@ const CallToAction = () => {
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Button 
               variant="medical" 
               size="lg" 
@@ -27,13 +27,6 @@ const CallToAction = () => {
             >
               Começar Grátis Agora
               <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button 
-              variant="medical-outline" 
-              size="lg" 
-              className="text-lg px-8 py-6"
-            >
-              Falar com Especialista
             </Button>
           </div>
 
@@ -48,7 +41,7 @@ const CallToAction = () => {
             </div>
             <div className="hidden sm:block w-px h-6 bg-border"></div>
             <div className="text-muted-foreground">
-              ✓ Sem compromisso • ✓ Cancele quando quiser • ✓ Suporte em português
+              ✓ Sem compromisso • ✓ Cancele quando quiser
             </div>
           </div>
         </div>
