@@ -98,8 +98,8 @@ const Pricing = () => {
               key={index} 
               className={`relative group hover:shadow-card transition-all duration-300 hover:-translate-y-1 ${
                 plan.popular 
-                  ? 'border-primary/50 shadow-card ring-2 ring-primary/20' 
-                  : 'border-border/50'
+                  ? 'border-primary/70 shadow-card ring-2 ring-primary/30 bg-gradient-to-br from-card to-primary/5' 
+                  : 'border-border/80 shadow-sm'
               }`}
             >
               {plan.popular && (

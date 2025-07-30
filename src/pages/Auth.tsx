@@ -185,7 +185,7 @@ const Auth = () => {
           </div>
         </div>
 
-        <Card className="border-border/50 shadow-card">
+        <Card className="border-border/80 shadow-card">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-foreground">Bem-vindo</CardTitle>
             <CardDescription>

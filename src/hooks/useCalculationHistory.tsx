@@ -716,4 +716,4 @@ export const useCalculationHistory = (page = 0) => {
       }
     }
   };
-};
+};

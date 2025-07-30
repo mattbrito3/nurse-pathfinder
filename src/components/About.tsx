@@ -86,7 +86,7 @@ const About = () => {
 
           <div className="grid grid-cols-2 gap-6">
             {stats.map((stat, index) => (
-              <Card key={index} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 border-border/50">
+              <Card key={index} className="group hover:shadow-card transition-all duration-300 hover:-translate-y-1 border-border/80 shadow-sm">
                 <CardContent className="p-6 text-center space-y-4">
                   <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center mx-auto group-hover:scale-110 transition-transform duration-300">
                     <stat.icon className="h-6 w-6 text-white" />
