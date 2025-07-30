@@ -36,6 +36,9 @@ const MedicationCalculator = () => {
     usagePercentage
   } = useCalculatorLimits();
 
+  // 📌 Definir explicitamente se deve mostrar as abas premium
+  const shouldShowPremiumTabs = !isFreePlan && !limitsLoading;
+
   // Estados para cada tipo de cálculo
   const [dosageData, setDosageData] = useState<DosageCalculation>({
     patientWeight: 0,
@@ -139,6 +142,105 @@ const MedicationCalculator = () => {
         }
       }
     });
+  };
+
+  const handleInfusionCalculation = async () => {
+    // Validações antes do cálculo
+    const errors: string[] = [];
+    
+    if (!infusionData.totalVolume || infusionData.totalVolume <= 0) {
+      errors.push('Volume total é obrigatório e deve ser maior que zero');
+    }
+    if (!infusionData.totalTime || infusionData.totalTime <= 0) {
+      errors.push('Tempo total é obrigatório e deve ser maior que zero');
+    }
+
+    if (errors.length > 0) {
+      toast.error('Dados inválidos', {
+        description: errors.join('; ')
+      });
+      return;
+    }
+
+    // Realizar cálculo
+    const result = calculateInfusion(infusionData);
+    setInfusionData(result);
+    
+    if (result.result) {
+      // Só salvar no histórico se o usuário tiver acesso
+      if (canUseFeature('history')) {
+        await addCalculation('infusion', result, 'Solução IV');
+        toast.success('Cálculo realizado e salvo no histórico!');
+      } else {
+        toast.success('Cálculo realizado!');
+      }
+    }
+  };
+
+  const handleConversionCalculation = async () => {
+    // Validações antes do cálculo
+    const errors: string[] = [];
+    
+    if (!conversionData.value || conversionData.value <= 0) {
+      errors.push('Valor é obrigatório e deve ser maior que zero');
+    }
+    if (conversionData.fromUnit === conversionData.toUnit) {
+      errors.push('Unidades de origem e destino devem ser diferentes');
+    }
+
+    if (errors.length > 0) {
+      toast.error('Dados inválidos', {
+        description: errors.join('; ')
+      });
+      return;
+    }
+
+    // Realizar cálculo
+    const result = convertUnits(conversionData);
+    setConversionData(result);
+    
+    if (result.result) {
+      // Só salvar no histórico se o usuário tiver acesso
+      if (canUseFeature('history')) {
+        await addCalculation('conversion', result, 'Conversão de Unidades');
+        toast.success('Conversão realizada e salva no histórico!');
+      } else {
+        toast.success('Conversão realizada!');
+      }
+    }
+  };
+
+  const handleConcentrationCalculation = async () => {
+    // Validações antes do cálculo
+    const errors: string[] = [];
+    
+    if (!concentrationData.drugAmount || concentrationData.drugAmount <= 0) {
+      errors.push('Quantidade do medicamento é obrigatória e deve ser maior que zero');
+    }
+    if (!concentrationData.diluentVolume || concentrationData.diluentVolume <= 0) {
+      errors.push('Volume do diluente é obrigatório e deve ser maior que zero');
+    }
+
+    if (errors.length > 0) {
+      toast.error('Dados inválidos', {
+        description: errors.join('; ')
+      });
+      return;
+    }
+
+    // Realizar cálculo
+    const result = calculateConcentration(concentrationData);
+    setConcentrationData(result);
+    
+    if (result.result) {
+      // Só salvar no histórico se o usuário tiver acesso
+      if (canUseFeature('history')) {
+        await addCalculation('concentration', result, 'Cálculo de Concentração');
+        toast.success('Cálculo realizado e salvo no histórico!');
+      } else {
+        toast.success('Cálculo realizado!');
+      }
+    }
   };
 
   // Componente de upgrade para features bloqueadas
@@ -262,10 +364,11 @@ const MedicationCalculator = () => {
           </Alert>
 
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CalculationType | 'history')}>
-            <TabsList className={`grid w-full ${isFreePlan ? 'grid-cols-2' : 'grid-cols-5'}`}>
+            <TabsList className={`grid w-full ${shouldShowPremiumTabs ? 'grid-cols-5' : 'grid-cols-2'}`}>
               <TabsTrigger value="dosage">Dosagem</TabsTrigger>
               
-              {!isFreePlan && (
+              {/* ✅ Abas premium condicionais */}
+              {shouldShowPremiumTabs && (
                 <>
                   <TabsTrigger value="infusion">Gotejamento</TabsTrigger>
                   <TabsTrigger value="conversion">Conversão</TabsTrigger>
@@ -439,20 +542,240 @@ const MedicationCalculator = () => {
               </Card>
             </TabsContent>
 
-            {/* Features Premium Bloqueadas */}
-            {isFreePlan && (
-              <>
-                <TabsContent value="infusion">
-                  <UpgradePrompt feature="Cálculo de Gotejamento" />
-                </TabsContent>
-                <TabsContent value="conversion">
-                  <UpgradePrompt feature="Conversão de Unidades" />
-                </TabsContent>
-                <TabsContent value="concentration">
-                  <UpgradePrompt feature="Cálculo de Diluição" />
-                </TabsContent>
-              </>
-            )}
+            {/* 🧮 Cálculo de Gotejamento - Premium */}
+            <TabsContent value="infusion" className="space-y-6">
+              {!isFreePlan ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Clock className="h-5 w-5" />
+                      Cálculo de Gotejamento
+                    </CardTitle>
+                    <CardDescription>
+                      Calcule o gotejamento de soluções intravenosas
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="totalVolume">Volume Total (ml)</Label>
+                          <Input
+                            id="totalVolume"
+                            type="number"
+                            value={infusionData.totalVolume || ''}
+                            onChange={(e) => setInfusionData({...infusionData, totalVolume: parseFloat(e.target.value) || 0})}
+                            placeholder="Ex: 500"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="totalTime">Tempo Total</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="totalTime"
+                              type="number"
+                              value={infusionData.totalTime || ''}
+                              onChange={(e) => setInfusionData({...infusionData, totalTime: parseFloat(e.target.value) || 0})}
+                              placeholder="Ex: 8"
+                            />
+                            <Select 
+                              value={infusionData.timeUnit} 
+                              onValueChange={(value) => setInfusionData({...infusionData, timeUnit: value as 'h' | 'min'})}
+                            >
+                              <SelectTrigger className="w-24">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="h">Horas</SelectItem>
+                                <SelectItem value="min">Minutos</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="equipmentType">Tipo de Equipo</Label>
+                        <Select 
+                          value={infusionData.equipmentType} 
+                          onValueChange={(value) => setInfusionData({...infusionData, equipmentType: value as 'macro' | 'micro'})}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="macro">Macrogotejador (20 gotas/ml)</SelectItem>
+                            <SelectItem value="micro">Microgotejador (60 gotas/ml)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <Button 
+                        onClick={() => handleCalculationAttempt(handleInfusionCalculation)} 
+                        className="w-full"
+                      >
+                        <Calculator className="mr-2 h-4 w-4" />
+                        Calcular Gotejamento
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <UpgradePrompt feature="Cálculo de Gotejamento" />
+              )}
+            </TabsContent>
+
+            {/* 🔄 Conversão de Unidades - Premium */}
+            <TabsContent value="conversion" className="space-y-6">
+              {!isFreePlan ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Zap className="h-5 w-5" />
+                      Conversão de Unidades
+                    </CardTitle>
+                    <CardDescription>
+                      Converta entre diferentes unidades de medida
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="conversionValue">Valor</Label>
+                        <Input
+                          id="conversionValue"
+                          type="number"
+                          value={conversionData.value || ''}
+                          onChange={(e) => setConversionData({...conversionData, value: parseFloat(e.target.value) || 0})}
+                          placeholder="Ex: 1000"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="fromUnit">De</Label>
+                          <Select 
+                            value={conversionData.fromUnit} 
+                            onValueChange={(value) => setConversionData({...conversionData, fromUnit: value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="mg">mg (miligramas)</SelectItem>
+                              <SelectItem value="g">g (gramas)</SelectItem>
+                              <SelectItem value="kg">kg (quilogramas)</SelectItem>
+                              <SelectItem value="ml">ml (mililitros)</SelectItem>
+                              <SelectItem value="l">L (litros)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="toUnit">Para</Label>
+                          <Select 
+                            value={conversionData.toUnit} 
+                            onValueChange={(value) => setConversionData({...conversionData, toUnit: value})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="mg">mg (miligramas)</SelectItem>
+                              <SelectItem value="g">g (gramas)</SelectItem>
+                              <SelectItem value="kg">kg (quilogramas)</SelectItem>
+                              <SelectItem value="ml">ml (mililitros)</SelectItem>
+                              <SelectItem value="l">L (litros)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <Button 
+                        onClick={() => handleCalculationAttempt(handleConversionCalculation)} 
+                        className="w-full"
+                      >
+                        <Calculator className="mr-2 h-4 w-4" />
+                        Converter Unidades
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <UpgradePrompt feature="Conversão de Unidades" />
+              )}
+            </TabsContent>
+
+            {/* 🧪 Cálculo de Diluição - Premium */}
+            <TabsContent value="concentration" className="space-y-6">
+              {!isFreePlan ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5" />
+                      Cálculo de Diluição
+                    </CardTitle>
+                    <CardDescription>
+                      Calcule concentrações e diluições de medicamentos
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="drugAmount">Quantidade do Medicamento</Label>
+                          <Input
+                            id="drugAmount"
+                            type="number"
+                            value={concentrationData.drugAmount || ''}
+                            onChange={(e) => setConcentrationData({...concentrationData, drugAmount: parseFloat(e.target.value) || 0})}
+                            placeholder="Ex: 500"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="drugUnit">Unidade</Label>
+                          <Select 
+                            value={concentrationData.drugUnit} 
+                            onValueChange={(value) => setConcentrationData({...concentrationData, drugUnit: value as 'mg' | 'g' | 'mcg' | 'UI'})}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="mg">mg</SelectItem>
+                              <SelectItem value="g">g</SelectItem>
+                              <SelectItem value="mcg">mcg</SelectItem>
+                              <SelectItem value="UI">UI</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="diluentVolume">Volume do Diluente (ml)</Label>
+                        <Input
+                          id="diluentVolume"
+                          type="number"
+                          value={concentrationData.diluentVolume || ''}
+                          onChange={(e) => setConcentrationData({...concentrationData, diluentVolume: parseFloat(e.target.value) || 0})}
+                          placeholder="Ex: 250"
+                        />
+                      </div>
+
+                      <Button 
+                        onClick={() => handleCalculationAttempt(handleConcentrationCalculation)} 
+                        className="w-full"
+                      >
+                        <Calculator className="mr-2 h-4 w-4" />
+                        Calcular Concentração
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <UpgradePrompt feature="Cálculo de Diluição" />
+              )}
+            </TabsContent>
 
             {/* Histórico */}
             <TabsContent value="history">

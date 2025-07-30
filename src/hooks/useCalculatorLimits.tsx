@@ -28,6 +28,8 @@ export const useCalculatorLimits = () => {
   const [usage, setUsage] = useState<CalculatorUsage | null>(null);
   const [isLoadingUsage, setIsLoadingUsage] = useState(true);
 
+
+
   // Definir limites baseado no plano
   const getCalculatorLimits = (): CalculatorLimits => {
     if (hasPremiumAccess) {
