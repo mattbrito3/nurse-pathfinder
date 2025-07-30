@@ -32,6 +32,7 @@ const BrowsePage = lazy(() => import("./pages/flashcards/BrowsePage"));
 const CreateFlashcardPage = lazy(() => import("./pages/flashcards/CreateFlashcardPage"));
 const MyFlashcardsPage = lazy(() => import("./pages/flashcards/MyFlashcardsPage"));
 const EditFlashcardPage = lazy(() => import("./pages/flashcards/EditFlashcardPage"));
+const PaymentCheckout = lazy(() => import("./pages/PaymentCheckout"));
 
 // Configuração otimizada do React Query
 const queryClient = new QueryClient({
@@ -89,6 +90,7 @@ const App = () => {
              <Route path="/reset-password" element={<ResetPassword />} />
              <Route path="/profile" element={<Profile />} />
              <Route path="/pricing" element={<Pricing />} />
+             <Route path="/payment-checkout" element={<PaymentCheckout />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/analytics" element={<Analytics />} />
               <Route path="/dashboard/calculator" element={<MedicationCalculator />} />
