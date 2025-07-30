@@ -59,12 +59,20 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
         throw new Error(error.message || 'Failed to generate PIX');
       }
 
+      console.log('🎯 Resposta da Edge Function:', data);
+
       if (!data.success || !data.pixData) {
+        console.error('❌ Dados PIX inválidos:', data);
         throw new Error('No PIX data received from server');
       }
 
+      console.log('✅ PIX Data recebido:', data.pixData);
+      console.log('📱 QR Code URL:', data.pixData.qrCode);
+
       setPixData(data.pixData);
       setShowCustomerForm(false);
+      
+      console.log('🔄 Estado atualizado - showCustomerForm: false, pixData:', data.pixData);
       
       // Iniciar polling para verificar pagamento
       startPaymentPolling(data.pixData.paymentId);
@@ -130,8 +138,17 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
     window.open(pixUrl, '_blank');
   };
 
+  // Debug logs
+  console.log('🔍 AbacatePayButton render state:', {
+    showCustomerForm,
+    pixData: !!pixData,
+    isPaid,
+    isLoading
+  });
+
   // Mostrar formulário de dados do cliente
   if (showCustomerForm) {
+    console.log('📝 Renderizando formulário do cliente');
     return (
       <CustomerDataForm
         planName={planName}
@@ -163,6 +180,7 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
   }
 
   if (pixData) {
+    console.log('🎯 Renderizando QR Code PIX:', pixData);
     return (
       <Card className="border-green-200">
         <CardHeader>
