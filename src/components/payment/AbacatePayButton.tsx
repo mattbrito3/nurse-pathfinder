@@ -42,7 +42,13 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
           planType: 'professional', // TODO: Passar planType dinamicamente
           userId: user?.id,
           amount: parseFloat(planPrice.replace('R$ ', '').replace(',', '.')),
-          description: `Plano ${planName} - Nurse Pathfinder`
+          description: `Plano ${planName} - Nurse Pathfinder`,
+          customerData: {
+            name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Cliente',
+            email: user?.email,
+            phone: user?.user_metadata?.phone || '(11) 99999-9999',
+            taxId: user?.user_metadata?.taxId || '123.456.789-01'
+          }
         },
       });
 
@@ -72,21 +78,29 @@ const AbacatePayButton: React.FC<AbacatePayButtonProps> = ({
   const startPaymentPolling = (paymentId: string) => {
     const interval = setInterval(async () => {
       try {
-        // TODO: Verificar status do pagamento na API do AbacatePay
-        // const response = await fetch(`/api/abacatepay/status/${paymentId}`);
-        // const { status } = await response.json();
-        
-        // Simulando pagamento aprovado após 10 segundos
-        if (Date.now() > Date.now() + 10000) {
+        // Verificar status do pagamento via Edge Function
+        const { data, error } = await supabase.functions.invoke('abacatepay-status', {
+          body: { paymentId }
+        });
+
+        if (error) {
+          console.error('❌ Status check error:', error);
+          return;
+        }
+
+        if (data.success && data.isPaid) {
           clearInterval(interval);
           setIsPaid(true);
           toast.success('Pagamento aprovado! Redirecionando...');
           onSuccess?.({ paymentId, method: 'pix' });
+        } else if (data.status === 'EXPIRED') {
+          clearInterval(interval);
+          toast.error('PIX expirado. Gere um novo PIX.');
         }
       } catch (error) {
         console.error('Erro ao verificar pagamento:', error);
       }
-    }, 2000); // Verificar a cada 2 segundos
+    }, 3000); // Verificar a cada 3 segundos
 
     // Limpar intervalo após 30 minutos
     setTimeout(() => {

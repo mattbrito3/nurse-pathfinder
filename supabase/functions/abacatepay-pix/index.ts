@@ -19,28 +19,55 @@ serve(async (req) => {
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const abacatePayApiKey = Deno.env.get('ABACATE_PAY_API_KEY')!
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    const { planType, userId, amount, description } = await req.json()
+    const { planType, userId, amount, description, customerData } = await req.json()
 
-    console.log('🔍 AbacatePay PIX Request:', { planType, userId, amount, description })
+    console.log('🔍 AbacatePay PIX Request:', { planType, userId, amount, description, customerData })
 
-    // TODO: Integrar com API real do AbacatePay
-    // Por enquanto, simulando a resposta
-    
-    const mockPixResponse = {
-      success: true,
-      pixData: {
-        qrCode: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
-        qrCodeText: '00020126580014br.gov.bcb.pix0136123e4567-e12b-12d1-a456-426614174000520400005303986540510.005802BR5913Nurse Pathfinder6009Sao Paulo62070503***6304E2CA',
-        paymentId: `pix_${Date.now()}_${userId}`,
-        expiresAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutos
-        amount: amount,
-        description: description
-      }
+    // Validar dados obrigatórios
+    if (!amount || !customerData) {
+      throw new Error('Amount and customer data are required')
+    }
+
+    // Preparar dados do cliente para AbacatePay
+    const customer = {
+      name: customerData.name || 'Cliente Nurse Pathfinder',
+      cellphone: customerData.phone || '(11) 99999-9999',
+      email: customerData.email,
+      taxId: customerData.taxId || '123.456.789-01' // TODO: Implementar validação de CPF
+    }
+
+    // Criar QR Code PIX via AbacatePay API
+    const pixResponse = await fetch('https://api.abacatepay.com/v1/pixQrCode/create', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${abacatePayApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        amount: Math.round(amount * 100), // Converter para centavos
+        expiresIn: 1800, // 30 minutos
+        description: description || `Plano ${planType} - Nurse Pathfinder`,
+        customer: customer
+      })
+    })
+
+    if (!pixResponse.ok) {
+      const errorData = await pixResponse.json()
+      console.error('❌ AbacatePay API error:', errorData)
+      throw new Error(`AbacatePay API error: ${errorData.error || pixResponse.statusText}`)
+    }
+
+    const pixData = await pixResponse.json()
+    console.log('✅ AbacatePay PIX created:', pixData)
+
+    if (!pixData.data) {
+      throw new Error('No PIX data received from AbacatePay')
     }
 
     // Salvar dados do pagamento no banco
@@ -53,10 +80,11 @@ serve(async (req) => {
         status: 'pending',
         payment_method: 'pix',
         payment_provider: 'abacatepay',
-        payment_id: mockPixResponse.pixData.paymentId,
+        payment_id: pixData.data.id,
         metadata: {
           planType,
-          pixData: mockPixResponse.pixData
+          pixData: pixData.data,
+          customer: customer
         }
       })
 
@@ -65,10 +93,24 @@ serve(async (req) => {
       throw new Error('Failed to save payment data')
     }
 
-    console.log('✅ PIX generated successfully:', mockPixResponse.pixData.paymentId)
+    console.log('✅ PIX payment saved to database:', pixData.data.id)
+
+    // Retornar dados formatados para o frontend
+    const responseData = {
+      success: true,
+      pixData: {
+        qrCode: pixData.data.brCodeBase64,
+        qrCodeText: pixData.data.brCode,
+        paymentId: pixData.data.id,
+        expiresAt: pixData.data.expiresAt,
+        amount: amount,
+        description: description,
+        status: pixData.data.status
+      }
+    }
 
     return new Response(
-      JSON.stringify(mockPixResponse),
+      JSON.stringify(responseData),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
