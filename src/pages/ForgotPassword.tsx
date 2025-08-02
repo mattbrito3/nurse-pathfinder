@@ -35,9 +35,7 @@ const ForgotPassword = () => {
       if (result.success) {
         toast({
           title: "✅ Recuperação de senha solicitada!",
-          description: result.method?.includes('Supabase') 
-            ? "Verifique sua caixa de entrada para o link de recuperação."
-            : "Sistema configurado! Verifique o console para instruções de desenvolvimento.",
+          description: result.message || "Verifique sua caixa de entrada para o link de recuperação.",
           duration: 8000
         });
         

@@ -11,3 +11,6 @@ verify_jwt = false
 [functions.send-verification-email]
 # Allow public access without authentication
 verify_jwt = false
+[functions.password-reset]
+# Allow public access without authentication
+verify_jwt = false

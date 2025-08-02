@@ -25,6 +25,14 @@ interface PasswordStrengthOptions {
   checkCommonPasswords?: boolean;
 }
 
+// Senhas comuns a serem evitadas (movido para fora do hook para evitar recriação)
+const COMMON_PASSWORDS = [
+  '123456', 'password', '123456789', '12345678', '12345',
+  'qwerty', 'abc123', '111111', '123123', 'admin',
+  'letmein', 'welcome', 'monkey', '1234567', '1234567890',
+  'senha', '123456789', 'qwerty123', 'password123', 'admin123'
+];
+
 export function usePasswordStrength(
   password: string,
   options: PasswordStrengthOptions = {}
@@ -54,14 +62,6 @@ export function usePasswordStrength(
     }
   });
 
-  // Senhas comuns a serem evitadas
-  const commonPasswords = [
-    '123456', 'password', '123456789', '12345678', '12345',
-    'qwerty', 'abc123', '111111', '123123', 'admin',
-    'letmein', 'welcome', 'monkey', '1234567', '1234567890',
-    'senha', '123456789', 'qwerty123', 'password123', 'admin123'
-  ];
-
   const calculatePasswordStrength = useCallback((password: string): PasswordStrength => {
     let score = 0;
     const feedback: string[] = [];
@@ -72,7 +72,7 @@ export function usePasswordStrength(
     const hasLowercase = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const isNotCommon = !commonPasswords.includes(password.toLowerCase());
+    const isNotCommon = !COMMON_PASSWORDS.includes(password.toLowerCase());
 
     // Pontuação por comprimento
     if (hasLength) {
@@ -185,7 +185,7 @@ export function usePasswordStrength(
         noCommon: isNotCommon
       }
     };
-  }, [minLength, requireUppercase, requireLowercase, requireNumbers, requireSpecial, checkCommonPasswords, commonPasswords]);
+  }, [minLength, requireUppercase, requireLowercase, requireNumbers, requireSpecial, checkCommonPasswords]);
 
   // Atualizar força quando a senha mudar
   useEffect(() => {
@@ -209,7 +209,7 @@ export function usePasswordStrength(
         }
       });
     }
-  }, [password, calculatePasswordStrength]);
+  }, [password]); // Removido calculatePasswordStrength das dependências
 
   // Função para verificar se a senha atende aos requisitos mínimos
   const isPasswordValid = useCallback(() => {

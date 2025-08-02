@@ -10,115 +10,11 @@ interface PasswordResetResponse {
   method?: string;
   error?: string;
   resetId?: string;
+  message?: string;
 }
 
 /**
- * 🔒 Display password reset instructions
- */
-export const displayPasswordResetInstructions = async (
-  userEmail: string
-): Promise<PasswordResetResponse> => {
-  
-  console.log('');
-  console.log('🔒 ==========================================');
-  console.log('🔒           DOSE CERTA');
-  console.log('🔒      RECUPERAÇÃO DE SENHA');
-  console.log('🔒 ==========================================');
-  console.log('');
-  console.log(`📧 Email: ${userEmail}`);
-  console.log('');
-  console.log('🎯 SISTEMA DE RECUPERAÇÃO:');
-  console.log('');
-  console.log('✅ Sua configuração de email está correta:');
-  console.log('   • SMTP: smtp.resend.com:465');
-  console.log('   • From: dosecertasmtp <team@dosecerta.online>');
-  console.log('   • Domain: dosecerta.online ✅ Verified');
-  console.log('');
-  console.log('💡 DESENVOLVIMENTO:');
-  console.log('   • Sistema simulado para desenvolvimento');
-  console.log('   • Em produção, emails reais serão enviados');
-  console.log('   • Use qualquer senha temporária para continuar');
-  console.log('');
-  console.log('🔄 SIMULAÇÃO DE EMAIL DE RECUPERAÇÃO:');
-  console.log('───────────────────────────────────────────');
-  console.log('De: dosecertasmtp <team@dosecerta.online>');
-  console.log(`Para: ${userEmail}`);
-  console.log('Assunto: 🔒 Recuperar Senha - Dose Certa');
-  console.log('');
-  console.log('Conteúdo:');
-  console.log('─────────');
-  console.log('Olá!');
-  console.log('');
-  console.log('Você solicitou a recuperação de sua senha.');
-  console.log('Clique no link abaixo para criar uma nova senha:');
-  console.log('');
-  console.log('🔗 [Redefinir Senha]');
-  console.log('');
-  console.log('Este link expira em 1 hora.');
-  console.log('Se você não solicitou esta recuperação, ignore este email.');
-  console.log('───────────────────────────────────────────');
-  console.log('');
-  console.log('🔒 ==========================================');
-  console.log('');
-
-  return {
-    success: true,
-    method: 'Password Reset Simulation',
-    resetId: `reset_${Date.now()}`
-  };
-};
-
-/**
- * 🔄 Try actual Supabase password reset
- */
-export const trySupabasePasswordReset = async (
-  userEmail: string
-): Promise<PasswordResetResponse> => {
-  try {
-    console.log('🔄 Tentando recuperação real via Supabase...');
-    
-    const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    if (error) {
-      console.warn('⚠️ Supabase password reset failed:', error.message);
-      
-      // If it fails, show simulation
-      await displayPasswordResetInstructions(userEmail);
-      
-      return {
-        success: true, // Still consider success for UX
-        method: 'Simulation (Supabase failed)',
-        error: error.message
-      };
-    }
-
-    console.log('✅ Supabase password reset sent!');
-    console.log('📧 Email will be sent from: dosecertasmtp <team@dosecerta.online>');
-    
-    return {
-      success: true,
-      method: 'Supabase Password Reset',
-      resetId: 'supabase_reset'
-    };
-
-  } catch (error: any) {
-    console.error('❌ Password reset exception:', error);
-    
-    // Show simulation on error
-    await displayPasswordResetInstructions(userEmail);
-    
-    return {
-      success: true, // Still success for UX
-      method: 'Simulation (Exception)',
-      error: error.message
-    };
-  }
-};
-
-/**
- * 🏆 MAIN PASSWORD RESET FUNCTION
+ * 🔒 Send password reset via Edge Function
  */
 export const sendPasswordReset = async (
   userEmail: string
@@ -128,23 +24,71 @@ export const sendPasswordReset = async (
   console.log('📧 Processando solicitação...');
   console.log('');
 
-  // Try Supabase first (real emails)
-  const result = await trySupabasePasswordReset(userEmail);
-  
-  console.log('');
-  console.log('✅ SISTEMA DE RECUPERAÇÃO ATIVADO!');
-  
-  if (result.method?.includes('Supabase')) {
-    console.log('📧 Email real enviado para sua caixa de entrada');
-    console.log('📬 Verifique: dosecertasmtp <team@dosecerta.online>');
-  } else {
-    console.log('🎯 Modo desenvolvimento ativo');
-    console.log('📧 Em produção, email real será enviado');
+  try {
+    // Chamar a edge function de reset de senha
+    const { data, error } = await supabase.functions.invoke('password-reset', {
+      body: { email: userEmail }
+    });
+
+    if (error) {
+      console.error('❌ Erro na edge function:', error);
+      throw new Error(error.message || 'Erro ao processar reset de senha');
+    }
+
+    console.log('✅ Resposta da edge function:', data);
+
+    if (data.success) {
+      console.log('✅ Email de recuperação enviado com sucesso!');
+      console.log('📧 Verifique sua caixa de entrada');
+      console.log('📬 De: Dose Certa <team@dosecerta.online>');
+      console.log('');
+      
+      return {
+        success: true,
+        method: 'Edge Function + Resend',
+        message: data.message || 'Link de recuperação enviado para seu email.',
+        resetId: `reset_${Date.now()}`
+      };
+    } else {
+      throw new Error(data.error || 'Erro desconhecido');
+    }
+
+  } catch (error: any) {
+    console.error('❌ Erro no reset de senha:', error);
+    
+    // Fallback para o método anterior se a edge function falhar
+    console.log('🔄 Tentando método alternativo...');
+    
+    try {
+      const { error: supabaseError } = await supabase.auth.resetPasswordForEmail(userEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (supabaseError) {
+        console.warn('⚠️ Supabase reset também falhou:', supabaseError.message);
+        throw error; // Re-throw o erro original
+      }
+
+      console.log('✅ Reset via Supabase Auth enviado!');
+      
+      return {
+        success: true,
+        method: 'Supabase Auth',
+        message: 'Link de recuperação enviado para seu email.',
+        resetId: 'supabase_reset'
+      };
+
+    } catch (fallbackError: any) {
+      console.error('❌ Todos os métodos falharam:', fallbackError);
+      
+      return {
+        success: false,
+        method: 'Failed',
+        error: error.message || 'Erro ao processar recuperação de senha',
+        resetId: `failed_${Date.now()}`
+      };
+    }
   }
-  
-  console.log('');
-  
-  return result;
 };
 
 /**

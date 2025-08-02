@@ -40,6 +40,9 @@ Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profission
 ### 👤 **Gestão de Usuário**
 - **Autenticação segura** com Supabase Auth
 - **Verificação de email** via Resend (✅ Funcionando)
+- **Recuperação de senha** completa com emails personalizados (✅ Funcionando)
+- **Validação de força de senha** em tempo real
+- **Campo de email editável** na verificação
 - **Perfis personalizados** com estatísticas de uso
 - **Dashboard analítico** com métricas de progresso
 - **Histórico completo** de atividades
@@ -135,6 +138,8 @@ SUPABASE_SERVICE_ROLE_KEY=sua_supabase_service_role_key
 ```bash
 npx supabase functions deploy create-checkout-session
 npx supabase functions deploy stripe-webhook
+npx supabase functions deploy send-verification-email
+npx supabase functions deploy password-reset
 ```
 
 ### **5. Configuração do Stripe**
@@ -171,7 +176,9 @@ src/
 supabase/
 ├── functions/          # Edge Functions
 │   ├── create-checkout-session/
-│   └── stripe-webhook/
+│   ├── stripe-webhook/
+│   ├── send-verification-email/
+│   └── password-reset/
 └── migrations/         # Migrações do banco
 ```
 
@@ -221,10 +228,22 @@ npm run stop             # Para processos Vite
 - Portal de gerenciamento de cobrança
 - Diferentes níveis de acesso
 
+### **Sistema de Recuperação de Senha**
+- **Edge Function customizada** para gerenciar reset de senha
+- **Emails personalizados** com template HTML profissional
+- **Links seguros** com expiração automática
+- **Validação de força de senha** em tempo real
+- **Campo de email editável** na verificação
+- **Verificação robusta de tokens** com delays para processamento
+- **Redirecionamento correto** para ambiente de desenvolvimento
+
 ## 🔒 Segurança
 
 - **Row Level Security (RLS)** habilitado em todas as tabelas
 - **Autenticação JWT** via Supabase Auth
+- **Recuperação de senha segura** com tokens expiráveis
+- **Validação de força de senha** com critérios rigorosos
+- **Prevenção de enumeração de emails** com rate limiting
 - **Validação de entrada** em todas as operações
 - **HTTPS** obrigatório em produção
 - **Sanitização** de dados de entrada

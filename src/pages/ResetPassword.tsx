@@ -51,21 +51,46 @@ const ResetPassword = () => {
   };
 
   useEffect(() => {
-    // Check if we have the necessary tokens in URL
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    
-    if (!accessToken || !refreshToken) {
-      setError('Link de recuperação inválido ou expirado.');
-      return;
-    }
+    const checkAuthStatus = async () => {
+      try {
+        // Aguardar um pouco para o Supabase processar o hash da URL
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Verificar se o usuário está autenticado
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Erro ao verificar sessão:', error);
+          setError('Link de recuperação inválido ou expirado.');
+          return;
+        }
+        
+        if (!session) {
+          // Se não há sessão, verificar se há hash na URL
+          const hash = window.location.hash;
+          if (hash) {
+            console.log('🔗 Hash detectado, aguardando processamento...');
+            // Aguardar mais um pouco e verificar novamente
+            setTimeout(async () => {
+              const { data: { session: retrySession } } = await supabase.auth.getSession();
+              if (!retrySession) {
+                setError('Link de recuperação inválido ou expirado.');
+              }
+            }, 2000);
+          } else {
+            setError('Link de recuperação inválido ou expirado.');
+          }
+        } else {
+          console.log('✅ Sessão válida detectada');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao verificar autenticação:', error);
+        setError('Erro ao processar link de recuperação.');
+      }
+    };
 
-    // Set the session with the tokens from URL
-    supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken
-    });
-  }, [searchParams]);
+    checkAuthStatus();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

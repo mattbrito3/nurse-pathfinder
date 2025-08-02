@@ -8,6 +8,15 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Added
+- **Sistema de Recuperação de Senha Completo**: Implementada funcionalidade completa de reset de senha
+- **Edge Function de Password Reset**: Nova API `password-reset` para gerenciar recuperação de senha
+- **Email Personalizado de Recuperação**: Template HTML customizado com design profissional
+- **Link de Recuperação Seguro**: Geração de links seguros com expiração automática
+- **Validação de Força de Senha**: Sistema robusto para verificar qualidade da nova senha
+- **Feedback Visual de Senha**: Medidor de força com critérios detalhados
+- **Campo de Email Editável**: Correção para permitir edição de email na verificação
+- **Tratamento de Sessão**: Verificação robusta de tokens de recuperação
+- **Redirecionamento Correto**: Configuração para porta de desenvolvimento (8080)
 - **Sistema de Validação de Email Duplicado**: Implementada validação robusta para prevenir cadastros duplicados
 - **Edge Function de Verificação**: API segura para verificação de disponibilidade de email
 - **Validação em Tempo Real**: Verificação automática enquanto usuário digita o email
@@ -33,6 +42,11 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **Orientação sobre Spam**: Adicionada dica para verificar pasta de spam/lixo eletrônico
 
 ### Changed
+- **Fluxo de Recuperação de Senha**: Reestruturado para usar Edge Function customizada
+- **Template de Email**: Atualizado com design profissional e botão de ação
+- **Configuração de Redirecionamento**: Ajustado para ambiente de desenvolvimento
+- **Verificação de Tokens**: Implementada verificação robusta com delays para processamento
+- **Interface de Reset de Senha**: Melhorada com validação em tempo real e feedback visual
 - **Fluxo de Cadastro**: Reestruturado para validar email antes da verificação
 - **Interface de Validação**: Adicionados indicadores visuais e feedback em tempo real
 - **Tratamento de Erros**: Melhorado para lidar especificamente com emails duplicados
@@ -50,6 +64,11 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **Interface Limpa**: Removido botão de debug após resolução do problema de email
 
 ### Fixed
+- **Loop Infinito React**: ✅ **RESOLVIDO** - Corrigido problema de "Maximum update depth exceeded" no usePasswordStrength
+- **Campo de Email Não Editável**: ✅ **RESOLVIDO** - Corrigido onEmailChange no SimpleEmailVerification
+- **Link de Recuperação Inválido**: ✅ **RESOLVIDO** - Implementada verificação robusta de sessão com delays
+- **Redirecionamento para Porta Errada**: ✅ **RESOLVIDO** - Corrigido redirectTo para localhost:8080
+- **Email de Recuperação Não Enviado**: ✅ **RESOLVIDO** - Implementada Edge Function completa com Resend
 - **Emails Duplicados**: ✅ **RESOLVIDO** - Sistema agora previne cadastros com emails já existentes
 - **Validação de Email**: Implementada verificação robusta antes do cadastro
 - **Feedback ao Usuário**: Mensagens claras sobre status do email

@@ -131,7 +131,7 @@ const Auth = () => {
     }
 
     // Validação de força de senha
-    if (!passwordStrength.isPasswordValid()) {
+    if (passwordStrength.score < 70) {
       setError('Sua senha não atende aos requisitos mínimos de segurança. Verifique as sugestões abaixo.');
       setIsLoading(false);
       return;
@@ -195,7 +195,12 @@ const Auth = () => {
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
         <SimpleEmailVerification
           email={pendingSignupData.email}
-          onEmailChange={() => {}} // Not editable at this stage
+          onEmailChange={(newEmail) => {
+            setPendingSignupData({
+              ...pendingSignupData,
+              email: newEmail
+            });
+          }}
           onVerified={handleCodeVerified}
           onBack={() => {
             setShowCodeVerification(false);

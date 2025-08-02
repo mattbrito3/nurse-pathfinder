@@ -1,0 +1,195 @@
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type'
+};
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  try {
+    const { email } = await req.json();
+
+    if (!email) {
+      return new Response(
+        JSON.stringify({ error: 'Email é obrigatório' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    console.log('🔒 Iniciando reset de senha para:', email);
+
+    // Criar cliente Supabase
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Gerar link de recuperação usando a API admin
+    const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
+      type: 'recovery',
+      email: email,
+      options: {
+        redirectTo: `${Deno.env.get('FRONTEND_URL') || 'http://localhost:8080'}/reset-password`
+      }
+    });
+
+    if (resetError) {
+      console.error('❌ Erro ao gerar link de reset:', resetError);
+      
+      // Se o erro for de usuário não encontrado, retornar sucesso mesmo assim (segurança)
+      if (resetError.message.includes('User with this email not found') || 
+          resetError.message.includes('User not found') || 
+          resetError.message.includes('not found') ||
+          resetError.code === 'user_not_found') {
+        console.log('❌ Usuário não encontrado:', email);
+        return new Response(
+          JSON.stringify({ 
+            success: true,
+            message: 'Se o email existir em nossa base, você receberá um link de recuperação.'
+          }),
+          { 
+            status: 200, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+      
+      throw new Error('Erro interno ao processar reset de senha');
+    }
+
+    // Extrair o link de recuperação
+    const recoveryLink = resetData.properties.action_link;
+    console.log('🔗 Link de recuperação gerado:', recoveryLink);
+
+    // Enviar email customizado via Resend com o link real
+    const resendApiKey = Deno.env.get('NEW_API_KEY_RESEND');
+    
+    if (resendApiKey) {
+      try {
+        const emailContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <title>Recuperar Senha - Dose Certa</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+              .button { display: inline-block; background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+              .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+              .link-fallback { margin-top: 20px; padding: 15px; background: #f0f0f0; border-radius: 5px; font-size: 12px; word-break: break-all; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>🔒 Recuperar Senha</h1>
+                <p>Dose Certa - Sua calculadora de medicamentos</p>
+              </div>
+              <div class="content">
+                <h2>Olá!</h2>
+                <p>Você solicitou a recuperação de sua senha no Dose Certa.</p>
+                <p>Clique no botão abaixo para criar uma nova senha:</p>
+                
+                <div style="text-align: center;">
+                  <a href="${recoveryLink}" class="button">
+                    🔑 Redefinir Senha
+                  </a>
+                </div>
+                
+                <p><strong>Este link expira em 1 hora.</strong></p>
+                
+                <p>Se o botão não funcionar, copie e cole o link abaixo no seu navegador:</p>
+                <div class="link-fallback">
+                  ${recoveryLink}
+                </div>
+                
+                <p>Se você não solicitou esta recuperação, ignore este email.</p>
+                
+                <div class="footer">
+                  <p>Dose Certa - Calculadora de Medicamentos</p>
+                  <p>Se tiver problemas, verifique sua pasta de spam/lixo eletrônico.</p>
+                </div>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+
+        const resendResponse = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: 'Dose Certa <team@dosecerta.online>',
+            to: [email],
+            subject: '🔒 Recuperar Senha - Dose Certa',
+            html: emailContent
+          })
+        });
+
+        if (resendResponse.ok) {
+          console.log('✅ Email customizado com link enviado via Resend para:', email);
+        } else {
+          const errorData = await resendResponse.text();
+          console.error('❌ Erro ao enviar email customizado:', errorData);
+          throw new Error('Erro ao enviar email de recuperação');
+        }
+      } catch (resendError) {
+        console.error('❌ Erro no Resend:', resendError);
+        throw new Error('Erro ao enviar email de recuperação');
+      }
+    } else {
+      // Fallback: usar o método padrão do Supabase se Resend não estiver configurado
+      console.log('⚠️ Resend não configurado, usando método padrão do Supabase');
+      const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${Deno.env.get('FRONTEND_URL') || 'http://localhost:8080'}/reset-password`
+      });
+
+      if (fallbackError) {
+        console.error('❌ Erro no fallback:', fallbackError);
+        throw new Error('Erro ao enviar email de recuperação');
+      }
+    }
+
+    console.log('✅ Reset de senha processado com sucesso para:', email);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true,
+        message: 'Link de recuperação enviado para seu email.'
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+
+  } catch (error) {
+    console.error('❌ Erro no reset de senha:', error);
+    
+    return new Response(
+      JSON.stringify({ 
+        error: 'Erro interno do servidor. Tente novamente mais tarde.',
+        details: error.message 
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    );
+  }
+}); 
