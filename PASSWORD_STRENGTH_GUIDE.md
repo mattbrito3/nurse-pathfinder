@@ -61,7 +61,7 @@ interface PasswordStrengthOptions {
 }
 ```
 
-### **Componente: `PasswordStrengthMeter`**
+### **Componente: `PasswordStrengthMeter` (Versão Clean)**
 
 ```typescript
 import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter';
@@ -69,10 +69,19 @@ import { PasswordStrengthMeter } from '@/components/auth/PasswordStrengthMeter';
 <PasswordStrengthMeter
   password={password}
   onPasswordChange={setPassword}
-  showSuggestions={true}
   showGenerator={true}
   className="mb-4"
 />
+```
+
+#### **Props do Componente**
+```typescript
+interface PasswordStrengthMeterProps {
+  password: string;
+  onPasswordChange: (password: string) => void;
+  showGenerator?: boolean;      // Padrão: true
+  className?: string;           // Classes CSS adicionais
+}
 ```
 
 ## 📊 Sistema de Pontuação
@@ -130,9 +139,7 @@ const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
   <PasswordStrengthMeter
     password={signupPassword}
     onPasswordChange={setSignupPassword}
-    showSuggestions={true}
     showGenerator={true}
-    className="mb-4"
   />
   <input
     type="hidden"
@@ -142,19 +149,26 @@ const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
 </div>
 ```
 
-## 🎨 Interface do Usuário
+## 🎨 Interface do Usuário (Versão Clean)
 
 ### **Elementos Visuais**
-1. **Barra de Progresso**: Mostra a pontuação atual
-2. **Badge de Nível**: Exibe o nível de força com emoji
-3. **Critérios Detalhados**: Lista com ✅/❌ para cada critério
-4. **Sugestões**: Orientações específicas para melhorar
-5. **Gerador**: Botão para criar senha forte automaticamente
+1. **Campo de Senha**: Input com placeholder e botões funcionais
+2. **Barra de Progresso**: Barra discreta de 6px mostrando a pontuação
+3. **Informações Mínimas**: Nível da senha + porcentagem
+4. **Botões Funcionais**: 
+   - 🔄 **Gerar Senha**: Cria senha forte automaticamente
+   - 👁️ **Mostrar/Ocultar**: Alterna visibilidade da senha
 
 ### **Feedback Dinâmico**
-- **Cores**: Mudam conforme a força da senha
-- **Ícones**: Indicam status de cada critério
-- **Mensagens**: Explicam o que precisa ser melhorado
+- **Cores**: Mudam conforme a força da senha (vermelho → verde)
+- **Barra de Progresso**: Aparece apenas quando há senha
+- **Informações**: Nível e porcentagem em texto pequeno
+- **Hover States**: Botões com feedback visual
+
+### **Integração com Dark Theme**
+- **Cores Adaptadas**: Usa classes nativas do shadcn/ui
+- **Contraste Otimizado**: Bom contraste em modo escuro
+- **Transições Suaves**: Animações elegantes e consistentes
 
 ## 🔒 Segurança
 
@@ -176,14 +190,14 @@ const commonPasswords = [
 ## 📈 Benefícios
 
 ### **Para o Usuário**
+- ✅ **Interface Clean**: Design minimalista e elegante
 - ✅ **Feedback Imediato**: Sabe instantaneamente se a senha é segura
-- ✅ **Orientações Claras**: Recebe sugestões específicas de melhoria
-- ✅ **Confiança**: Tem certeza de que sua conta está protegida
 - ✅ **Facilidade**: Gerador automático de senhas seguras
+- ✅ **Experiência Superior**: Integração perfeita com dark theme
 
 ### **Para a Aplicação**
 - 🔒 **Segurança Aprimorada**: Reduz risco de contas comprometidas
-- 📊 **Métricas**: Dados sobre qualidade das senhas dos usuários
+- 📱 **Responsivo**: Funciona perfeitamente em dispositivos móveis
 - 🎯 **Conversão**: Reduz abandono no cadastro
 - 🛡️ **Proteção**: Previne ataques de força bruta
 
