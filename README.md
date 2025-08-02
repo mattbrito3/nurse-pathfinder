@@ -54,6 +54,14 @@ Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profission
 - **Sincronização de perfil** - nome atualizado automaticamente no sistema
 - **Validação de email simplificada** - interface mais limpa
 
+### 🛠️ **Ferramentas de Desenvolvimento**
+- **Sistema de Backlog Simples**: Gerenciamento de ideias e tarefas do projeto
+- **Dashboard de Desenvolvimento**: Interface para acompanhar progresso
+- **Categorização por Funcionalidade**: Calculadora, Flashcards, Glossário, UX/UI, etc.
+- **Gerenciamento de Status**: Backlog → Em Desenvolvimento → Concluído
+- **Filtros e Estatísticas**: Visualização organizada do progresso
+- **Guia Prático de Uso**: Documentação completa para desenvolvedores
+
 ## 🛠️ Tecnologias Utilizadas
 
 ### **Frontend**
@@ -91,6 +99,56 @@ Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profission
 - npm ou yarn
 - Conta Supabase
 - Conta Stripe (para pagamentos)
+
+## 📋 **Para Desenvolvedores**
+
+### **Sistema de Backlog**
+O projeto inclui um sistema interno de backlog para gerenciar funcionalidades e melhorias:
+
+1. **Acesse**: Faça login e vá para "Dev Dashboard" no menu
+2. **Adicione Ideias**: Use o botão "Adicionar Item" para registrar novas funcionalidades
+3. **Categorize**: Organize por Calculadora, Flashcards, Glossário, UX/UI, Performance, etc.
+4. **Priorize**: Defina prioridades (Alta, Média, Baixa)
+5. **Acompanhe**: Use filtros para ver backlog, em desenvolvimento ou concluído
+
+### **Guias Disponíveis**
+- `BACKLOG_GUIDE.md` - Guia prático do sistema de backlog
+- `NURSE_PATHFINDER_PLANNING_GUIDE.md` - Documentação completa de planejamento
+
+### **Comandos Úteis**
+```javascript
+// Adicionar item ao backlog via console
+addBacklogItem("Título", "Descrição", "Calculadora", "Alta")
+```
+
+## 🔧 **Contexto de Decisões Técnicas**
+
+### **Sistema de Backlog Simples**
+**Decisão**: Implementar sistema de backlog interno em vez de usar ferramentas externas
+**Contexto**: Necessidade de manter controle de funcionalidades específicas do Nurse Pathfinder sem dependência de ferramentas externas
+**Benefícios**: 
+- Controle total sobre categorização e priorização
+- Integração direta com o fluxo de desenvolvimento
+- Persistência local para desenvolvimento offline
+- Interface customizada para as necessidades específicas do projeto
+
+### **Desenvolvimento Incremental**
+**Decisão**: Implementar regras de desenvolvimento incremental conforme `.cursor/rules/desenvolvimento-incremental.mdc`
+**Contexto**: Necessidade de estruturar o desenvolvimento de forma organizada e mensurável
+**Benefícios**:
+- Planejamento estruturado por funcionalidades
+- Validação em múltiplas camadas (técnica, integração, UX)
+- Gerenciamento de débito técnico
+- Métricas de progresso e qualidade
+
+### **Armazenamento Local**
+**Decisão**: Usar localStorage para persistência do backlog
+**Contexto**: Sistema interno para desenvolvimento, sem necessidade de sincronização entre dispositivos
+**Benefícios**:
+- Simplicidade de implementação
+- Funcionamento offline
+- Sem dependência de APIs externas
+- Performance otimizada
 
 ### **1. Clone o repositório**
 ```bash

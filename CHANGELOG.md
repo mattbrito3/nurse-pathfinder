@@ -8,6 +8,16 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Added
+- **Sistema de Backlog Simples**: Implementado sistema interno para gerenciar funcionalidades e melhorias do projeto
+- **Dashboard de Desenvolvimento**: Interface dedicada para acompanhar progresso de desenvolvimento
+- **Componente SimpleBacklog**: Interface clean e prática para gerenciar backlog
+- **Categorização por Funcionalidade**: Sistema organiza itens por Calculadora, Flashcards, Glossário, UX/UI, Performance, etc.
+- **Gerenciamento de Status**: Fluxo Backlog → Em Desenvolvimento → Concluído
+- **Filtros e Estatísticas**: Visualização organizada com filtros por status e estatísticas de progresso
+- **Guias Práticos**: Documentação completa para desenvolvedores (BACKLOG_GUIDE.md, NURSE_PATHFINDER_PLANNING_GUIDE.md)
+- **Regras de Desenvolvimento Incremental**: Atualizadas regras do Cursor para desenvolvimento estruturado
+- **Sistema de Armazenamento Local**: Persistência de dados do backlog no localStorage
+- **Comandos de Console**: Funções utilitárias para adicionar itens via console do navegador
 - **Login com Google OAuth**: Implementada autenticação social completa com Google
 - **Vinculação de Contas**: Sistema para vincular contas Google com emails existentes
 - **Setup de Perfil para Usuários Google**: Modal para configuração inicial de nome após login Google
@@ -18,6 +28,9 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 - **Validação de Email Simplificada**: Remoção de mensagens desnecessárias na validação de email
 
 ### Changed
+- **Foco em Simplicidade**: Removidas funcionalidades complexas (métricas avançadas, análises de impacto) para priorizar usabilidade
+- **Interface do Dashboard**: Simplificada para focar no backlog e ferramentas essenciais
+- **Estrutura de Desenvolvimento**: Implementado sistema de desenvolvimento incremental conforme regras do Cursor
 - **Fluxo de Autenticação**: Reestruturado para rotas organizadas (/login, /register, /profile)
 - **Redirecionamento Pós-Login**: Agora redireciona para `/profile` em vez de `/dashboard`
 - **Interface de Validação de Email**: Removida mensagem "Email disponível para cadastro"
