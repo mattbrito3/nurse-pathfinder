@@ -39,14 +39,20 @@ Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profission
 
 ### 👤 **Gestão de Usuário**
 - **Autenticação segura** com Supabase Auth
+- **Login com Google OAuth** (✅ Implementado)
+- **Vinculação de contas** Google + Email/Senha
 - **Verificação de email** via Resend (✅ Funcionando)
 - **Recuperação de senha** completa com emails personalizados (✅ Funcionando)
 - **Validação de força de senha** em tempo real
 - **Campo de email editável** na verificação
+- **Setup de perfil** para usuários Google
 - **Perfis personalizados** com estatísticas de uso
 - **Dashboard analítico** com métricas de progresso
 - **Histórico completo** de atividades
 - **Ferramentas de debug** para diagnóstico de problemas
+- **Rotas organizadas** (/login, /register, /profile)
+- **Sincronização de perfil** - nome atualizado automaticamente no sistema
+- **Validação de email simplificada** - interface mais limpa
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -108,6 +114,9 @@ VITE_SUPABASE_ANON_KEY=sua_supabase_anon_key
 
 # Stripe
 VITE_STRIPE_PUBLISHABLE_KEY=sua_stripe_publishable_key
+
+# Google OAuth
+VITE_GOOGLE_CLIENT_ID=seu_google_client_id
 ```
 
 ### **4. Configuração do Supabase**
@@ -134,7 +143,24 @@ SUPABASE_URL=sua_supabase_url
 SUPABASE_SERVICE_ROLE_KEY=sua_supabase_service_role_key
 ```
 
-#### **4.3. Deploy das Edge Functions**
+#### **4.3. Configure o Google OAuth**
+1. **Execute a migração do Google OAuth:**
+   ```sql
+   -- Execute o arquivo: 20250130000004_add_google_auth_fields.sql
+   ```
+
+2. **Configure o provider Google no Supabase:**
+   - Acesse: Authentication → Providers
+   - Ative o Google provider
+   - Configure o Client ID e Client Secret
+
+3. **Configure as URLs de redirecionamento:**
+   - Site URL: `http://localhost:8080` (dev) ou seu domínio (prod)
+   - Redirect URLs: `http://localhost:8080/**` (dev) ou seu domínio (prod)
+
+**📖 Guia completo:** Veja `GOOGLE_OAUTH_SETUP.md` para instruções detalhadas.
+
+#### **4.4. Deploy das Edge Functions**
 ```bash
 npx supabase functions deploy create-checkout-session
 npx supabase functions deploy stripe-webhook
@@ -236,6 +262,13 @@ npm run stop             # Para processos Vite
 - **Campo de email editável** na verificação
 - **Verificação robusta de tokens** com delays para processamento
 - **Redirecionamento correto** para ambiente de desenvolvimento
+
+### **Sistema de Autenticação Google**
+- **OAuth 2.0 completo** com Google
+- **Vinculação de contas** para emails existentes
+- **Setup de perfil** para novos usuários Google
+- **Sincronização automática** de dados do perfil
+- **Redirecionamento inteligente** baseado no status do usuário
 
 ## 🔒 Segurança
 

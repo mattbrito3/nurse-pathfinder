@@ -45,7 +45,7 @@ const ForgotPassword = () => {
         
         // Redirect to login after success
         setTimeout(() => {
-          navigate('/auth');
+          navigate('/login');
         }, 3000);
         
       } else {
@@ -108,10 +108,10 @@ const ForgotPassword = () => {
               type="button" 
               variant="ghost" 
               className="w-full"
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/login')}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Voltar ao Login
+              Voltar para o login
             </Button>
           </form>
         </CardContent>

@@ -60,16 +60,16 @@ const Profile = () => {
   // Redirect if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth');
+      navigate('/login');
     }
   }, [user, loading, navigate]);
 
   // Load user profile
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       loadProfile();
     }
-  }, [user]);
+  }, [user, loading]);
 
   const loadProfile = async () => {
     try {
@@ -211,14 +211,28 @@ const Profile = () => {
     try {
       setIsSaving(true);
 
-      const { error } = await supabase
+      // Salvar no perfil
+      const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
           ...profile,
           updated_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // Atualizar user_metadata do Supabase Auth para refletir no sistema geral
+      const { error: authError } = await supabase.auth.updateUser({
+        data: {
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url
+        }
+      });
+
+      if (authError) {
+        console.warn('Erro ao atualizar user_metadata:', authError);
+        // Não falhar o salvamento se apenas o metadata falhar
+      }
 
       toast.success('Perfil salvo com sucesso!');
     } catch (error: any) {

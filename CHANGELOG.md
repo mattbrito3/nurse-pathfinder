@@ -8,6 +8,33 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 ## [Unreleased]
 
 ### Added
+- **Login com Google OAuth**: Implementada autenticação social completa com Google
+- **Vinculação de Contas**: Sistema para vincular contas Google com emails existentes
+- **Setup de Perfil para Usuários Google**: Modal para configuração inicial de nome após login Google
+- **Rotas Organizadas**: Páginas dedicadas `/login`, `/register` e `/profile-setup`
+- **Hook Global de Google Auth**: `useGoogleAuthGlobal` para processamento centralizado
+- **Componente GoogleLoginButton**: Botão reutilizável para login com Google
+- **Sincronização de Perfil**: Atualização automática do user_metadata após alterações no perfil
+- **Validação de Email Simplificada**: Remoção de mensagens desnecessárias na validação de email
+
+### Changed
+- **Fluxo de Autenticação**: Reestruturado para rotas organizadas (/login, /register, /profile)
+- **Redirecionamento Pós-Login**: Agora redireciona para `/profile` em vez de `/dashboard`
+- **Interface de Validação de Email**: Removida mensagem "Email disponível para cadastro"
+- **Sincronização de Nome**: Nome do perfil agora é refletido imediatamente no sistema geral
+- **Estrutura de Rotas**: Organização mais clara e intuitiva das páginas de autenticação
+
+### Fixed
+- **Nome não Atualizado no Sistema**: ✅ **RESOLVIDO** - Nome do perfil agora sincroniza com user_metadata
+- **Modal de Setup não Aparecia**: ✅ **RESOLVIDO** - Corrigido fluxo de verificação de perfil para usuários Google
+- **Página Profile Inacessível**: ✅ **RESOLVIDO** - Corrigido redirecionamento automático que impedia acesso
+- **Interface Poluída**: ✅ **RESOLVIDO** - Removidas mensagens desnecessárias na validação de email
+
+### Breaking Changes
+- **Rota `/auth`**: Agora redireciona para `/login` (mantida para compatibilidade)
+- **Redirecionamento Pós-Login**: Mudou de `/dashboard` para `/profile`
+
+### Added
 - **Sistema de Recuperação de Senha Completo**: Implementada funcionalidade completa de reset de senha
 - **Edge Function de Password Reset**: Nova API `password-reset` para gerenciar recuperação de senha
 - **Email Personalizado de Recuperação**: Template HTML customizado com design profissional

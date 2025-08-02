@@ -69,7 +69,7 @@ const Pricing = () => {
   const handlePlanClick = (planName: string, buttonText: string) => {
     if (buttonText === "Começar Grátis") {
       if (!user) {
-        navigate('/auth');
+        navigate('/register');
       } else {
         navigate('/dashboard');
       }
@@ -130,11 +130,11 @@ const Pricing = () => {
               <CardContent className="space-y-6">
                 {plan.name === "Gratuito" ? (
                   <Button 
-                    variant={plan.buttonVariant}
-                    className={`w-full py-6 text-lg ${plan.popular ? 'shadow-soft' : ''}`}
-                    onClick={() => handlePlanClick(plan.name, plan.buttonText)}
+                    variant="medical" 
+                    className="w-full"
+                    onClick={() => navigate('/register')}
                   >
-                    {plan.buttonText}
+                    Começar Grátis
                   </Button>
                 ) : (
                   <UnifiedPaymentButton

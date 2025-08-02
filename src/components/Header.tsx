@@ -69,7 +69,7 @@ const Header = () => {
                 variant="ghost" 
                 size="sm" 
                 className="hidden md:flex"
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/login')}
               >
                 <User className="h-4 w-4 mr-2" />
                 Entrar
@@ -77,7 +77,7 @@ const Header = () => {
               <Button 
                 variant="medical" 
                 size="sm"
-                onClick={() => navigate('/auth')}
+                onClick={() => navigate('/register')}
               >
                 Começar Grátis
               </Button>
@@ -127,11 +127,11 @@ const Header = () => {
                 </>
               ) : (
                 <>
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/auth')}>
+                  <Button variant="ghost" size="sm" onClick={() => navigate('/login')}>
                     <User className="h-4 w-4 mr-2" />
                     Entrar
                   </Button>
-                  <Button variant="medical" size="sm" onClick={() => navigate('/auth')}>
+                  <Button variant="medical" size="sm" onClick={() => navigate('/register')}>
                     Começar Grátis
                   </Button>
                 </>

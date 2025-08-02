@@ -16,7 +16,7 @@ const Dashboard = () => {
   // Redirecionar se não estiver logado
   useEffect(() => {
     if (!loading && !user) {
-      navigate('/auth');
+      navigate('/login');
     }
   }, [user, loading, navigate]);
 

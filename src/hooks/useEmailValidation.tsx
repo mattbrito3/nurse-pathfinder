@@ -87,7 +87,7 @@ export function useEmailValidation(
         return {
           isValid: true,
           isAvailable: true,
-          message: data.message,
+          message: '', // Não mostrar mensagem quando email estiver disponível
           isLoading: false,
           error: null
         };

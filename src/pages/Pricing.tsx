@@ -214,9 +214,9 @@ const Pricing = () => {
                         </Button>
                       ) : isFree ? (
                         <Button 
-                          className="w-full" 
-                          variant="outline"
-                          onClick={() => navigate('/auth')}
+                          variant="medical" 
+                          className="w-full"
+                          onClick={() => navigate('/register')}
                         >
                           Começar Grátis
                         </Button>

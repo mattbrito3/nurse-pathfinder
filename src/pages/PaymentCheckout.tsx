@@ -23,7 +23,7 @@ const PaymentCheckout = () => {
 
   // Se não há usuário logado, redirecionar para login
   if (!user) {
-    navigate('/auth');
+    navigate('/login');
     return null;
   }
 

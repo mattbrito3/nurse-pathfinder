@@ -130,10 +130,10 @@ const ResetPassword = () => {
         description: "Sua senha foi redefinida. Você já pode fazer login.",
       });
 
-      // Redirect to login page
+      // Redirect to login after success
       setTimeout(() => {
-        navigate('/auth');
-      }, 2000);
+        navigate('/login');
+      }, 3000);
 
     } catch (error: any) {
       console.error('Error updating password:', error);

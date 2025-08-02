@@ -12,6 +12,8 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 // Páginas que carregam imediatamente (críticas)
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 
 // Auth pages
@@ -86,26 +88,37 @@ const App = () => {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Index />} />
+              
+              {/* Rotas de Autenticação Organizadas */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              
+              {/* Rota de compatibilidade - redireciona para login */}
               <Route path="/auth" element={<Auth />} />
-                                      <Route path="/forgot-password" element={<ForgotPassword />} />
-             <Route path="/reset-password" element={<ResetPassword />} />
-             <Route path="/profile" element={<Profile />} />
-             <Route path="/pricing" element={<Pricing />} />
-             <Route path="/payment-checkout" element={<PaymentCheckout />} />
-             <Route path="/verify-email" element={<VerifyEmail />} />
+              
+              {/* Outras rotas de auth */}
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/payment-checkout" element={<PaymentCheckout />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
+              
+              {/* Rotas do Dashboard */}
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/analytics" element={<Analytics />} />
               <Route path="/dashboard/calculator" element={<MedicationCalculator />} />
               <Route path="/dashboard/glossary" element={<MedicalGlossary />} />
-                                      <Route path="/dashboard/flashcards" element={<FlashcardsPage />} />
-            <Route path="/dashboard/flashcards/create" element={<CreateFlashcardPage />} />
-            <Route path="/dashboard/flashcards/my" element={<MyFlashcardsPage />} />
-            <Route path="/dashboard/flashcards/edit/:flashcardId" element={<EditFlashcardPage />} />
-            <Route path="/dashboard/flashcards/browse" element={<BrowsePage />} />
-            <Route path="/dashboard/flashcards/browse/favorites" element={<BrowsePage />} />
-            <Route path="/dashboard/flashcards/browse/:categoryId" element={<BrowsePage />} />
-            <Route path="/dashboard/flashcards/study/:sessionId" element={<StudyPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/dashboard/flashcards" element={<FlashcardsPage />} />
+              <Route path="/dashboard/flashcards/create" element={<CreateFlashcardPage />} />
+              <Route path="/dashboard/flashcards/my" element={<MyFlashcardsPage />} />
+              <Route path="/dashboard/flashcards/edit/:flashcardId" element={<EditFlashcardPage />} />
+              <Route path="/dashboard/flashcards/browse" element={<BrowsePage />} />
+              <Route path="/dashboard/flashcards/browse/favorites" element={<BrowsePage />} />
+              <Route path="/dashboard/flashcards/browse/:categoryId" element={<BrowsePage />} />
+              <Route path="/dashboard/flashcards/study/:sessionId" element={<StudyPage />} />
+              
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
