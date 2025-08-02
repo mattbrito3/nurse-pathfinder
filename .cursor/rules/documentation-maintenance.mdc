@@ -1,0 +1,156 @@
+# Manutenção de Documentação - README e CHANGELOG
+
+## Princípios Fundamentais
+
+### 1. Atualização Obrigatória do README
+- **Toda nova funcionalidade precisa estar explicada no README.md**
+- Documente como usar a nova funcionalidade
+- Inclua exemplos de código quando relevante
+- Atualize a seção de funcionalidades
+- Mantenha a documentação sincronizada com o código
+
+### 2. Atualização Obrigatória do CHANGELOG
+- **Todas as mudanças devem ser listadas no CHANGELOG.md**
+- Use formato semântico de versionamento
+- Documente mudanças, adições, correções e breaking changes
+- Mantenha histórico cronológico das alterações
+- Inclua referências a issues/PRs quando aplicável
+
+### 3. Estrutura do README.md
+O README deve conter:
+
+1. **Descrição do Projeto** - O que o projeto faz
+2. **Funcionalidades** - Lista completa e atualizada
+3. **Instalação** - Como configurar o ambiente
+4. **Uso** - Como usar cada funcionalidade
+5. **Exemplos** - Código de exemplo para funcionalidades principais
+6. **Configuração** - Variáveis de ambiente e configurações
+7. **Contribuição** - Como contribuir para o projeto
+
+### 4. Estrutura do CHANGELOG.md
+Use formato [Keep a Changelog](https://keepachangelog.com/):
+
+```markdown
+# Changelog
+
+## [Unreleased]
+### Added
+- Nova funcionalidade X
+- Suporte para Y
+
+### Changed
+- Melhoria na funcionalidade Z
+
+### Fixed
+- Correção do bug A
+
+### Breaking Changes
+- Mudança que quebra compatibilidade
+
+## [1.2.0] - 2024-01-15
+### Added
+- Funcionalidade anterior
+```
+
+### 5. Processo de Atualização
+Para cada nova funcionalidade:
+
+1. **Implemente a funcionalidade** - Código primeiro
+2. **Atualize README.md** - Documente como usar
+3. **Atualize CHANGELOG.md** - Liste as mudanças
+4. **Teste a documentação** - Verifique se está clara
+5. **Commit separado** - Documentação em commit próprio
+
+### 6. Exemplos de Documentação
+
+#### README - Nova Funcionalidade
+```markdown
+## Funcionalidades
+
+### Calculadora de Medicamentos
+Calcula dosagens de medicamentos baseadas em peso, idade e condição do paciente.
+
+**Como usar:**
+```typescript
+import { calculateDosage } from './calculator';
+
+const dosage = calculateDosage({
+  weight: 70,
+  age: 30,
+  medication: 'paracetamol'
+});
+```
+
+**Parâmetros:**
+- `weight`: Peso em kg
+- `age`: Idade em anos
+- `medication`: Nome do medicamento
+```
+
+#### CHANGELOG - Nova Funcionalidade
+```markdown
+## [Unreleased]
+### Added
+- Calculadora de medicamentos com suporte a múltiplas drogas
+- Interface de usuário para entrada de dados do paciente
+- Validação de dosagem baseada em guidelines médicos
+- Histórico de cálculos para referência futura
+```
+
+### 7. Verificação de Qualidade
+Antes de considerar uma funcionalidade completa:
+
+- [ ] README.md atualizado com nova funcionalidade
+- [ ] CHANGELOG.md atualizado com mudanças
+- [ ] Exemplos de código incluídos
+- [ ] Documentação testada e clara
+- [ ] Screenshots/vídeos adicionados se necessário
+
+### 8. Templates de Documentação
+
+#### Template para Nova Funcionalidade no README
+```markdown
+### [Nome da Funcionalidade]
+[Descrição breve da funcionalidade]
+
+**Como usar:**
+```[linguagem]
+[código de exemplo]
+```
+
+**Parâmetros:**
+- `param1`: Descrição do parâmetro
+- `param2`: Descrição do parâmetro
+
+**Retorno:**
+Descrição do que é retornado
+
+**Exemplo:**
+```[linguagem]
+[exemplo prático de uso]
+```
+```
+
+#### Template para CHANGELOG
+```markdown
+### Added
+- [Descrição da nova funcionalidade]
+
+### Changed
+- [Descrição da mudança]
+
+### Fixed
+- [Descrição da correção]
+
+### Breaking Changes
+- [Descrição da breaking change]
+```
+
+### 9. Referências de Arquivos
+- [README.md](mdc:README.md) - Documentação principal do projeto
+- [CHANGELOG.md](mdc:CHANGELOG.md) - Histórico de mudanças
+- [package.json](mdc:package.json) - Informações do projeto
+description:
+globs:
+alwaysApply: true
+---

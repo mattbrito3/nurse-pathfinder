@@ -88,7 +88,7 @@ export const sendEmailDirectApproach = async (
         subject: '🩺 Código de Verificação - Nurse Pathfinder',
         verification_code: verificationCode,
         user_name: userName || 'Usuário',
-        api_key: 're_auJbm1rY_AmScYpyomnG81PeHCGsRcq8v',
+        api_key: 're_3hMvo4A6_2EY5MKCR1U713FYZQj8oeg3Z',
         template: 'verification_email',
         timestamp: new Date().toISOString()
       })

@@ -32,7 +32,7 @@ const SimpleEmailVerification: React.FC<SimpleEmailVerificationProps> = ({
 
   const sendVerificationEmail = async () => {
     if (!email || !email.includes('@')) {
-      setError('Por favor, digite um email válido');
+      setError('Por favor, insira um email válido.');
       return;
     }
 
@@ -42,11 +42,21 @@ const SimpleEmailVerification: React.FC<SimpleEmailVerificationProps> = ({
     try {
       console.log('🔄 Sending verification email to:', email);
       
+      // Extrair nome do email para personalização
+      const emailName = email.split('@')[0];
+      const userName = emailName
+        .replace(/[._-]/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+      
+      console.log('👤 Nome extraído do email:', userName);
+      
       // Call our custom Edge Function
       const { data, error: functionError } = await supabase.functions.invoke('send-verification-email', {
         body: {
           email: email,
-          name: 'Usuário'
+          name: userName
         }
       });
 
@@ -61,7 +71,7 @@ const SimpleEmailVerification: React.FC<SimpleEmailVerificationProps> = ({
         setEmailSent(true);
         toast({
           title: "Email enviado!",
-          description: "Verifique sua caixa de entrada e clique no link de verificação.",
+          description: "Verifique sua caixa de entrada (e spam) e clique no link de verificação.",
           duration: 10000
         });
 
@@ -113,6 +123,8 @@ const SimpleEmailVerification: React.FC<SimpleEmailVerificationProps> = ({
             <Mail className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-green-700 dark:text-green-300">
               Verifique sua caixa de entrada e clique no link para confirmar seu email.
+              <br />
+              <span className="text-sm font-medium">💡 Dica: Verifique também a pasta de spam/lixo eletrônico!</span>
             </AlertDescription>
           </Alert>
 

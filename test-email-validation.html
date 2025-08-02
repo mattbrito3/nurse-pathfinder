@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Validação de Email</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .loading {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .neutral {
+            background-color: #e2e3e5;
+            color: #383d41;
+            border: 1px solid #d6d8db;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de Validação de Email</h1>
+        <p>Teste a funcionalidade de validação de email duplicado implementada no Dose Certa.</p>
+        
+        <div class="form-group">
+            <label for="email">Email para Teste:</label>
+            <input 
+                type="email" 
+                id="email" 
+                placeholder="Digite um email para testar..."
+                autocomplete="off"
+            >
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <button id="testBtn" onclick="testEmail()">Testar Email</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const statusDiv = document.getElementById('status');
+        const resultDiv = document.getElementById('result');
+        const testBtn = document.getElementById('testBtn');
+        
+        let debounceTimer;
+        
+        // Debounce para validação em tempo real
+        emailInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if (this.value.trim()) {
+                    validateEmail(this.value);
+                } else {
+                    hideStatus();
+                }
+            }, 800);
+        });
+        
+        async function validateEmail(email) {
+            showStatus('Verificando email...', 'loading');
+            
+            try {
+                const response = await fetch('https://epjfoteyvejoqnigijrz.supabase.co/functions/v1/check-email-exists', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVwamZvdGV5dmVlam9xbmlnaWpyeiIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzM1NzI5NzIzLCJleHAiOjIwNTEzMDU3MjN9.Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8Ej8'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.code === 'EMAIL_EXISTS') {
+                        showStatus('❌ Este email já está cadastrado', 'error');
+                    } else if (data.code === 'EMAIL_AVAILABLE') {
+                        showStatus('✅ Email disponível para cadastro', 'success');
+                    } else if (data.code === 'RATE_LIMIT_EXCEEDED') {
+                        showStatus('⚠️ Muitas tentativas. Tente novamente em alguns minutos.', 'error');
+                    } else {
+                        showStatus('ℹ️ ' + data.message, 'neutral');
+                    }
+                } else {
+                    showStatus('❌ Erro: ' + (data.error || 'Erro desconhecido'), 'error');
+                }
+                
+                showResult(data);
+                
+            } catch (error) {
+                console.error('Erro na validação:', error);
+                showStatus('❌ Erro de conexão. Tente novamente.', 'error');
+            }
+        }
+        
+        async function testEmail() {
+            const email = emailInput.value.trim();
+            if (!email) {
+                showStatus('⚠️ Digite um email para testar', 'error');
+                return;
+            }
+            
+            testBtn.disabled = true;
+            testBtn.textContent = 'Testando...';
+            
+            await validateEmail(email);
+            
+            testBtn.disabled = false;
+            testBtn.textContent = 'Testar Email';
+        }
+        
+        function showStatus(message, type) {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+        
+        function hideStatus() {
+            statusDiv.style.display = 'none';
+            resultDiv.style.display = 'none';
+        }
+        
+        function showResult(data) {
+            resultDiv.innerHTML = `
+                <h3>📊 Resultado da Validação:</h3>
+                <p><strong>Código:</strong> ${data.code || 'N/A'}</p>
+                <p><strong>Mensagem:</strong> ${data.message || 'N/A'}</p>
+                ${data.suggestions ? `<p><strong>Sugestões:</strong> ${data.suggestions.join(', ')}</p>` : ''}
+                ${data.error ? `<p><strong>Erro:</strong> ${data.error}</p>` : ''}
+                <p><strong>Status HTTP:</strong> ${response?.status || 'N/A'}</p>
+            `;
+            resultDiv.style.display = 'block';
+        }
+        
+        // Teste automático com alguns emails
+        function runAutoTests() {
+            const testEmails = [
+                'test@example.com',
+                'user@dosecerta.online',
+                'invalid-email',
+                'test@',
+                '@example.com'
+            ];
+            
+            console.log('🧪 Executando testes automáticos...');
+            testEmails.forEach((email, index) => {
+                setTimeout(() => {
+                    console.log(`Testando: ${email}`);
+                    validateEmail(email);
+                }, index * 2000);
+            });
+        }
+        
+        // Descomente a linha abaixo para executar testes automáticos
+        // runAutoTests();
+    </script>
+</body>
+</html> 

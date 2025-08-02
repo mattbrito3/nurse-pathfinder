@@ -11,7 +11,7 @@ interface EmailResponse {
 }
 
 // ⚠️ SUBSTITUA PELA SUA API KEY QUANDO CRIAR
-const RESEND_API_KEY = 're_auJbm1rY_AmScYpyomnG81PeHCGsRcq8v'; // MUDE AQUI
+const RESEND_API_KEY = 're_3hMvo4A6_2EY5MKCR1U713FYZQj8oeg3Z'; // MUDE AQUI
 const FROM_EMAIL = 'delivered@resend.dev'; // Domínio de teste (funciona sem configuração)
 
 /**

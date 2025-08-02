@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useEmailValidation } from "@/hooks/useEmailValidation";
+import { usePasswordStrength } from "@/hooks/usePasswordStrength";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Heart, Loader2, Eye, EyeOff, Check, AlertCircle, Mail } from "lucide-react";
+import { Heart, Loader2, Eye, EyeOff, Check, AlertCircle, Mail, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SimpleEmailVerification from "@/components/auth/SimpleEmailVerification";
+import { PasswordStrengthMeter } from "@/components/auth/PasswordStrengthMeter";
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,9 +21,27 @@ const Auth = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCodeVerification, setShowCodeVerification] = useState(false);
   const [pendingSignupData, setPendingSignupData] = useState<any>(null);
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
   const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Validação de email em tempo real
+  const emailValidation = useEmailValidation(signupEmail, {
+    debounceMs: 800,
+    enableRealTime: true
+  });
+
+  // Validação de força de senha
+  const passwordStrength = usePasswordStrength(signupPassword, {
+    minLength: 8,
+    requireUppercase: true,
+    requireLowercase: true,
+    requireNumbers: true,
+    requireSpecial: true,
+    checkCommonPasswords: true
+  });
 
   // Redirecionar se já estiver logado
   useEffect(() => {
@@ -79,25 +100,39 @@ const Auth = () => {
       return;
     }
 
+    // Validação de email duplicado
+    if (emailValidation.isAvailable === false) {
+      setError('Este email já está cadastrado. Tente fazer login ou recuperar sua senha.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Se ainda está carregando a validação, aguardar
+    if (emailValidation.isLoading) {
+      setError('Aguarde a verificação do email...');
+      setIsLoading(false);
+      return;
+    }
+
+    // Se não foi possível verificar, tentar novamente
+    if (emailValidation.isAvailable === null && emailValidation.isValid) {
+      const validationResult = await emailValidation.validateEmail(email);
+      if (validationResult.isAvailable === false) {
+        setError('Este email já está cadastrado. Tente fazer login ou recuperar sua senha.');
+        setIsLoading(false);
+        return;
+      }
+    }
+
     if (password !== confirmPassword) {
       setError('As senhas não coincidem.');
       setIsLoading(false);
       return;
     }
 
-    if (password.length < 8) {
-      setError('A senha deve ter pelo menos 8 caracteres.');
-      setIsLoading(false);
-      return;
-    }
-
-    // Check password strength
-    const hasLowercase = /[a-z]/.test(password);
-    const hasUppercase = /[A-Z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    
-    if (!hasLowercase || !hasUppercase || !hasNumbers) {
-      setError('A senha deve conter pelo menos: uma letra maiúscula, uma minúscula e um número.');
+    // Validação de força de senha
+    if (!passwordStrength.isPasswordValid()) {
+      setError('Sua senha não atende aos requisitos mínimos de segurança. Verifique as sugestões abaixo.');
       setIsLoading(false);
       return;
     }
@@ -106,7 +141,6 @@ const Auth = () => {
     setPendingSignupData({ email, password, fullName });
     setShowCodeVerification(true);
     setIsLoading(false);
-
   };
 
   const handleCodeVerified = async (verifiedEmail: string) => {
@@ -120,8 +154,10 @@ const Auth = () => {
 
       if (error) {
         console.error('Signup error:', error);
-        if (error.message.includes('already registered')) {
-          setError('Este email já está cadastrado. Tente fazer login.');
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          setError('Este email já está cadastrado. Tente fazer login ou recuperar sua senha.');
+          // Reset da validação de email
+          emailValidation.resetValidation();
         } else if (error.message.includes('Password should be at least')) {
           setError('A senha deve ter pelo menos 8 caracteres.');
         } else if (error.message.includes('Invalid email')) {
@@ -280,40 +316,85 @@ const Auth = () => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      name="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      required
-                      disabled={isLoading}
-                    />
+                    <div className="relative">
+                      <Input
+                        id="signup-email"
+                        name="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        required
+                        disabled={isLoading}
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
+                        className={`pr-10 ${
+                          emailValidation.isAvailable === false 
+                            ? 'border-red-500 focus:border-red-500' 
+                            : emailValidation.isAvailable === true 
+                            ? 'border-green-500 focus:border-green-500'
+                            : ''
+                        }`}
+                      />
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {emailValidation.isLoading && (
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        )}
+                        {emailValidation.isAvailable === true && !emailValidation.isLoading && (
+                          <Check className="h-4 w-4 text-green-500" />
+                        )}
+                        {emailValidation.isAvailable === false && !emailValidation.isLoading && (
+                          <X className="h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                    </div>
+                    {emailValidation.message && (
+                      <div className={`text-sm ${
+                        emailValidation.isAvailable === false 
+                          ? 'text-red-600' 
+                          : emailValidation.isAvailable === true 
+                          ? 'text-green-600'
+                          : 'text-muted-foreground'
+                      }`}>
+                        {emailValidation.message}
+                      </div>
+                    )}
+                    {emailValidation.isAvailable === false && (
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            // Mudar para aba de login
+                            const tabsList = document.querySelector('[role="tablist"]');
+                            const signinTab = tabsList?.querySelector('[value="signin"]') as HTMLElement;
+                            if (signinTab) signinTab.click();
+                          }}
+                        >
+                          Fazer Login
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate('/forgot-password')}
+                        >
+                          Recuperar Senha
+                        </Button>
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Senha</Label>
-                    <div className="relative">
-                      <Input
-                        id="signup-password"
-                        name="password"
-                        type={showPassword ? "text" : "password"}
-                        placeholder="Mínimo 8 caracteres (A-Z, a-z, 0-9)"
-                        required
-                        className="pr-10"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                    <PasswordStrengthMeter
+                      password={signupPassword}
+                      onPasswordChange={setSignupPassword}
+                      showGenerator={true}
+                    />
+                    <input
+                      type="hidden"
+                      name="password"
+                      value={signupPassword}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-confirm">Confirmar Senha</Label>

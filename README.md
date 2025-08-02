@@ -39,9 +39,11 @@ Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profission
 
 ### 👤 **Gestão de Usuário**
 - **Autenticação segura** com Supabase Auth
+- **Verificação de email** via Resend (✅ Funcionando)
 - **Perfis personalizados** com estatísticas de uso
 - **Dashboard analítico** com métricas de progresso
 - **Histórico completo** de atividades
+- **Ferramentas de debug** para diagnóstico de problemas
 
 ## 🛠️ Tecnologias Utilizadas
 

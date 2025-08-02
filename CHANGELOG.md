@@ -1,0 +1,106 @@
+# Changelog
+
+Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
+
+O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
+e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
+
+## [Unreleased]
+
+### Added
+- **Sistema de Validação de Email Duplicado**: Implementada validação robusta para prevenir cadastros duplicados
+- **Edge Function de Verificação**: API segura para verificação de disponibilidade de email
+- **Validação em Tempo Real**: Verificação automática enquanto usuário digita o email
+- **Rate Limiting**: Sistema de proteção contra abuso da API de verificação
+- **Hook Customizado**: `useEmailValidation` para gerenciar validação de email
+- **Feedback Visual**: Indicadores visuais (ícones, cores) para status da validação
+- **Fluxo Alternativo**: Botões para login e recuperação de senha quando email já existe
+- **Componente de Teste**: `EmailValidationTest` para validar a funcionalidade
+- **Sistema de Validação de Força de Senha**: Implementada validação robusta de senhas com feedback visual
+- **Hook Customizado**: `usePasswordStrength` para análise de força de senha em tempo real
+- **Componente de Medidor**: `PasswordStrengthMeter` com barra de progresso e critérios detalhados
+- **Gerador de Senhas**: Funcionalidade para gerar senhas seguras automaticamente
+- **Critérios de Segurança**: Verificação de comprimento, tipos de caracteres e senhas comuns
+- **Sugestões de Melhoria**: Feedback específico sobre como melhorar a senha
+- **Sistema de Pontuação**: Score de 0-100 com níveis visuais (Muito Fraca, Fraca, Média, Forte, Muito Forte)
+- **Sistema de Email Real**: Implementado envio real de emails via Resend API
+- **Ferramenta de Debug**: Componente `EmailDebugPanel` para diagnóstico de problemas de email
+- **Logs Detalhados**: Melhor logging na Edge Function para debugging
+- **Guia de Configuração**: Documentação completa para configuração do Resend
+- **Tratamento de Erros**: Melhor tratamento de erros na Edge Function
+- **Monitoramento**: Sistema de debug em tempo real para problemas de email
+- **Personalização de Email**: Nome do usuário extraído automaticamente do email para emails mais humanizados
+- **Orientação sobre Spam**: Adicionada dica para verificar pasta de spam/lixo eletrônico
+
+### Changed
+- **Fluxo de Cadastro**: Reestruturado para validar email antes da verificação
+- **Interface de Validação**: Adicionados indicadores visuais e feedback em tempo real
+- **Tratamento de Erros**: Melhorado para lidar especificamente com emails duplicados
+- **Experiência do Usuário**: Fluxo mais intuitivo com opções alternativas
+- **Validação de Senha**: Substituída validação básica por sistema completo de força de senha
+- **Formulário de Cadastro**: Integrado medidor de força de senha com feedback visual
+- **Critérios de Segurança**: Atualizados para incluir caracteres especiais e verificação de senhas comuns
+- **Interface do Medidor de Senha**: Redesenhada versão clean e minimalista com melhor integração ao dark theme
+- **Componente PasswordStrengthMeter**: Simplificado para mostrar apenas barra de progresso e informações essenciais
+- **UX/UI**: Removida poluição visual e duplicação de labels, foco na simplicidade e elegância
+- **Atualização de Chave**: Migração para nova API key do Resend (`re_3hMvo4A6_2EY5MKCR1U713FYZQj8oeg3Z`)
+- **Nomenclatura**: Alterado `RESEND_API_KEY` para `NEW_API_KEY_RESEND` no Supabase
+- **Domínio de Email**: Corrigido domínio de `noreply@resend.dev` para `team@dosecerta.online`
+- **Consistência**: Padronizado domínio de email em toda a aplicação
+- **Interface Limpa**: Removido botão de debug após resolução do problema de email
+
+### Fixed
+- **Emails Duplicados**: ✅ **RESOLVIDO** - Sistema agora previne cadastros com emails já existentes
+- **Validação de Email**: Implementada verificação robusta antes do cadastro
+- **Feedback ao Usuário**: Mensagens claras sobre status do email
+- **Segurança**: Prevenção contra enumeração de emails com rate limiting
+- **Senhas Fracas**: ✅ **RESOLVIDO** - Sistema agora previne cadastros com senhas inseguras
+- **Validação de Senha**: Implementada verificação robusta de força de senha
+- **Feedback de Segurança**: Mensagens claras sobre requisitos de senha
+- **Educação do Usuário**: Orientações específicas para criar senhas seguras
+- **Problema de Entrega**: ✅ **RESOLVIDO** - Emails agora chegam corretamente na caixa de entrada
+- **Configuração Resend**: Corrigida implementação para usar API real do Resend
+- **Debug de Problemas**: Implementada ferramenta para identificar problemas de email
+- **Logs de Erro**: Melhor visibilidade de erros na Edge Function
+- **Domínio Inválido**: Corrigido problema de domínio não verificado no Resend
+
+### Breaking Changes
+- **Nenhuma breaking change** - Todas as mudanças são compatíveis com versões anteriores
+
+## [1.2.0] - 2024-01-15
+
+### Added
+- Sistema de flashcards com 270 cards pré-criados
+- Glossário médico interativo
+- Sistema de assinaturas com Stripe
+- Dashboard com estatísticas de uso
+- Sistema de autenticação com Supabase
+
+### Changed
+- Interface melhorada com shadcn/ui
+- Performance otimizada com React Query
+- Segurança aprimorada com RLS
+
+### Fixed
+- Bugs de validação de formulários
+- Problemas de responsividade
+- Erros de tipagem TypeScript
+
+## [1.1.0] - 2024-01-10
+
+### Added
+- Calculadora de medicamentos
+- Sistema de histórico de cálculos
+- Autenticação básica
+- Interface responsiva
+
+### Changed
+- Migração para TypeScript
+- Atualização para React 18
+
+## [1.0.0] - 2024-01-01
+
+### Added
+- Versão inicial do projeto
+- Estrutura básica React
+- Configuração inicial Supabase 

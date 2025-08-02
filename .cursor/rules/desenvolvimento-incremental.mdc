@@ -1,0 +1,53 @@
+# Desenvolvimento Incremental e Estruturado
+
+## Princípios Fundamentais
+
+### 1. Implementação por Funcionalidade
+- **Sempre implemente uma funcionalidade por vez**
+- Divida prompts grandes em tarefas menores e gerenciáveis
+- Confirme o escopo antes de gerar código
+- Mantenha o foco em uma única responsabilidade por iteração
+
+### 2. Processo de Confirmação de Escopo
+Antes de implementar qualquer funcionalidade:
+
+1. **Analise o pedido** - Identifique a funcionalidade principal
+2. **Divida em etapas** - Quebre em tarefas menores se necessário
+3. **Confirme o escopo** - Peça confirmação do usuário sobre:
+   - Funcionalidade específica a ser implementada
+   - Arquivos que serão modificados
+   - Dependências que serão adicionadas
+   - Impacto em outras partes do sistema
+
+### 3. Estrutura de Resposta
+Para cada implementação:
+
+1. **Planejamento**: Descreva o que será feito
+2. **Implementação**: Execute uma funcionalidade por vez
+3. **Validação**: Confirme que a funcionalidade está funcionando
+4. **Próximos Passos**: Identifique a próxima funcionalidade se houver
+
+### 4. Boas Práticas
+- Mantenha arquivos com menos de 200-300 linhas
+- Evite duplicação de código
+- Prefira soluções simples
+- Considere diferentes ambientes (dev, test, prod)
+- Documente mudanças significativas
+
+### 5. Quando Dividir Prompts
+Divida prompts quando:
+- Envolver múltiplas funcionalidades não relacionadas
+- Requerir mudanças em múltiplos arquivos independentes
+- Tiver dependências complexas entre componentes
+- Incluir configurações de diferentes serviços
+
+### 6. Confirmação de Escopo
+Sempre confirme:
+- "Qual funcionalidade específica você gostaria que eu implemente primeiro?"
+- "Quais arquivos serão afetados por esta mudança?"
+- "Há alguma dependência específica que devo considerar?"
+- "Esta implementação afetará outras partes do sistema?"
+description:
+globs:
+alwaysApply: true
+---

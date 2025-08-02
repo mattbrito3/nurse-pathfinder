@@ -7,7 +7,7 @@ import { Resend } from 'resend';
 import { VerificationEmailTemplate } from '@/components/EmailTemplate';
 
 // Your API Key
-const RESEND_API_KEY = 're_auJbm1rY_AmScYpyomnG81PeHCGsRcq8v';
+const RESEND_API_KEY = 're_3hMvo4A6_2EY5MKCR1U713FYZQj8oeg3Z';
 
 // Initialize Resend
 const resend = new Resend(RESEND_API_KEY);
