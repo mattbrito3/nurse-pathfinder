@@ -1,15 +1,8 @@
-// @ts-ignore: Deno is available in Supabase Edge Functions
-declare const Deno: {
-  env: {
-    get(key: string): string | undefined;
-  };
-};
+// Deno Edge Function - Create Checkout Session
+// Este arquivo é executado no ambiente Deno, não Node.js
 
-// @ts-ignore: Deno supports URL imports
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-// @ts-ignore: Deno supports URL imports
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-// @ts-ignore: Deno supports URL imports
 import Stripe from 'https://esm.sh/stripe@14.21.0'
 
 const corsHeaders = {

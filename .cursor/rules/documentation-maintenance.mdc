@@ -146,7 +146,182 @@ Descrição do que é retornado
 - [Descrição da breaking change]
 ```
 
-### 9. Referências de Arquivos
+## Boas Práticas Avançadas de Documentação
+
+### 9. Contexto de Decisões Técnicas
+- **Adicione seção "Decisões Técnicas" no README e CHANGELOG**
+- Documente o raciocínio por trás de escolhas arquiteturais importantes
+- Inclua contexto sobre por que uma abordagem foi escolhida
+- Exemplo: "Edge Function vs Frontend: Escolhido Edge Function para processamento de pagamentos devido à segurança e isolamento"
+
+**Template para Decisões Técnicas:**
+```markdown
+## Decisões Técnicas
+
+### [Nome da Decisão] - [Data]
+**Contexto:** [Situação que levou à decisão]
+**Alternativas Consideradas:** [Lista de opções avaliadas]
+**Decisão:** [O que foi escolhido]
+**Justificativa:** [Por que essa escolha foi feita]
+**Impacto:** [Como isso afeta o projeto]
+```
+
+### 10. Categoria para Refatorações e Melhorias Internas
+- **Expanda categorias do CHANGELOG para incluir:**
+  - `Internal` - Melhorias arquiteturais e otimizações
+  - `Refactoring` - Reestruturação de código existente
+  - `Performance` - Otimizações de performance
+  - `Dependencies` - Atualizações de dependências
+
+**Exemplo de CHANGELOG expandido:**
+```markdown
+## [Unreleased]
+### Added
+- Nova funcionalidade X
+
+### Internal
+- Refatoração do sistema de autenticação para melhor performance
+- Otimização de queries do banco de dados
+- Migração para nova versão do Supabase
+
+### Refactoring
+- Reestruturação do componente de pagamento
+- Simplificação da lógica de validação de email
+
+### Performance
+- Implementação de lazy loading para flashcards
+- Otimização de bundle size em 15%
+```
+
+### 11. Cenários de Uso nos Templates
+- **Enriqueça templates com seção "Quando usar"**
+- Transforme documentação técnica em documentação educativa
+- Inclua cenários reais que a funcionalidade resolve
+
+**Template Expandido para Funcionalidade:**
+```markdown
+### [Nome da Funcionalidade]
+[Descrição breve da funcionalidade]
+
+**Quando usar:**
+- [Cenário real 1: "Para calcular dosagem pediátrica em emergência"]
+- [Cenário real 2: "Para ajustar dosagem baseada em função renal reduzida"]
+- [Cenário real 3: "Para verificar interações medicamentosas"]
+
+**Como usar:**
+```[linguagem]
+[código de exemplo]
+```
+
+**Parâmetros:**
+- `param1`: Descrição do parâmetro
+- `param2`: Descrição do parâmetro
+
+**Exemplo Prático:**
+```[linguagem]
+[exemplo com dados reais]
+```
+```
+
+### 12. Critérios Objetivos de Validação
+- **Substitua "teste a documentação" por critérios específicos:**
+  - Alguém que nunca viu este código consegue usar a funcionalidade em menos de 5 minutos
+  - A documentação responde claramente: o que faz, por que existe, como usar
+  - Novos desenvolvedores conseguem contribuir sem perguntas repetitivas
+
+**Checklist de Validação:**
+- [ ] Funcionalidade pode ser usada por iniciantes em < 5 minutos
+- [ ] Documentação responde: O que faz? Por que existe? Como usar?
+- [ ] Exemplos são práticos e funcionais
+- [ ] Screenshots/vídeos mostram o resultado esperado
+- [ ] Processo de revisão periódica estabelecido
+
+### 13. Segmentação por Audiência
+- **Estruture README com seções para diferentes audiências:**
+
+```markdown
+# [Nome do Projeto]
+
+## Para Usuários
+### Como Usar
+- [Instruções simples para usuários finais]
+- [Exemplos práticos de uso]
+- [Screenshots da interface]
+
+### Funcionalidades
+- [Lista de funcionalidades com benefícios para o usuário]
+
+## Para Desenvolvedores
+### Arquitetura
+- [Detalhes técnicos da implementação]
+- [Diagramas de arquitetura]
+- [Decisões técnicas]
+
+### Como Contribuir
+- [Processo de desenvolvimento]
+- [Padrões de código]
+- [Como testar]
+
+### Configuração de Ambiente
+- [Setup para desenvolvimento]
+- [Variáveis de ambiente]
+- [Dependências]
+```
+
+### 14. Métricas de Efetividade
+- **Inclua indicadores para medir sucesso da documentação:**
+  - Frequência de perguntas repetidas sobre funcionalidades documentadas
+  - Tempo que novos desenvolvedores levam para contribuir
+  - Feedback direto sobre clareza da documentação
+  - Taxa de sucesso em implementação de funcionalidades
+
+**Métricas a Acompanhar:**
+```markdown
+## Métricas de Documentação
+
+### Indicadores de Qualidade
+- **Tempo de onboarding:** Novos devs conseguem contribuir em < 2 horas
+- **Taxa de perguntas repetidas:** < 10% de perguntas sobre funcionalidades documentadas
+- **Feedback de clareza:** > 8/10 em avaliações de documentação
+- **Taxa de sucesso:** > 95% de implementações bem-sucedidas seguindo a documentação
+
+### Processo de Revisão
+- Revisão mensal da documentação existente
+- Atualização automática baseada em feedback
+- Teste de novos desenvolvedores usando apenas a documentação
+```
+
+### 15. Processo de Revisão Periódica
+- **Estabeleça processo de manutenção contínua:**
+  - Revisão mensal da documentação existente
+  - Atualização baseada em feedback dos usuários
+  - Validação de novos desenvolvedores
+  - Métricas de efetividade
+
+**Cronograma de Revisão:**
+```markdown
+## Cronograma de Manutenção
+
+### Mensal
+- [ ] Revisar documentação existente
+- [ ] Atualizar exemplos desatualizados
+- [ ] Coletar feedback de usuários
+- [ ] Medir métricas de efetividade
+
+### Trimestral
+- [ ] Revisão completa da arquitetura
+- [ ] Atualização de decisões técnicas
+- [ ] Validação com novos desenvolvedores
+- [ ] Reestruturação se necessário
+
+### Semestral
+- [ ] Auditoria completa da documentação
+- [ ] Revisão de métricas e objetivos
+- [ ] Planejamento de melhorias
+- [ ] Treinamento da equipe
+```
+
+### 16. Referências de Arquivos
 - [README.md](mdc:README.md) - Documentação principal do projeto
 - [CHANGELOG.md](mdc:CHANGELOG.md) - Histórico de mudanças
 - [package.json](mdc:package.json) - Informações do projeto
