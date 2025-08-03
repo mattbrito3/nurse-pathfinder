@@ -32,6 +32,18 @@ Documentação específica para deploy e configuração de produção:
 Documentação técnica detalhada de funcionalidades implementadas:
 - `FAQ_IMPLEMENTATION_GUIDE.md` - Guia completo da implementação da seção FAQ
 
+### 🔌 `api/` - Documentação de APIs
+Documentação de endpoints e integrações:
+- APIs do Supabase
+- Edge Functions
+- Integrações externas (Stripe, Resend, Google)
+
+### 🏗️ `architecture/` - Documentação de Arquitetura
+Documentação técnica da arquitetura do sistema:
+- Diagramas de arquitetura
+- Decisões técnicas
+- Padrões de design
+
 ## 🎯 Como Usar Esta Documentação
 
 ### **Para Desenvolvedores**
