@@ -209,7 +209,13 @@ serve(async (req) => {
          // Create verification URL
      const baseUrl = req.headers.get('origin') || 'http://localhost:8080';
      const finalRedirectUrl = redirectUrl || `${baseUrl}/verify-email`;
-     const verificationUrl = `${finalRedirectUrl}?token=${token}&fromRegister=true`;
+     
+     // Construir URL corretamente com parâmetros
+     const url = new URL(finalRedirectUrl);
+     url.searchParams.set('token', token);
+     url.searchParams.set('fromRegister', 'true');
+     const verificationUrl = url.toString();
+     
      console.log(`🔗 Verification URL: ${verificationUrl}`);
      console.log(`🔗 Base URL: ${baseUrl}`);
      console.log(`🔗 Final Redirect URL: ${finalRedirectUrl}`);
