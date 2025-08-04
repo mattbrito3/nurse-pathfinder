@@ -22,7 +22,7 @@ const Register = () => {
   const [pendingSignupData, setPendingSignupData] = useState<any>(null);
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
-  const { signUp } = useAuth();
+  const { signUp, signUpWithoutEmailConfirmation } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -118,7 +118,8 @@ const Register = () => {
     try {
       const { email, password, fullName } = pendingSignupData;
       
-      const { error } = await signUp(email, password, fullName);
+      // Usar função que não envia email de confirmação (já foi verificado)
+      const { error } = await signUpWithoutEmailConfirmation(email, password, fullName);
 
       if (error) {
         console.error('Signup error:', error);

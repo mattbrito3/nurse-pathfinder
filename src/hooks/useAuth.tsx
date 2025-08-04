@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUpWithoutEmailConfirmation: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -56,6 +57,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error };
   };
 
+  const signUpWithoutEmailConfirmation = async (email: string, password: string, fullName: string) => {
+    try {
+      // Chamar Edge Function para criar usuário confirmado
+      const { data, error } = await supabase.functions.invoke('create-confirmed-user', {
+        body: {
+          email,
+          password,
+          fullName
+        }
+      });
+      
+      if (error) {
+        console.error('Erro na Edge Function:', error);
+        return { error };
+      }
+      
+      if (data.error) {
+        return { error: { message: data.error } };
+      }
+      
+      return { error: null };
+    } catch (error) {
+      console.error('Erro ao criar usuário:', error);
+      return { error };
+    }
+  };
+
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -89,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session,
     loading,
     signUp,
+    signUpWithoutEmailConfirmation,
     signIn,
     signInWithGoogle,
     signOut
