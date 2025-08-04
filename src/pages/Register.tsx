@@ -32,20 +32,59 @@ const Register = () => {
     const verified = searchParams.get('verified');
     const verifiedEmail = searchParams.get('email');
     
-    if (verified === 'true' && verifiedEmail && pendingSignupData) {
-      console.log('🔄 Usuário voltou da verificação:', { verifiedEmail, pendingSignupData });
+    if (verified === 'true' && verifiedEmail) {
+      console.log('🔄 Usuário voltou da verificação:', { verifiedEmail });
       
-      // Verificar se o email verificado corresponde ao email do pendingSignupData
-      if (pendingSignupData.email === verifiedEmail) {
-        console.log('✅ Email verificado corresponde ao pendingSignupData');
-        // Chamar handleCodeVerified automaticamente
-        handleCodeVerified(verifiedEmail);
+      // Tentar recuperar dados do localStorage
+      const storedSignupData = localStorage.getItem('pendingSignupData');
+      let signupData = null;
+      
+      if (storedSignupData) {
+        try {
+          signupData = JSON.parse(storedSignupData);
+          console.log('📦 Dados recuperados do localStorage:', signupData);
+        } catch (error) {
+          console.error('❌ Erro ao parsear dados do localStorage:', error);
+        }
+      }
+      
+      // Se não tem dados no localStorage, usar pendingSignupData (caso ainda esteja na memória)
+      if (!signupData && pendingSignupData) {
+        signupData = pendingSignupData;
+        console.log('📦 Usando dados da memória:', signupData);
+      }
+      
+      if (signupData) {
+        // Verificar se o email verificado corresponde ao email do signupData
+        if (signupData.email === verifiedEmail) {
+          console.log('✅ Email verificado corresponde aos dados de cadastro');
+          // Restaurar dados e chamar handleCodeVerified automaticamente
+          setPendingSignupData(signupData);
+          handleCodeVerified(verifiedEmail);
+        } else {
+          console.log('❌ Email verificado não corresponde aos dados de cadastro');
+          setError('Email verificado não corresponde ao email do cadastro.');
+          localStorage.removeItem('pendingSignupData');
+        }
       } else {
-        console.log('❌ Email verificado não corresponde ao pendingSignupData');
-        setError('Email verificado não corresponde ao email do cadastro.');
+        console.log('❌ Nenhum dado de cadastro encontrado');
+        setError('Dados de cadastro não encontrados. Tente novamente.');
       }
     }
-  }, [searchParams, pendingSignupData]);
+  }, [searchParams]);
+  
+  // Limpar localStorage quando sair da página (opcional)
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // Não limpar aqui, deixar para quando o cadastro for completado
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
   
   // Validação de email em tempo real
   const emailValidation = useEmailValidation(signupEmail, {
@@ -125,7 +164,13 @@ const Register = () => {
     }
 
     // Store signup data and show verification
-    setPendingSignupData({ email, password, fullName });
+    const signupData = { email, password, fullName };
+    setPendingSignupData(signupData);
+    
+    // Salvar no localStorage para persistir durante a verificação
+    localStorage.setItem('pendingSignupData', JSON.stringify(signupData));
+    console.log('💾 Dados salvos no localStorage:', { email, fullName });
+    
     setShowCodeVerification(true);
     setIsLoading(false);
   };
@@ -162,14 +207,19 @@ const Register = () => {
           setError(error.message || 'Erro ao criar conta. Tente novamente.');
         }
         setShowCodeVerification(false);
-      } else {
-        console.log('✅ Usuário criado com sucesso!');
-        toast({
-          title: "Conta criada com sucesso!",
-          description: "Bem-vindo ao Dose Certa!",
-        });
-        navigate('/profile');
-      }
+             } else {
+         console.log('✅ Usuário criado com sucesso!');
+         
+         // Limpar dados do localStorage após sucesso
+         localStorage.removeItem('pendingSignupData');
+         console.log('🧹 Dados removidos do localStorage');
+         
+         toast({
+           title: "Conta criada com sucesso!",
+           description: "Bem-vindo ao Dose Certa!",
+         });
+         navigate('/profile');
+       }
     } catch (error) {
       console.error('❌ Signup error:', error);
       setError('Erro ao criar conta. Tente novamente.');
