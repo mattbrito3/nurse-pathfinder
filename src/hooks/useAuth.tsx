@@ -59,6 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUpWithoutEmailConfirmation = async (email: string, password: string, fullName: string) => {
     try {
+      console.log('🔄 Chamando Edge Function create-confirmed-user...', { email, fullName });
+      
       // Chamar Edge Function para criar usuário confirmado
       const { data, error } = await supabase.functions.invoke('create-confirmed-user', {
         body: {
@@ -68,18 +70,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       });
       
+      console.log('📡 Resposta da Edge Function:', { data, error });
+      
       if (error) {
-        console.error('Erro na Edge Function:', error);
+        console.error('❌ Erro na Edge Function:', error);
         return { error };
       }
       
       if (data.error) {
+        console.error('❌ Erro retornado pela Edge Function:', data.error);
         return { error: { message: data.error } };
       }
       
+      console.log('✅ Usuário criado com sucesso via Edge Function');
       return { error: null };
     } catch (error) {
-      console.error('Erro ao criar usuário:', error);
+      console.error('❌ Erro ao criar usuário:', error);
       return { error };
     }
   };
