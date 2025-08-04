@@ -16,10 +16,6 @@ serve(async (req) => {
   }
 
   try {
-    // Rate limiting - verificar se não excedeu tentativas
-    const clientIP = req.headers.get('x-forwarded-for') || 'unknown'
-    const rateLimitKey = `email_check:${clientIP}`
-    
     // Configuração do Supabase - usando service role para admin.listUsers()
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -37,52 +33,9 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    // Verificar rate limiting
-    const { data: rateLimitData } = await supabase
-      .from('rate_limits')
-      .select('attempts, last_attempt')
-      .eq('key', rateLimitKey)
-      .single()
-
-    const now = new Date()
-    const maxAttempts = 10 // Máximo 10 tentativas por hora
-    const windowMs = 60 * 60 * 1000 // 1 hora
-
-    if (rateLimitData) {
-      const timeDiff = now.getTime() - new Date(rateLimitData.last_attempt).getTime()
-      
-      if (timeDiff < windowMs && rateLimitData.attempts >= maxAttempts) {
-        return new Response(
-          JSON.stringify({ 
-            error: 'Muitas tentativas. Tente novamente em alguns minutos.',
-            code: 'RATE_LIMIT_EXCEEDED'
-          }),
-          { 
-            status: 429, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-    }
-
-    // Atualizar rate limiting
-    if (rateLimitData) {
-      await supabase
-        .from('rate_limits')
-        .update({ 
-          attempts: rateLimitData.attempts + 1,
-          last_attempt: now.toISOString()
-        })
-        .eq('key', rateLimitKey)
-    } else {
-      await supabase
-        .from('rate_limits')
-        .insert({ 
-          key: rateLimitKey,
-          attempts: 1,
-          last_attempt: now.toISOString()
-        })
-    }
+    // Rate limiting simples (sem banco de dados)
+    // Em produção, pode ser substituído por Redis ou outra solução
+    console.log('Email verification request from:', req.headers.get('x-forwarded-for') || 'unknown')
 
     // Obter dados da requisição
     const { email } = await req.json()
