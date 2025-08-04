@@ -70,6 +70,19 @@ const VerifyEmail = () => {
   };
 
   const handleGoToLogin = () => {
+    // Se temos o email verificado, tentar notificar o Register.tsx
+    if (email) {
+      // Tentar chamar onVerified se estiver disponível
+      const urlParams = new URLSearchParams(window.location.search);
+      const fromRegister = urlParams.get('fromRegister');
+      
+      if (fromRegister === 'true') {
+        // Redirecionar para register com parâmetros de sucesso
+        navigate(`/register?verified=true&email=${encodeURIComponent(email)}`);
+        return;
+      }
+    }
+    
     navigate('/auth');
   };
 

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmailValidation } from "@/hooks/useEmailValidation";
 import { usePasswordStrength } from "@/hooks/usePasswordStrength";
@@ -25,8 +25,27 @@ const Register = () => {
   const { signUp, signUpWithoutEmailConfirmation, testEdgeFunction } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+    const [searchParams] = useSearchParams();
   
-
+  // Verificar se o usuário voltou da verificação
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    const verifiedEmail = searchParams.get('email');
+    
+    if (verified === 'true' && verifiedEmail && pendingSignupData) {
+      console.log('🔄 Usuário voltou da verificação:', { verifiedEmail, pendingSignupData });
+      
+      // Verificar se o email verificado corresponde ao email do pendingSignupData
+      if (pendingSignupData.email === verifiedEmail) {
+        console.log('✅ Email verificado corresponde ao pendingSignupData');
+        // Chamar handleCodeVerified automaticamente
+        handleCodeVerified(verifiedEmail);
+      } else {
+        console.log('❌ Email verificado não corresponde ao pendingSignupData');
+        setError('Email verificado não corresponde ao email do cadastro.');
+      }
+    }
+  }, [searchParams, pendingSignupData]);
   
   // Validação de email em tempo real
   const emailValidation = useEmailValidation(signupEmail, {

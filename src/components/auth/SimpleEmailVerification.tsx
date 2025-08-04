@@ -56,7 +56,8 @@ const SimpleEmailVerification: React.FC<SimpleEmailVerificationProps> = ({
       const { data, error: functionError } = await supabase.functions.invoke('send-verification-email', {
         body: {
           email: email,
-          name: userName
+          name: userName,
+          redirectUrl: `${window.location.origin}/verify-email?fromRegister=true`
         }
       });
 
