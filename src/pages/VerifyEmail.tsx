@@ -70,17 +70,32 @@ const VerifyEmail = () => {
   };
 
   const handleGoToLogin = () => {
+    console.log('🔄 handleGoToLogin chamado');
+    console.log('📧 Email verificado:', email);
+    
     // Se temos o email verificado, tentar notificar o Register.tsx
     if (email) {
       // Tentar chamar onVerified se estiver disponível
       const urlParams = new URLSearchParams(window.location.search);
       const fromRegister = urlParams.get('fromRegister');
       
+      console.log('🔍 Parâmetros da URL:', {
+        fromRegister,
+        token: urlParams.get('token'),
+        allParams: Object.fromEntries(urlParams.entries())
+      });
+      
       if (fromRegister === 'true') {
         // Redirecionar para register com parâmetros de sucesso
-        navigate(`/register?verified=true&email=${encodeURIComponent(email)}`);
+        const redirectUrl = `/register?verified=true&email=${encodeURIComponent(email)}`;
+        console.log('🔄 Redirecionando para:', redirectUrl);
+        navigate(redirectUrl);
         return;
+      } else {
+        console.log('❌ fromRegister não é true, redirecionando para /auth');
       }
+    } else {
+      console.log('❌ Email não encontrado, redirecionando para /auth');
     }
     
     navigate('/auth');

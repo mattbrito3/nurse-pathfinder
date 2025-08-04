@@ -206,8 +206,11 @@ serve(async (req) => {
 
     // Create verification URL
     const baseUrl = req.headers.get('origin') || 'http://localhost:8080';
-    const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
+    const redirectUrl = body.redirectUrl || `${baseUrl}/verify-email`;
+    const verificationUrl = `${redirectUrl}?token=${token}&fromRegister=true`;
     console.log(`🔗 Verification URL: ${verificationUrl}`);
+    console.log(`🔗 Base URL: ${baseUrl}`);
+    console.log(`🔗 Redirect URL from body: ${body.redirectUrl}`);
 
     // Create email HTML content
     const emailHtml = `
