@@ -1,0 +1,38 @@
+# Vercel ignore file
+# Files and directories to ignore during Vercel deployment
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# Development files
+.vscode/
+.cursor/
+tests/
+test-results/
+playwright-report/
+
+# Examples and scripts
+examples/
+scripts/
+
+# Config files
+*.config.js
+!vite.config.ts
+!tailwind.config.ts
+!postcss.config.js
+
+# Development dependencies
+.eslintrc*
+eslint.config.js
+
+# Environment examples
+env.example
+env.production
+
+# Lock files (keep package-lock.json for consistent builds)
+bun.lockb
+
+# Patches and temporary files
+*.patch
