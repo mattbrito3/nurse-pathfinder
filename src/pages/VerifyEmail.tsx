@@ -49,13 +49,18 @@ const VerifyEmail = () => {
 
       if (data.success) {
         setStatus('success');
-        setMessage(data.message);
+        setMessage('Email verificado com sucesso! Redirecionando para concluir cadastro...');
         setEmail(data.email);
         
         toast({
           title: "Email verificado!",
-          description: "Seu email foi confirmado com sucesso. Você já pode fazer login.",
+          description: "Redirecionando para concluir o cadastro...",
         });
+        
+        // Redirecionar automaticamente para registro com email verificado
+        setTimeout(() => {
+          navigate(`/register?email_verified=true&verified_email=${encodeURIComponent(data.email)}`);
+        }, 2000);
       } else {
         setStatus('error');
         setMessage(data.message);
@@ -129,10 +134,10 @@ const VerifyEmail = () => {
 
             <div className="space-y-3">
               <Button 
-                onClick={handleGoToLogin}
+                onClick={() => navigate('/register')}
                 className="w-full bg-green-600 hover:bg-green-700"
               >
-                Fazer Login
+                Concluir Cadastro
               </Button>
               
               <Button 

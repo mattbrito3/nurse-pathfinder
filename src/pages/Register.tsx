@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useEmailValidation } from "@/hooks/useEmailValidation";
 import { usePasswordStrength } from "@/hooks/usePasswordStrength";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,23 @@ const Register = () => {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  
+  // Verificar se veio de uma verificação de email
+  const urlParams = new URLSearchParams(window.location.search);
+  const emailVerified = urlParams.get('email_verified') === 'true';
+  const verifiedEmail = urlParams.get('verified_email');
+  
+  // Se email foi verificado, pré-preencher e mostrar mensagem
+  useEffect(() => {
+    if (emailVerified && verifiedEmail) {
+      setSignupEmail(verifiedEmail);
+      toast({
+        title: "Email verificado!",
+        description: `${verifiedEmail} foi verificado com sucesso. Complete os dados para finalizar o cadastro.`,
+        duration: 8000
+      });
+    }
+  }, [emailVerified, verifiedEmail, toast]);
   
   // Validação de email em tempo real
   const emailValidation = useEmailValidation(signupEmail, {
@@ -66,27 +84,30 @@ const Register = () => {
       return;
     }
 
-    // Validação de email duplicado
-    if (emailValidation.isAvailable === false) {
-      setError('Este email já está cadastrado. Tente fazer login ou recuperar sua senha.');
-      setIsLoading(false);
-      return;
-    }
-
-    // Se ainda está carregando a validação, aguardar
-    if (emailValidation.isLoading) {
-      setError('Aguarde a verificação do email...');
-      setIsLoading(false);
-      return;
-    }
-
-    // Se não foi possível verificar, tentar novamente
-    if (emailValidation.isAvailable === null && emailValidation.isValid) {
-      const validationResult = await emailValidation.validateEmail(email);
-      if (validationResult.isAvailable === false) {
+    // Se email já foi verificado, pular validação
+    if (!emailVerified || email !== verifiedEmail) {
+      // Validação de email duplicado
+      if (emailValidation.isAvailable === false) {
         setError('Este email já está cadastrado. Tente fazer login ou recuperar sua senha.');
         setIsLoading(false);
         return;
+      }
+
+      // Se ainda está carregando a validação, aguardar
+      if (emailValidation.isLoading) {
+        setError('Aguarde a verificação do email...');
+        setIsLoading(false);
+        return;
+      }
+
+      // Se não foi possível verificar, tentar novamente
+      if (emailValidation.isAvailable === null && emailValidation.isValid) {
+        const validationResult = await emailValidation.validateEmail(email);
+        if (validationResult.isAvailable === false) {
+          setError('Este email já está cadastrado. Tente fazer login ou recuperar sua senha.');
+          setIsLoading(false);
+          return;
+        }
       }
     }
 
@@ -103,10 +124,41 @@ const Register = () => {
       return;
     }
 
-    // Store signup data and show verification
-    setPendingSignupData({ email, password, fullName });
-    setShowCodeVerification(true);
-    setIsLoading(false);
+    // Se email já foi verificado, criar conta diretamente
+    if (emailVerified && email === verifiedEmail) {
+      // Criar conta diretamente
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/profile`,
+          data: {
+            full_name: fullName
+          }
+        }
+      });
+
+      if (error) {
+        console.error('Signup error:', error);
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          setError('Este email já está cadastrado. Tente fazer login ou recuperar sua senha.');
+        } else {
+          setError(error.message || 'Erro ao criar conta. Tente novamente.');
+        }
+      } else {
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Bem-vindo ao Dose Certa! Você já pode fazer login.",
+        });
+        navigate('/login');
+      }
+      setIsLoading(false);
+    } else {
+      // Store signup data and show verification
+      setPendingSignupData({ email, password, fullName });
+      setShowCodeVerification(true);
+      setIsLoading(false);
+    }
   };
 
   const handleCodeVerified = async (verifiedEmail: string) => {
@@ -116,7 +168,17 @@ const Register = () => {
     try {
       const { email, password, fullName } = pendingSignupData;
       
-      const { error } = await signUp(email, password, fullName);
+      // Criar usuário com confirmação de email desabilitada
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/profile`,
+          data: {
+            full_name: fullName
+          }
+        }
+      });
 
       if (error) {
         console.error('Signup error:', error);
@@ -135,9 +197,9 @@ const Register = () => {
       } else {
         toast({
           title: "Conta criada com sucesso!",
-          description: "Bem-vindo ao Dose Certa!",
+          description: "Email verificado! Você já pode fazer login.",
         });
-        navigate('/profile');
+        navigate('/login');
       }
     } catch (error) {
       console.error('Signup error:', error);
