@@ -20,9 +20,20 @@ serve(async (req) => {
     const clientIP = req.headers.get('x-forwarded-for') || 'unknown'
     const rateLimitKey = `email_check:${clientIP}`
     
-    // Configuração do Supabase
+    // Configuração do Supabase - usando service role para admin.listUsers()
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase environment variables')
+      return new Response(
+        JSON.stringify({ error: 'Configuração do servidor incorreta' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
