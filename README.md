@@ -5,8 +5,8 @@ Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profission
 ![React](https://img.shields.io/badge/React-18.3.1-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)
 ![Supabase](https://img.shields.io/badge/Supabase-2.52.0-green.svg)
-![Stripe](https://img.shields.io/badge/Stripe-18.3.0-purple.svg)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.11-cyan.svg)
+![Vite](https://img.shields.io/badge/Vite-5.4.19-yellow.svg)
 
 ## 📁 Estrutura do Projeto
 
@@ -55,7 +55,10 @@ nurse-pathfinder/
 - **Plano Gratuito**: Acesso limitado à calculadora (7 usos/dia, apenas dosagem)
 - **Plano Estudante (R$ 29/mês)**: Acesso completo às funcionalidades
 - **Plano Profissional (R$ 59/mês)**: Recursos avançados + suporte prioritário
-- **Pagamentos seguros** via Stripe
+- **🚧 Sistema de pagamentos**: Em atualização para nova solução mais segura
+
+> **📢 Atualização Importante (Janeiro 2025)**  
+> O sistema de pagamentos foi completamente renovado. A integração anterior foi removida e estamos implementando uma nova solução mais segura e eficiente. Durante este período, todas as funcionalidades principais da plataforma permanecem disponíveis.
 
 ### 👤 **Gestão de Usuário**
 - **Autenticação segura** com Supabase Auth
@@ -93,9 +96,10 @@ nurse-pathfinder/
 - **Edge Functions** - Serverless functions
 - **Real-time subscriptions** - Atualizações em tempo real
 
-### **Pagamentos & Autenticação**
-- **Stripe** - Processamento de pagamentos
+### **Autenticação & Email**
 - **Supabase Auth** - Sistema de autenticação
+- **Google OAuth** - Login social integrado
+- **Resend** - Serviço de emails
 - **JWT** - Tokens de autenticação
 
 ### **Ferramentas de Desenvolvimento**
@@ -110,7 +114,8 @@ nurse-pathfinder/
 - Node.js 18+ 
 - npm ou yarn
 - Conta Supabase
-- Conta Stripe (para pagamentos)
+- Conta Resend (para emails)
+- Conta Google (para OAuth)
 
 ### **1. Clone o repositório**
 ```bash
@@ -132,11 +137,17 @@ Crie um arquivo `.env` na raiz do projeto:
 VITE_SUPABASE_URL=sua_supabase_url
 VITE_SUPABASE_ANON_KEY=sua_supabase_anon_key
 
-# Stripe
-VITE_STRIPE_PUBLISHABLE_KEY=sua_stripe_publishable_key
+# Email (Resend)
+VITE_RESEND_API_KEY=sua_resend_api_key
+VITE_FROM_EMAIL=noreply@seudominio.com
+VITE_FROM_NAME=Dose Certa
 
 # Google OAuth
 VITE_GOOGLE_CLIENT_ID=seu_google_client_id
+
+# App Configuration
+VITE_APP_URL=http://localhost:8080
+VITE_APP_NAME=Dose Certa
 ```
 
 ### **4. Configuração do Supabase**
@@ -182,19 +193,13 @@ SUPABASE_SERVICE_ROLE_KEY=sua_supabase_service_role_key
 
 #### **4.4. Deploy das Edge Functions**
 ```bash
-npx supabase functions deploy create-checkout-session
-npx supabase functions deploy stripe-webhook
 npx supabase functions deploy send-verification-email
 npx supabase functions deploy password-reset
+npx supabase functions deploy check-email-exists
+npx supabase functions deploy debug-subscription
 ```
 
-### **5. Configuração do Stripe**
-
-1. **Configure os produtos no Stripe Dashboard**
-2. **Configure os webhooks** para o endpoint das Edge Functions
-3. **Anote os Price IDs** dos produtos criados
-
-### **6. Inicie o servidor de desenvolvimento**
+### **5. Inicie o servidor de desenvolvimento**
 ```bash
 npm run dev
 ```
@@ -246,10 +251,10 @@ npm run stop             # Para processos Vite
 - Análise de performance
 
 ### **Sistema de Assinatura**
-- Integração completa com Stripe
-- Webhooks para sincronização de status
-- Portal de gerenciamento de cobrança
-- Diferentes níveis de acesso
+- 🚧 Sistema em atualização para nova solução de pagamento
+- Controle de acesso baseado em planos
+- Diferentes níveis de funcionalidades
+- Preparado para integração com Mercado Pago
 
 ### **Sistema de Recuperação de Senha**
 - **Edge Function customizada** para gerenciar reset de senha
@@ -329,7 +334,8 @@ Para suporte e dúvidas:
 
 - Comunidade de enfermagem pela validação das funcionalidades
 - Equipe shadcn/ui pelos componentes excepcionais
-- Supabase e Stripe pelas ferramentas robustas
+- Supabase e Resend pelas ferramentas robustas
+- Comunidade open source pelo suporte contínuo
 
 ---
 
