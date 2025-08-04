@@ -73,7 +73,7 @@ export class TechnicalDebtTracker {
         idealSolution: "Criar ErrorBoundary e sistema de notificações unificado",
         priority: 'Média',
         estimatedTime: 4,
-        affectedFiles: ['src/components/DevelopmentDashboard.tsx', 'src/pages/Dashboard.tsx'],
+        affectedFiles: ['src/pages/Dashboard.tsx'],
         affectedFeatures: ['Todas as páginas', 'Sistema de notificações']
       },
       {
@@ -97,7 +97,7 @@ export class TechnicalDebtTracker {
         idealSolution: "Redesenhar componentes com mobile-first approach",
         priority: 'Baixa',
         estimatedTime: 12,
-        affectedFiles: ['src/components/DevelopmentDashboard.tsx', 'src/pages/flashcards/StudyPage.tsx'],
+        affectedFiles: ['src/pages/flashcards/StudyPage.tsx'],
         affectedFeatures: ['Dashboard', 'Estudo de Flashcards', 'Glossário']
       }
     ];

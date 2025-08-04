@@ -4,8 +4,8 @@
 
 ### **1. Acessando o Dashboard**
 - Faça login na aplicação
-- Clique em "Dev Dashboard" no menu do usuário
-- Vá para a aba "Planejamento NP"
+- Acesse o dashboard principal
+- Vá para a seção de planejamento
 
 ---
 

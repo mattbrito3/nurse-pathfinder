@@ -1,6 +1,7 @@
 /**
  * 💳 SUBSCRIPTION & PAYMENT TYPES
- * Complete typing system for payment and subscription management
+ * Generic typing system for payment and subscription management
+ * Compatible with multiple payment gateways (Stripe, Mercado Pago, etc.)
  */
 
 export interface SubscriptionPlan {
@@ -11,7 +12,9 @@ export interface SubscriptionPlan {
   currency: string;
   interval: 'month' | 'year';
   features: string[];
-  stripePriceId: string;
+  // Gateway-specific IDs (legacy and new)
+  stripePriceId?: string; // Legacy - will be removed
+  mercadopagoPlanId?: string; // New payment gateway
   popular?: boolean;
   maxFlashcards?: number;
   maxCalculations?: number;
@@ -23,7 +26,9 @@ export interface UserSubscription {
   id: string;
   user_id: string;
   plan_id: string;
-  stripe_subscription_id: string;
+  // Gateway-specific subscription IDs (legacy and new)
+  stripe_subscription_id?: string; // Legacy - will be removed
+  mercadopago_subscription_id?: string; // New payment gateway
   status: 'active' | 'canceled' | 'past_due' | 'trialing' | 'incomplete';
   current_period_start: string;
   current_period_end: string;
@@ -45,7 +50,7 @@ export interface PaymentIntent {
   amount: number;
   currency: string;
   status: 'succeeded' | 'pending' | 'failed';
-  client_secret: string;
+  client_secret?: string; // Optional - some gateways don't use this
 }
 
 export interface BillingPortalSession {

@@ -7,7 +7,7 @@ import { Suspense, lazy, useEffect} from "react";
 import { runGlossaryMigrations } from "@/utils/runMigrations";
 import { runGlossaryDataMigrations } from "@/utils/runGlossaryMigrations";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { DevelopmentDashboardPage } from './pages/DevelopmentDashboard';
+
 
 
 // Páginas que carregam imediatamente (críticas)
@@ -118,7 +118,7 @@ const App = () => {
               <Route path="/dashboard/flashcards/browse/favorites" element={<BrowsePage />} />
               <Route path="/dashboard/flashcards/browse/:categoryId" element={<BrowsePage />} />
               <Route path="/dashboard/flashcards/study/:sessionId" element={<StudyPage />} />
-              <Route path="/development-dashboard" element={<DevelopmentDashboardPage />} />
+
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

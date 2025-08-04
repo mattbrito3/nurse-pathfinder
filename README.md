@@ -203,24 +203,7 @@ A aplicação estará disponível em `http://localhost:8080`
 
 ## 📋 **Para Desenvolvedores**
 
-### **Sistema de Backlog**
-O projeto inclui um sistema interno de backlog para gerenciar funcionalidades e melhorias:
 
-1. **Acesse**: Faça login e vá para "Dev Dashboard" no menu
-2. **Adicione Ideias**: Use o botão "Adicionar Item" para registrar novas funcionalidades
-3. **Categorize**: Organize por Calculadora, Flashcards, Glossário, UX/UI, etc.
-4. **Priorize**: Defina prioridades (Alta, Média, Baixa)
-5. **Acompanhe**: Use filtros para ver backlog, em desenvolvimento ou concluído
-
-### **Guias Disponíveis**
-- `docs/guides/BACKLOG_GUIDE.md` - Guia prático do sistema de backlog
-- `docs/guides/NURSE_PATHFINDER_PLANNING_GUIDE.md` - Documentação completa de planejamento
-
-### **Comandos Úteis**
-```javascript
-// Adicionar item ao backlog via console
-addBacklogItem("Título", "Descrição", "Calculadora", "Alta")
-```
 
 ## 🎯 Scripts Disponíveis
 

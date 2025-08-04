@@ -128,51 +128,35 @@ export const useSubscription = () => {
     };
   };
 
-  // Create billing portal session
+  // Create billing portal session - PLACEHOLDER durante remoção do Stripe
   const createBillingPortalSession = useMutation({
     mutationFn: async (): Promise<BillingPortalSession> => {
       if (!user?.id) throw new Error('User not authenticated');
-      if (!(currentSubscription as any)?.stripe_customer_id) {
-        throw new Error('No active subscription found');
-      }
-
-      const { data, error } = await supabase.functions.invoke('create-billing-portal-session', {
-        body: { 
-          customerId: (currentSubscription as any).stripe_customer_id,
-          returnUrl: `${window.location.origin}/dashboard`
-        }
-      });
-
-      if (error) throw error;
-      return data;
+      
+      // 🚧 Placeholder - não redireciona mais para Stripe
+      throw new Error('Sistema de cobrança em atualização');
     },
     onSuccess: (data) => {
-      // Redirect to Stripe Billing Portal
-      window.location.href = data.url;
+      // Não redireciona mais - removido temporariamente
     },
     onError: (error: any) => {
-      console.error('Billing portal error:', error);
-      toast.error('Erro ao acessar portal de cobrança', {
-        description: error.message || 'Tente novamente'
+      console.error('Billing portal disabled:', error);
+      toast.info('Portal de cobrança em atualização', {
+        description: 'Em breve teremos uma nova solução de gerenciamento de pagamentos!',
+        duration: 5000
       });
     }
   });
 
-  // Cancel subscription
+  // Cancel subscription - PLACEHOLDER durante remoção do Stripe
   const cancelSubscription = useMutation({
     mutationFn: async () => {
-      if (!user?.id || !currentSubscription?.stripe_subscription_id) {
+      if (!user?.id) {
         throw new Error('No active subscription found');
       }
 
-      const { data, error } = await supabase.functions.invoke('cancel-subscription', {
-        body: { 
-          subscriptionId: currentSubscription.stripe_subscription_id
-        }
-      });
-
-      if (error) throw error;
-      return data;
+      // 🚧 Placeholder - não cancela via Stripe mais
+      throw new Error('Sistema de cancelamento em atualização');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-subscription'] });
@@ -181,9 +165,10 @@ export const useSubscription = () => {
       });
     },
     onError: (error: any) => {
-      console.error('Cancel subscription error:', error);
-      toast.error('Erro ao cancelar assinatura', {
-        description: error.message || 'Tente novamente'
+      console.error('Cancel subscription disabled:', error);
+      toast.info('Cancelamento em atualização', {
+        description: 'Em breve teremos uma nova forma de gerenciar sua assinatura. Entre em contato conosco se precisar de ajuda!',
+        duration: 5000
       });
     }
   });

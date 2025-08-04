@@ -57,10 +57,7 @@ const Header = () => {
                   <User className="h-4 w-4 mr-2" />
                   Meu Perfil
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/development-dashboard')}>
-                  <User className="h-4 w-4 mr-2" />
-                  Dev Dashboard
-                </DropdownMenuItem>
+
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Sair
@@ -124,10 +121,7 @@ const Header = () => {
                     <User className="h-4 w-4 mr-2" />
                     Meu Perfil
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => navigate('/development-dashboard')}>
-                    <User className="h-4 w-4 mr-2" />
-                    Dev Dashboard
-                  </Button>
+
                   <Button variant="ghost" size="sm" onClick={handleSignOut}>
                     <LogOut className="h-4 w-4 mr-2" />
                     Sair

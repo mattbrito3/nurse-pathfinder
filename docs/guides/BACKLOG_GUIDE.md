@@ -10,8 +10,8 @@ Um sistema **super simples** para você não esquecer das suas ideias e acompanh
 
 ### **1. Acessar**
 - Faça login na aplicação
-- Clique em "Dev Dashboard" no menu
-- Vá para a aba "Backlog"
+- Acesse o dashboard principal
+- Vá para a seção de gerenciamento
 
 ### **2. Adicionar Ideia**
 - Clique em **"Adicionar Item"**

@@ -4,20 +4,18 @@ import { Wrench } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
-interface UnifiedPaymentButtonProps {
+interface SubscribeButtonProps {
   planType: 'professional' | 'annual';
   planName: string;
   planPrice: string;
-  planPeriod: string;
   className?: string;
   children?: React.ReactNode;
 }
 
-const UnifiedPaymentButton: React.FC<UnifiedPaymentButtonProps> = ({
+const SubscribeButton: React.FC<SubscribeButtonProps> = ({
   planType,
   planName,
   planPrice,
-  planPeriod,
   className,
   children
 }) => {
@@ -57,4 +55,4 @@ const UnifiedPaymentButton: React.FC<UnifiedPaymentButtonProps> = ({
   );
 };
 
-export default UnifiedPaymentButton; 
+export default SubscribeButton;
