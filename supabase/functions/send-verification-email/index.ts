@@ -153,9 +153,11 @@ serve(async (req) => {
     console.log(`SMTP_USER: ${Deno.env.get('SMTP_USER') ? '✅ OK' : '❌ NÃO ENCONTRADO'}`);
     console.log(`SMTP_PASS: ${Deno.env.get('SMTP_PASS') ? '✅ OK' : '❌ NÃO ENCONTRADO'}`);
     
-    // Parse request body
-    const { email, name } = await req.json();
-    console.log(`📧 Processing verification for: ${email}`);
+         // Parse request body
+     const body = await req.json();
+     const { email, name, redirectUrl } = body;
+     console.log(`📧 Processing verification for: ${email}`);
+     console.log(`🔗 Redirect URL from body: ${redirectUrl}`);
     
     // Personalizar nome do usuário
     let userName = name;
@@ -204,13 +206,13 @@ serve(async (req) => {
     const { token, expires_at } = tokenData;
     console.log(`✅ Token generated: ${token.substring(0, 8)}...`);
 
-    // Create verification URL
-    const baseUrl = req.headers.get('origin') || 'http://localhost:8080';
-    const redirectUrl = body.redirectUrl || `${baseUrl}/verify-email`;
-    const verificationUrl = `${redirectUrl}?token=${token}&fromRegister=true`;
-    console.log(`🔗 Verification URL: ${verificationUrl}`);
-    console.log(`🔗 Base URL: ${baseUrl}`);
-    console.log(`🔗 Redirect URL from body: ${body.redirectUrl}`);
+         // Create verification URL
+     const baseUrl = req.headers.get('origin') || 'http://localhost:8080';
+     const finalRedirectUrl = redirectUrl || `${baseUrl}/verify-email`;
+     const verificationUrl = `${finalRedirectUrl}?token=${token}&fromRegister=true`;
+     console.log(`🔗 Verification URL: ${verificationUrl}`);
+     console.log(`🔗 Base URL: ${baseUrl}`);
+     console.log(`🔗 Final Redirect URL: ${finalRedirectUrl}`);
 
     // Create email HTML content
     const emailHtml = `
