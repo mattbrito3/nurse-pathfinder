@@ -62,7 +62,7 @@ serve(async (req) => {
       )
     }
 
-    // Verificar se email existe no auth.users
+    // Verificar se email existe no auth.users (incluindo usuários não confirmados)
     const { data: user, error } = await supabase.auth.admin.listUsers()
     
     if (error) {
@@ -76,7 +76,23 @@ serve(async (req) => {
       )
     }
 
-    const emailExists = user.users.some(u => u.email?.toLowerCase() === email.toLowerCase())
+    // Verificar se email existe no auth.users (incluindo usuários não confirmados)
+    const emailExistsInAuth = user.users.some(u => u.email?.toLowerCase() === email.toLowerCase())
+    
+    // Verificar se email existe na tabela de verificação
+    const { data: verificationData, error: verificationError } = await supabase
+      .from('email_verification')
+      .select('email, verified')
+      .eq('email', email.toLowerCase())
+      .order('created_at', { ascending: false })
+      .limit(1)
+    
+    if (verificationError) {
+      console.error('Erro ao verificar tabela de verificação:', verificationError)
+    }
+    
+    // Email existe se estiver no auth.users OU se tiver registro de verificação
+    const emailExists = emailExistsInAuth || (verificationData && verificationData.length > 0)
 
     // Resposta segura - não revelar se email existe ou não
     if (emailExists) {
