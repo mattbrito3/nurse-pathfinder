@@ -22,7 +22,7 @@ const Register = () => {
   const [pendingSignupData, setPendingSignupData] = useState<any>(null);
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
-  const { signUp, signUpWithoutEmailConfirmation } = useAuth();
+  const { signUp, signUpWithoutEmailConfirmation, testEdgeFunction } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -340,18 +340,37 @@ const Register = () => {
             
             <GoogleLoginButton variant="outline" />
             
-            <div className="text-center mt-4">
-              <div className="text-sm text-muted-foreground">
-                Já tem uma conta?{" "}
-                <Button 
-                  variant="link" 
-                  className="p-0 h-auto font-normal text-primary hover:text-primary/80"
-                  onClick={() => navigate('/login')}
-                >
-                  Faça login
-                </Button>
-              </div>
-            </div>
+                         <div className="text-center mt-4">
+               <div className="text-sm text-muted-foreground">
+                 Já tem uma conta?{" "}
+                 <Button 
+                   variant="link" 
+                   className="p-0 h-auto font-normal text-primary hover:text-primary/80"
+                   onClick={() => navigate('/login')}
+                 >
+                   Faça login
+                 </Button>
+               </div>
+             </div>
+             
+             {/* Botão de teste temporário */}
+             <div className="text-center mt-4">
+               <Button 
+                 variant="outline"
+                 size="sm"
+                 onClick={async () => {
+                   console.log('🧪 Testando Edge Function...');
+                   const { error } = await testEdgeFunction();
+                   if (error) {
+                     console.error('❌ Teste falhou:', error);
+                   } else {
+                     console.log('✅ Teste passou!');
+                   }
+                 }}
+               >
+                 Testar Edge Function
+               </Button>
+             </div>
           </CardContent>
         </Card>
       </div>

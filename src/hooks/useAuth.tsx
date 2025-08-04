@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signUpWithoutEmailConfirmation: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  testEdgeFunction: () => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
@@ -61,6 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       console.log('🔄 Chamando Edge Function create-confirmed-user...', { email, fullName });
       
+      // Verificar se a Edge Function está disponível
+      console.log('🔍 Verificando disponibilidade da Edge Function...');
+      
       // Chamar Edge Function para criar usuário confirmado
       const { data, error } = await supabase.functions.invoke('create-confirmed-user', {
         body: {
@@ -86,6 +90,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: null };
     } catch (error) {
       console.error('❌ Erro ao criar usuário:', error);
+      return { error };
+    }
+  };
+
+  const testEdgeFunction = async () => {
+    try {
+      console.log('🧪 Testando Edge Function...');
+      
+      const { data, error } = await supabase.functions.invoke('test-edge-function');
+      
+      console.log('📡 Resposta do teste:', { data, error });
+      
+      if (error) {
+        console.error('❌ Erro no teste:', error);
+        return { error };
+      }
+      
+      console.log('✅ Teste da Edge Function funcionou!');
+      return { error: null };
+    } catch (error) {
+      console.error('❌ Erro no teste:', error);
       return { error };
     }
   };
@@ -124,6 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signUp,
     signUpWithoutEmailConfirmation,
+    testEdgeFunction,
     signIn,
     signInWithGoogle,
     signOut
