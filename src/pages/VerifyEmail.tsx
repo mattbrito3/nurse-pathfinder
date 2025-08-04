@@ -32,22 +32,38 @@ const VerifyEmail = () => {
     try {
       console.log('🔄 Verificando token:', verificationToken.substring(0, 8) + '...');
       
-      // Call the verification function
-      const { data, error } = await supabase
-        .rpc('verify_email_token', { p_token: verificationToken })
-        .single();
+      // Verificação simples usando Auth do Supabase
+      const { data, error } = await supabase.auth.verifyOtp({
+        token_hash: verificationToken,
+        type: 'email'
+      });
 
       if (error) {
-        console.error('❌ RPC Error:', error);
-        throw new Error('Erro ao verificar token');
+        console.error('❌ Verification Error:', error);
+        
+        // Diferentes tipos de erro
+        if (error.message.includes('expired')) {
+          setStatus('error');
+          setMessage('Token expirado. Solicite uma nova verificação.');
+          setEmail('');
+        } else if (error.message.includes('invalid')) {
+          setStatus('error');
+          setMessage('Token de verificação inválido.');
+          setEmail('');
+        } else {
+          setStatus('error');
+          setMessage('Erro ao verificar email. Tente novamente mais tarde.');
+          setEmail('');
+        }
+        return;
       }
 
       console.log('📧 Verification result:', data);
 
-      if (data.success) {
+      if (data.user) {
         setStatus('success');
-        setMessage(data.message);
-        setEmail(data.email);
+        setMessage('Email verificado com sucesso!');
+        setEmail(data.user.email || '');
         
         toast({
           title: "Email verificado!",
@@ -55,8 +71,8 @@ const VerifyEmail = () => {
         });
       } else {
         setStatus('error');
-        setMessage(data.message);
-        setEmail(data.email);
+        setMessage('Não foi possível verificar o email.');
+        setEmail('');
       }
       
     } catch (error: any) {
