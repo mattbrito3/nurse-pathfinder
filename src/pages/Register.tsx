@@ -112,17 +112,25 @@ const Register = () => {
   };
 
   const handleCodeVerified = async (verifiedEmail: string) => {
-    if (!pendingSignupData) return;
+    console.log('🔄 handleCodeVerified chamado com:', { verifiedEmail, pendingSignupData });
+    
+    if (!pendingSignupData) {
+      console.error('❌ pendingSignupData não encontrado');
+      return;
+    }
 
     setIsLoading(true);
     try {
       const { email, password, fullName } = pendingSignupData;
+      console.log('📝 Dados para criação:', { email, fullName, passwordLength: password.length });
       
       // Usar função que não envia email de confirmação (já foi verificado)
+      console.log('🔄 Chamando signUpWithoutEmailConfirmation...');
       const { error } = await signUpWithoutEmailConfirmation(email, password, fullName);
+      console.log('📡 Resposta do signUpWithoutEmailConfirmation:', { error });
 
       if (error) {
-        console.error('Signup error:', error);
+        console.error('❌ Signup error:', error);
         if (error.message.includes('already registered') || error.message.includes('already exists')) {
           setError('Este email já está cadastrado. Tente fazer login ou recuperar sua senha.');
           // Reset da validação de email
@@ -136,6 +144,7 @@ const Register = () => {
         }
         setShowCodeVerification(false);
       } else {
+        console.log('✅ Usuário criado com sucesso!');
         toast({
           title: "Conta criada com sucesso!",
           description: "Bem-vindo ao Dose Certa!",
@@ -143,7 +152,7 @@ const Register = () => {
         navigate('/profile');
       }
     } catch (error) {
-      console.error('Signup error:', error);
+      console.error('❌ Signup error:', error);
       setError('Erro ao criar conta. Tente novamente.');
       setShowCodeVerification(false);
     }
