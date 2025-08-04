@@ -5,7 +5,7 @@ Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profission
 ![React](https://img.shields.io/badge/React-18.3.1-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)
 ![Supabase](https://img.shields.io/badge/Supabase-2.52.0-green.svg)
-![Stripe](https://img.shields.io/badge/Stripe-18.3.0-purple.svg)
+![Resend](https://img.shields.io/badge/Resend-4.7.0-green.svg)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.11-cyan.svg)
 
 ## ✨ Funcionalidades

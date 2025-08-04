@@ -7,6 +7,18 @@ e este projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR
 
 ## [Unreleased]
 
+### 🚧 BREAKING CHANGES - January 2025
+- **Stripe Integration Removal**: Complete removal of Stripe payment system
+- **Payment System Migration**: Preparing for new payment gateway (Mercado Pago)
+- **Placeholder Implementation**: Payment buttons now show maintenance messages
+- **Database Migration**: Stripe constraints removed, new gateway columns added
+
+### Removed
+- **All Stripe Dependencies**: @stripe/stripe-js, stripe packages removed
+- **Stripe Edge Functions**: create-checkout-session, stripe-webhook deleted
+- **Stripe Components**: Legacy payment components removed
+- **Stripe Configuration**: Environment variables and configurations cleaned
+
 ### Added
 - **Sistema de Backlog Simples**: Implementado sistema interno para gerenciar funcionalidades e melhorias do projeto
 - **Dashboard de Desenvolvimento**: Interface dedicada para acompanhar progresso de desenvolvimento
