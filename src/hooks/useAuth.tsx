@@ -42,7 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/auth/callback`;
+    // Usar domínio específico para produção
+    const redirectUrl = 'https://dosecerta.online/auth/callback';
+    
+    console.log('🔄 Iniciando registro com redirecionamento para:', redirectUrl);
     
     const { error } = await supabase.auth.signUp({
       email,
@@ -151,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/profile`,
+        redirectTo: 'https://dosecerta.online/profile',
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
