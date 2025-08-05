@@ -109,22 +109,45 @@ const EmailVerificationDebug = () => {
         return;
       }
 
-      const { data: verificationResult, error: verificationError } = await supabase.rpc('verify_email_token_and_create_user', {
-        p_token: token
-      });
-
-      if (verificationError) {
-        updateLastStep('error', `Erro na verificação: ${verificationError.message}`);
-        return;
-      }
-
-      const result = verificationResult?.[0];
-      if (result?.success) {
-        updateLastStep('success', 'Token verificado e usuário criado com sucesso', result);
-      } else {
-        updateLastStep('error', result?.message || 'Falha na verificação do token');
-        return;
-      }
+                   const { data: verificationResult, error: verificationError } = await supabase.rpc('verify_email_token_and_create_user', {
+               p_token: token
+             });
+       
+             if (verificationError) {
+               updateLastStep('error', `Erro na verificação: ${verificationError.message}`);
+               return;
+             }
+       
+             const result = verificationResult?.[0];
+             if (result?.success) {
+               updateLastStep('success', 'Token verificado com sucesso', result);
+               
+               // Agora criar o usuário usando Edge Function
+               addStep('Criação do Usuário', 'pending', 'Criando usuário via Edge Function...');
+               
+               const { data: userData, error: userError } = await supabase.functions.invoke('create-user-after-verification', {
+                 body: {
+                   email: email,
+                   password: password,
+                   fullName: fullName
+                 }
+               });
+               
+               if (userError) {
+                 updateLastStep('error', `Erro ao criar usuário: ${userError.message}`);
+                 return;
+               }
+               
+               if (userData?.success) {
+                 updateLastStep('success', 'Usuário criado com sucesso via Edge Function', userData);
+               } else {
+                 updateLastStep('error', userData?.error || 'Falha ao criar usuário');
+                 return;
+               }
+             } else {
+               updateLastStep('error', result?.message || 'Falha na verificação do token');
+               return;
+             }
 
       // Passo 4: Verificar se usuário foi criado
       addStep('Verificação Final', 'pending', 'Verificando se usuário foi criado corretamente...');
