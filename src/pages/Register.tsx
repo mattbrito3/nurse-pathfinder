@@ -126,14 +126,14 @@ const Register = () => {
           setError(error.message || 'Erro ao criar conta. Tente novamente.');
         }
              } else {
-         console.log('✅ Registro iniciado com sucesso!');
+         console.log('✅ Usuário criado com sucesso!');
          toast({
-           title: "Verificação enviada!",
-           description: "Verifique seu email e clique no link para confirmar sua conta.",
+           title: "Conta criada com sucesso!",
+           description: "Bem-vindo ao Dose Certa!",
          });
          
-         // Mostrar tela de verificação
-         setShowCodeVerification(true);
+         // Redirecionar direto para o dashboard
+         navigate('/dashboard');
        }
     } catch (error: any) {
       console.error('❌ Erro inesperado:', error);
