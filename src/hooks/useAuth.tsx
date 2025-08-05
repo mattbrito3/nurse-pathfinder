@@ -42,48 +42,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    // Usar Edge Function para enviar email de verificação
-    console.log('🔄 Usando Edge Function para envio de email...');
+    // Usar Edge Function para criar usuário e enviar email
+    console.log('🔄 Usando Edge Function para registro completo...');
     
     try {
-      // Primeiro criar usuário sem confirmação
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: 'https://dosecerta.online/auth/callback',
-          data: {
-            full_name: fullName
-          }
+      const { data, error } = await supabase.functions.invoke('send-verification-email', {
+        body: {
+          email,
+          password,
+          fullName,
+          action: 'register'
         }
       });
       
-      if (signUpError) {
-        console.error('❌ Erro no signUp:', signUpError);
-        return { error: signUpError };
+      if (error) {
+        console.error('❌ Erro na Edge Function:', error);
+        return { error };
       }
       
-      // Se usuário foi criado, enviar email via Edge Function
-      if (signUpData.user) {
-        console.log('✅ Usuário criado, enviando email via Edge Function...');
-        
-        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-verification-email', {
-          body: {
-            email,
-            fullName,
-            userId: signUpData.user.id
-          }
-        });
-        
-        if (emailError) {
-          console.error('❌ Erro ao enviar email:', emailError);
-          return { error: { message: 'Erro ao enviar email de verificação' } };
-        }
-        
-        console.log('✅ Email enviado com sucesso via Edge Function');
-        return { error: null };
+      if (data.error) {
+        console.error('❌ Erro retornado pela Edge Function:', data.error);
+        return { error: { message: data.error } };
       }
       
+      console.log('✅ Registro e email enviado com sucesso via Edge Function');
       return { error: null };
     } catch (error) {
       console.error('❌ Erro ao criar usuário:', error);

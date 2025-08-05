@@ -153,11 +153,69 @@ serve(async (req) => {
     console.log(`SMTP_USER: ${Deno.env.get('SMTP_USER') ? '✅ OK' : '❌ NÃO ENCONTRADO'}`);
     console.log(`SMTP_PASS: ${Deno.env.get('SMTP_PASS') ? '✅ OK' : '❌ NÃO ENCONTRADO'}`);
     
-         // Parse request body
-     const body = await req.json();
-     const { email, name, redirectUrl } = body;
-     console.log(`📧 Processing verification for: ${email}`);
-     console.log(`🔗 Redirect URL from body: ${redirectUrl}`);
+    // Parse request body
+    const body = await req.json();
+    const { email, password, fullName, name, redirectUrl, action } = body;
+    console.log(`📧 Processing verification for: ${email}`);
+    console.log(`🔗 Redirect URL from body: ${redirectUrl}`);
+    console.log(`🎯 Action: ${action}`);
+    
+    // Se for registro, criar usuário primeiro
+    if (action === 'register' && password && fullName) {
+      console.log('👤 Criando usuário para registro...');
+      
+      // Initialize Supabase client
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Verificar se email já existe
+      const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers();
+      
+      if (listError) {
+        console.error('❌ Erro ao verificar usuários existentes:', listError);
+        return new Response(JSON.stringify({
+          error: 'Erro interno do servidor'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      const emailExists = existingUsers.users.some(u => u.email?.toLowerCase() === email.toLowerCase());
+      
+      if (emailExists) {
+        console.error('❌ Email já cadastrado:', email);
+        return new Response(JSON.stringify({
+          error: 'Este email já está cadastrado'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      // Criar usuário sem confirmação
+      const { data: user, error: createError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: false, // Não confirmar automaticamente
+        user_metadata: {
+          full_name: fullName
+        }
+      });
+      
+      if (createError) {
+        console.error('❌ Erro ao criar usuário:', createError);
+        return new Response(JSON.stringify({
+          error: createError.message
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      console.log('✅ Usuário criado com sucesso:', user.user?.email);
+    }
     
     // Personalizar nome do usuário
     let userName = name;
