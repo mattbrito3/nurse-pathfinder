@@ -32,10 +32,12 @@ const VerifyEmail = () => {
     try {
       console.log('🔄 Verificando token:', verificationToken.substring(0, 8) + '...');
       
-      // Verificação usando função RPC customizada
-      const { data, error } = await supabase.rpc('verify_email_token_and_create_user', {
-        p_token: verificationToken
-      }).single();
+      // Usar Edge Function para verificar token e confirmar usuário
+      const { data, error } = await supabase.functions.invoke('verify-email-token', {
+        body: {
+          token: verificationToken
+        }
+      });
 
       if (error) {
         console.error('❌ Verification Error:', error);
@@ -58,7 +60,7 @@ const VerifyEmail = () => {
         });
       } else {
         setStatus('error');
-        setMessage(data.message);
+        setMessage(data.message || 'Erro ao verificar email');
         setEmail(data.email || '');
       }
       
