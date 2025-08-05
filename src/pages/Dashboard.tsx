@@ -8,6 +8,7 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Calculator, BookOpen, Brain, FileText, User, Settings, LogOut, BarChart3 } from "lucide-react";
 import { useFormattedDashboardStats } from "@/hooks/useDashboardStats";
 
+
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -239,19 +240,24 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Atividade Recente</CardTitle>
-            <CardDescription>Suas últimas ações na plataforma</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8 text-muted-foreground">
-              <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>Suas atividades aparecerão aqui em breve.</p>
-              <p className="text-sm">Comece usando nossas ferramentas para ver seu progresso!</p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* Recent Activity */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Atividade Recente</CardTitle>
+              <CardDescription>Suas últimas ações na plataforma</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-muted-foreground">
+                <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                <p>Suas atividades aparecerão aqui em breve.</p>
+                <p className="text-sm">Comece usando nossas ferramentas para ver seu progresso!</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+
+        </div>
       </div>
     </div>
   );

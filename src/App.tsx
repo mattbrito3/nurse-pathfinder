@@ -6,6 +6,8 @@ import { Routes, Route } from "react-router-dom";
 import { Suspense, lazy, useEffect} from "react";
 import { runGlossaryMigrations } from "@/utils/runMigrations";
 import { runGlossaryDataMigrations } from "@/utils/runGlossaryMigrations";
+
+import { supabase } from "@/integrations/supabase/client";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 
 
@@ -40,6 +42,7 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const AuthDebug = lazy(() => import("./pages/AuthDebug"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
+
 // Configuração otimizada do React Query
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -72,6 +75,8 @@ const App = () => {
         
         // Depois executar migração de dados
         await runGlossaryDataMigrations();
+        
+
         
         console.log('✅ Todas as migrações executadas com sucesso');
       } catch (error) {
@@ -122,6 +127,7 @@ const App = () => {
               <Route path="/dashboard/flashcards/browse/favorites" element={<BrowsePage />} />
               <Route path="/dashboard/flashcards/browse/:categoryId" element={<BrowsePage />} />
               <Route path="/dashboard/flashcards/study/:sessionId" element={<StudyPage />} />
+
 
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

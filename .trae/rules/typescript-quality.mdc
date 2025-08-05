@@ -1,0 +1,90 @@
+# Qualidade TypeScript - Tratamento de Erros
+
+## Princípios Fundamentais
+
+### 1. Proibição de @ts-ignore sem Explicação
+- **NUNCA use `@ts-ignore` sem comentar o motivo**
+- **NUNCA ignore erros de TypeScript sem documentação**
+- Sempre explique por que o erro está sendo ignorado
+- Considere alternativas antes de ignorar erros
+
+### 2. Formato Correto para Ignorar Erros
+```typescript
+// ❌ INCORRETO - Sem explicação
+// @ts-ignore
+const result = someFunction();
+
+// ✅ CORRETO - Com explicação clara
+// @ts-ignore - Ignorando erro de tipo devido à incompatibilidade da API externa
+// TODO: Atualizar tipos quando a biblioteca for atualizada
+const result = someFunction();
+```
+
+### 3. Warnings como Erros
+- **Warnings devem ser tratados como erros**
+- Não ignore warnings do TypeScript
+- Corrija warnings antes de considerar o código pronto
+- Use configuração `"strict": true` no `tsconfig.json`
+
+### 4. Alternativas ao @ts-ignore
+Antes de usar `@ts-ignore`, considere:
+
+1. **Type Assertions** - Use `as` quando você tem certeza do tipo
+2. **Type Guards** - Implemente verificações de tipo em runtime
+3. **Interface Extensions** - Estenda interfaces quando necessário
+4. **Generic Types** - Use genéricos para maior flexibilidade
+5. **Union Types** - Use union types para múltiplas possibilidades
+
+### 5. Exemplos de Boas Práticas
+
+```typescript
+// ✅ Usando type assertion com explicação
+const data = response as ApiResponse; // API retorna tipo conhecido
+
+// ✅ Usando type guard
+function isUser(obj: any): obj is User {
+  return obj && typeof obj.id === 'string' && typeof obj.name === 'string';
+}
+
+// ✅ Usando union types
+type Status = 'loading' | 'success' | 'error';
+
+// ✅ Usando generic types
+function processData<T>(data: T): T {
+  return data;
+}
+```
+
+### 6. Configuração Recomendada
+No `tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  }
+}
+```
+
+### 7. Processo de Correção
+Quando encontrar erros TypeScript:
+
+1. **Analise o erro** - Entenda a causa raiz
+2. **Considere alternativas** - Não use `@ts-ignore` como primeira opção
+3. **Implemente correção** - Use type guards, assertions ou refatoração
+4. **Documente se necessário** - Se precisar ignorar, explique claramente
+5. **Adicione TODO** - Para problemas que precisam ser resolvidos no futuro
+
+### 8. Verificação Automática
+- Configure ESLint com regras TypeScript
+- Use `--noUncheckedIndexedAccess` para arrays
+- Habilite `exactOptionalPropertyTypes`
+- Configure `noImplicitOverride` para herança
+description:
+globs:
+alwaysApply: true
+---

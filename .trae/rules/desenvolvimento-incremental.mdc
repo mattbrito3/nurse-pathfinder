@@ -1,0 +1,680 @@
+---
+alwaysApply: true
+---
+
+# Desenvolvimento Incremental e Estruturado
+
+## Princípios Fundamentais
+
+### 1. Implementação por Funcionalidade
+- **Sempre implemente uma funcionalidade por vez**
+- Divida prompts grandes em tarefas menores e gerenciáveis
+- Confirme o escopo antes de gerar código
+- Mantenha o foco em uma única responsabilidade por iteração
+
+### 2. Processo de Confirmação de Escopo
+Antes de implementar qualquer funcionalidade:
+
+1. **Analise o pedido** - Identifique a funcionalidade principal
+2. **Divida em etapas** - Quebre em tarefas menores se necessário
+3. **Confirme o escopo** - Peça confirmação do usuário sobre:
+   - Funcionalidade específica a ser implementada
+   - Arquivos que serão modificados
+   - Dependências que serão adicionadas
+   - Impacto em outras partes do sistema
+
+### 3. Estrutura de Resposta
+Para cada implementação:
+
+1. **Planejamento**: Descreva o que será feito
+2. **Implementação**: Execute uma funcionalidade por vez
+3. **Validação**: Confirme que a funcionalidade está funcionando
+4. **Próximos Passos**: Identifique a próxima funcionalidade se houver
+
+### 4. Boas Práticas
+- Mantenha arquivos com menos de 200-300 linhas
+- Evite duplicação de código
+- Prefira soluções simples
+- Considere diferentes ambientes (dev, test, prod)
+- Documente mudanças significativas
+
+### 5. Quando Dividir Prompts
+Divida prompts quando:
+- Envolver múltiplas funcionalidades não relacionadas
+- Requerer mudanças em múltiplos arquivos independentes
+- Tiver dependências complexas entre componentes
+- Incluir configurações de diferentes serviços
+
+### 6. Confirmação de Escopo
+Sempre confirme:
+- "Qual funcionalidade específica você gostaria que eu implemente primeiro?"
+- "Quais arquivos serão afetados por esta mudança?"
+- "Há alguma dependência específica que devo considerar?"
+- "Esta implementação afetará outras partes do sistema?"
+
+## Refinamentos Avançados para Desenvolvimento Incremental
+
+### 7. Mapeamento de Impacto e Interdependências
+- **Análise de "ondas de impacto" antes da implementação**
+- Mapeie não apenas arquivos modificados, mas funcionalidades afetadas indiretamente
+- Identifique conexões ocultas entre componentes
+- Planeje sequência de implementação baseada em dependências
+
+**Processo de Análise de Impacto:**
+```markdown
+## Análise de Impacto - [Funcionalidade]
+
+### Onda 1 - Impacto Direto
+- Arquivos modificados: [lista]
+- Componentes afetados: [lista]
+- APIs alteradas: [lista]
+
+### Onda 2 - Impacto Indireto
+- Funcionalidades que dependem dos componentes modificados
+- Integrações que podem ser afetadas
+- Dados que podem ser impactados
+
+### Onda 3 - Impacto Sistêmico
+- Performance geral do sistema
+- Experiência do usuário
+- Segurança e validações
+
+### Estratégia de Implementação
+1. [Ordem de implementação baseada em dependências]
+2. [Pontos de validação entre ondas]
+3. [Rollback plan se necessário]
+```
+
+### 8. Validação Estruturada em Múltiplas Camadas
+- **Substitua validação genérica por três tipos específicos:**
+
+#### Validação Técnica
+- Código funciona como esperado
+- Performance dentro dos parâmetros aceitáveis
+- Tratamento adequado de erros
+- Cobertura de testes adequada
+
+#### Validação de Integração
+- Não quebra funcionalidades existentes
+- APIs mantêm compatibilidade
+- Dados permanecem consistentes
+- Fluxos de trabalho não são interrompidos
+
+#### Validação de Experiência do Usuário
+- Interface é intuitiva e clara
+- Fluxo de trabalho faz sentido
+- Feedback é apropriado
+- Acessibilidade mantida
+
+**Checklist de Validação:**
+```markdown
+## Checklist de Validação - [Funcionalidade]
+
+### Validação Técnica
+- [ ] Código executa sem erros
+- [ ] Performance: < 2s para operações críticas
+- [ ] Tratamento de erros implementado
+- [ ] Testes unitários passando
+- [ ] Cobertura de código > 80%
+
+### Validação de Integração
+- [ ] Funcionalidades existentes funcionam
+- [ ] APIs mantêm contratos existentes
+- [ ] Dados não corrompidos
+- [ ] Migrações executadas com sucesso
+- [ ] Logs não mostram erros críticos
+
+### Validação de UX
+- [ ] Interface é intuitiva
+- [ ] Fluxo de trabalho lógico
+- [ ] Mensagens de erro claras
+- [ ] Acessibilidade mantida
+- [ ] Responsividade funcionando
+```
+
+### 9. Estratégias por Tipo de Funcionalidade
+- **Diferencie abordagens baseadas no tipo de implementação:**
+
+#### Interface do Usuário
+1. **Estrutura primeiro** - Layout e componentes básicos
+2. **Comportamento depois** - Interações e lógica
+3. **Refinamento visual** - Estilos e animações
+4. **Otimização** - Performance e acessibilidade
+
+#### Integrações Externas
+1. **Simulações** - Mock APIs e dados de teste
+2. **Conexões básicas** - Integração simples
+3. **Tratamento de erros** - Robustez e fallbacks
+4. **Otimização** - Performance e cache
+
+#### Processamento de Dados
+1. **Lógica central** - Algoritmos principais
+2. **Validações** - Verificações de entrada
+3. **Otimização** - Performance e eficiência
+4. **Monitoramento** - Logs e métricas
+
+**Template de Estratégia:**
+```markdown
+## Estratégia de Implementação - [Tipo de Funcionalidade]
+
+### Fase 1: [Nome da Fase]
+- Objetivo: [Descrição do objetivo]
+- Critérios de sucesso: [Lista de critérios]
+- Validação: [Como validar]
+
+### Fase 2: [Nome da Fase]
+- Objetivo: [Descrição do objetivo]
+- Critérios de sucesso: [Lista de critérios]
+- Validação: [Como validar]
+
+### Fase 3: [Nome da Fase]
+- Objetivo: [Descrição do objetivo]
+- Critérios de sucesso: [Lista de critérios]
+- Validação: [Como validar]
+```
+
+### 10. Decomposição por Camadas de Funcionalidade
+- **Implemente técnicas específicas de decomposição:**
+
+#### Camadas de Funcionalidade
+1. **Versão mais básica possível** - Funcionalidade mínima viável
+2. **Adicione sofisticação incrementalmente** - Melhorias graduais
+3. **Cada camada deve ser completa e funcional** - Nunca implemente parcialmente
+
+#### Cenários de Uso
+1. **Caso mais comum primeiro** - Happy path principal
+2. **Expanda para situações especiais** - Edge cases e erros
+3. **Otimize para performance** - Melhorias baseadas em uso real
+
+**Exemplo de Decomposição:**
+```markdown
+## Decomposição - [Funcionalidade]
+
+### Camada 1: Funcionalidade Básica
+- [ ] Operação principal funciona
+- [ ] Interface mínima implementada
+- [ ] Dados salvos corretamente
+
+### Camada 2: Robustez
+- [ ] Tratamento de erros
+- [ ] Validações de entrada
+- [ ] Feedback ao usuário
+
+### Camada 3: Experiência
+- [ ] Interface polida
+- [ ] Animações e transições
+- [ ] Acessibilidade completa
+
+### Camada 4: Otimização
+- [ ] Performance otimizada
+- [ ] Cache implementado
+- [ ] Monitoramento adicionado
+```
+
+### 11. Momentos de Reflexão e Ajuste
+- **Incorpore revisão estruturada após cada implementação:**
+
+#### Perguntas de Reflexão
+1. **Resolve o problema da forma mais eficaz?**
+2. **Revela necessidades não antecipadas?**
+3. **Sugere abordagens diferentes para próximas funcionalidades?**
+4. **Mantém consistência com o resto do sistema?**
+
+#### Processo de Reflexão
+```markdown
+## Reflexão Pós-Implementação - [Funcionalidade]
+
+### O que funcionou bem?
+- [Lista de aspectos positivos]
+
+### O que poderia ser melhorado?
+- [Lista de melhorias possíveis]
+
+### Lições aprendidas
+- [Insights para futuras implementações]
+
+### Ajustes necessários
+- [Mudanças imediatas ou futuras]
+
+### Impacto em próximas funcionalidades
+- [Como isso afeta o desenvolvimento futuro]
+```
+
+### 12. Gerenciamento de Débito Técnico
+- **Identifique e documente comprometimentos temporários:**
+
+#### Quando Documentar Débito Técnico
+- Soluções que funcionam mas não são ideais
+- Código temporário que precisa ser refatorado
+- Dependências que devem ser atualizadas
+- Performance que pode ser melhorada
+
+#### Template de Débito Técnico
+```markdown
+## Débito Técnico - [Data]
+
+### [Descrição do Comprometimento]
+**Contexto:** [Por que foi necessário]
+**Impacto:** [Como afeta o sistema]
+**Solução Temporária:** [O que foi implementado]
+**Solução Ideal:** [O que deveria ser feito]
+**Prioridade:** [Alta/Média/Baixa]
+**Estimativa:** [Tempo para resolver]
+
+### Plano de Resolução
+- [ ] [Passo 1]
+- [ ] [Passo 2]
+- [ ] [Passo 3]
+```
+
+### 13. Indicadores de Progresso e Qualidade
+- **Estabeleça métricas para medir efetividade do processo:**
+
+#### Métricas de Produtividade
+- Tempo médio para funcionalidades similares
+- Frequência de bugs pós-validação
+- Quantidade de retrabalho necessário
+- Velocidade de implementação
+
+#### Métricas de Qualidade
+- Taxa de sucesso na primeira implementação
+- Frequência de mudanças após validação
+- Satisfação do usuário com funcionalidades
+- Estabilidade do sistema
+
+**Dashboard de Métricas:**
+```markdown
+## Dashboard de Desenvolvimento
+
+### Métricas de Produtividade
+- **Tempo médio por funcionalidade:** [X horas]
+- **Bugs pós-validação:** [X%]
+- **Retrabalho necessário:** [X%]
+- **Velocidade:** [X funcionalidades/semana]
+
+### Métricas de Qualidade
+- **Sucesso na primeira tentativa:** [X%]
+- **Mudanças pós-validação:** [X%]
+- **Satisfação do usuário:** [X/10]
+- **Estabilidade:** [X% uptime]
+
+### Tendências
+- [Gráfico ou descrição de tendências]
+- [Áreas de melhoria identificadas]
+- [Próximas ações]
+```
+
+### 14. Processo de Implementação Refinado
+- **Fluxo completo de desenvolvimento incremental:**
+
+```markdown
+## Processo de Implementação
+
+### 1. Análise e Planejamento
+- [ ] Mapeamento de impacto e interdependências
+- [ ] Definição de estratégia por tipo de funcionalidade
+- [ ] Decomposição em camadas
+- [ ] Confirmação de escopo
+
+### 2. Implementação Incremental
+- [ ] Implementar camada básica
+- [ ] Validar funcionalidade
+- [ ] Implementar camada seguinte
+- [ ] Validar integração
+
+### 3. Validação Estruturada
+- [ ] Validação técnica
+- [ ] Validação de integração
+- [ ] Validação de UX
+- [ ] Documentar débito técnico se necessário
+
+### 4. Reflexão e Ajuste
+- [ ] Revisão pós-implementação
+- [ ] Identificar lições aprendidas
+- [ ] Ajustar processo se necessário
+- [ ] Atualizar métricas
+
+### 5. Documentação
+- [ ] Atualizar README
+- [ ] Atualizar CHANGELOG
+- [ ] Documentar decisões técnicas
+- [ ] Registrar métricas de qualidade
+```
+# Desenvolvimento Incremental e Estruturado
+
+## Princípios Fundamentais
+
+### 1. Implementação por Funcionalidade
+- **Sempre implemente uma funcionalidade por vez**
+- Divida prompts grandes em tarefas menores e gerenciáveis
+- Confirme o escopo antes de gerar código
+- Mantenha o foco em uma única responsabilidade por iteração
+
+### 2. Processo de Confirmação de Escopo
+Antes de implementar qualquer funcionalidade:
+
+1. **Analise o pedido** - Identifique a funcionalidade principal
+2. **Divida em etapas** - Quebre em tarefas menores se necessário
+3. **Confirme o escopo** - Peça confirmação do usuário sobre:
+   - Funcionalidade específica a ser implementada
+   - Arquivos que serão modificados
+   - Dependências que serão adicionadas
+   - Impacto em outras partes do sistema
+
+### 3. Estrutura de Resposta
+Para cada implementação:
+
+1. **Planejamento**: Descreva o que será feito
+2. **Implementação**: Execute uma funcionalidade por vez
+3. **Validação**: Confirme que a funcionalidade está funcionando
+4. **Próximos Passos**: Identifique a próxima funcionalidade se houver
+
+### 4. Boas Práticas
+- Mantenha arquivos com menos de 200-300 linhas
+- Evite duplicação de código
+- Prefira soluções simples
+- Considere diferentes ambientes (dev, test, prod)
+- Documente mudanças significativas
+
+### 5. Quando Dividir Prompts
+Divida prompts quando:
+- Envolver múltiplas funcionalidades não relacionadas
+- Requerer mudanças em múltiplos arquivos independentes
+- Tiver dependências complexas entre componentes
+- Incluir configurações de diferentes serviços
+
+### 6. Confirmação de Escopo
+Sempre confirme:
+- "Qual funcionalidade específica você gostaria que eu implemente primeiro?"
+- "Quais arquivos serão afetados por esta mudança?"
+- "Há alguma dependência específica que devo considerar?"
+- "Esta implementação afetará outras partes do sistema?"
+
+## Refinamentos Avançados para Desenvolvimento Incremental
+
+### 7. Mapeamento de Impacto e Interdependências
+- **Análise de "ondas de impacto" antes da implementação**
+- Mapeie não apenas arquivos modificados, mas funcionalidades afetadas indiretamente
+- Identifique conexões ocultas entre componentes
+- Planeje sequência de implementação baseada em dependências
+
+**Processo de Análise de Impacto:**
+```markdown
+## Análise de Impacto - [Funcionalidade]
+
+### Onda 1 - Impacto Direto
+- Arquivos modificados: [lista]
+- Componentes afetados: [lista]
+- APIs alteradas: [lista]
+
+### Onda 2 - Impacto Indireto
+- Funcionalidades que dependem dos componentes modificados
+- Integrações que podem ser afetadas
+- Dados que podem ser impactados
+
+### Onda 3 - Impacto Sistêmico
+- Performance geral do sistema
+- Experiência do usuário
+- Segurança e validações
+
+### Estratégia de Implementação
+1. [Ordem de implementação baseada em dependências]
+2. [Pontos de validação entre ondas]
+3. [Rollback plan se necessário]
+```
+
+### 8. Validação Estruturada em Múltiplas Camadas
+- **Substitua validação genérica por três tipos específicos:**
+
+#### Validação Técnica
+- Código funciona como esperado
+- Performance dentro dos parâmetros aceitáveis
+- Tratamento adequado de erros
+- Cobertura de testes adequada
+
+#### Validação de Integração
+- Não quebra funcionalidades existentes
+- APIs mantêm compatibilidade
+- Dados permanecem consistentes
+- Fluxos de trabalho não são interrompidos
+
+#### Validação de Experiência do Usuário
+- Interface é intuitiva e clara
+- Fluxo de trabalho faz sentido
+- Feedback é apropriado
+- Acessibilidade mantida
+
+**Checklist de Validação:**
+```markdown
+## Checklist de Validação - [Funcionalidade]
+
+### Validação Técnica
+- [ ] Código executa sem erros
+- [ ] Performance: < 2s para operações críticas
+- [ ] Tratamento de erros implementado
+- [ ] Testes unitários passando
+- [ ] Cobertura de código > 80%
+
+### Validação de Integração
+- [ ] Funcionalidades existentes funcionam
+- [ ] APIs mantêm contratos existentes
+- [ ] Dados não corrompidos
+- [ ] Migrações executadas com sucesso
+- [ ] Logs não mostram erros críticos
+
+### Validação de UX
+- [ ] Interface é intuitiva
+- [ ] Fluxo de trabalho lógico
+- [ ] Mensagens de erro claras
+- [ ] Acessibilidade mantida
+- [ ] Responsividade funcionando
+```
+
+### 9. Estratégias por Tipo de Funcionalidade
+- **Diferencie abordagens baseadas no tipo de implementação:**
+
+#### Interface do Usuário
+1. **Estrutura primeiro** - Layout e componentes básicos
+2. **Comportamento depois** - Interações e lógica
+3. **Refinamento visual** - Estilos e animações
+4. **Otimização** - Performance e acessibilidade
+
+#### Integrações Externas
+1. **Simulações** - Mock APIs e dados de teste
+2. **Conexões básicas** - Integração simples
+3. **Tratamento de erros** - Robustez e fallbacks
+4. **Otimização** - Performance e cache
+
+#### Processamento de Dados
+1. **Lógica central** - Algoritmos principais
+2. **Validações** - Verificações de entrada
+3. **Otimização** - Performance e eficiência
+4. **Monitoramento** - Logs e métricas
+
+**Template de Estratégia:**
+```markdown
+## Estratégia de Implementação - [Tipo de Funcionalidade]
+
+### Fase 1: [Nome da Fase]
+- Objetivo: [Descrição do objetivo]
+- Critérios de sucesso: [Lista de critérios]
+- Validação: [Como validar]
+
+### Fase 2: [Nome da Fase]
+- Objetivo: [Descrição do objetivo]
+- Critérios de sucesso: [Lista de critérios]
+- Validação: [Como validar]
+
+### Fase 3: [Nome da Fase]
+- Objetivo: [Descrição do objetivo]
+- Critérios de sucesso: [Lista de critérios]
+- Validação: [Como validar]
+```
+
+### 10. Decomposição por Camadas de Funcionalidade
+- **Implemente técnicas específicas de decomposição:**
+
+#### Camadas de Funcionalidade
+1. **Versão mais básica possível** - Funcionalidade mínima viável
+2. **Adicione sofisticação incrementalmente** - Melhorias graduais
+3. **Cada camada deve ser completa e funcional** - Nunca implemente parcialmente
+
+#### Cenários de Uso
+1. **Caso mais comum primeiro** - Happy path principal
+2. **Expanda para situações especiais** - Edge cases e erros
+3. **Otimize para performance** - Melhorias baseadas em uso real
+
+**Exemplo de Decomposição:**
+```markdown
+## Decomposição - [Funcionalidade]
+
+### Camada 1: Funcionalidade Básica
+- [ ] Operação principal funciona
+- [ ] Interface mínima implementada
+- [ ] Dados salvos corretamente
+
+### Camada 2: Robustez
+- [ ] Tratamento de erros
+- [ ] Validações de entrada
+- [ ] Feedback ao usuário
+
+### Camada 3: Experiência
+- [ ] Interface polida
+- [ ] Animações e transições
+- [ ] Acessibilidade completa
+
+### Camada 4: Otimização
+- [ ] Performance otimizada
+- [ ] Cache implementado
+- [ ] Monitoramento adicionado
+```
+
+### 11. Momentos de Reflexão e Ajuste
+- **Incorpore revisão estruturada após cada implementação:**
+
+#### Perguntas de Reflexão
+1. **Resolve o problema da forma mais eficaz?**
+2. **Revela necessidades não antecipadas?**
+3. **Sugere abordagens diferentes para próximas funcionalidades?**
+4. **Mantém consistência com o resto do sistema?**
+
+#### Processo de Reflexão
+```markdown
+## Reflexão Pós-Implementação - [Funcionalidade]
+
+### O que funcionou bem?
+- [Lista de aspectos positivos]
+
+### O que poderia ser melhorado?
+- [Lista de melhorias possíveis]
+
+### Lições aprendidas
+- [Insights para futuras implementações]
+
+### Ajustes necessários
+- [Mudanças imediatas ou futuras]
+
+### Impacto em próximas funcionalidades
+- [Como isso afeta o desenvolvimento futuro]
+```
+
+### 12. Gerenciamento de Débito Técnico
+- **Identifique e documente comprometimentos temporários:**
+
+#### Quando Documentar Débito Técnico
+- Soluções que funcionam mas não são ideais
+- Código temporário que precisa ser refatorado
+- Dependências que devem ser atualizadas
+- Performance que pode ser melhorada
+
+#### Template de Débito Técnico
+```markdown
+## Débito Técnico - [Data]
+
+### [Descrição do Comprometimento]
+**Contexto:** [Por que foi necessário]
+**Impacto:** [Como afeta o sistema]
+**Solução Temporária:** [O que foi implementado]
+**Solução Ideal:** [O que deveria ser feito]
+**Prioridade:** [Alta/Média/Baixa]
+**Estimativa:** [Tempo para resolver]
+
+### Plano de Resolução
+- [ ] [Passo 1]
+- [ ] [Passo 2]
+- [ ] [Passo 3]
+```
+
+### 13. Indicadores de Progresso e Qualidade
+- **Estabeleça métricas para medir efetividade do processo:**
+
+#### Métricas de Produtividade
+- Tempo médio para funcionalidades similares
+- Frequência de bugs pós-validação
+- Quantidade de retrabalho necessário
+- Velocidade de implementação
+
+#### Métricas de Qualidade
+- Taxa de sucesso na primeira implementação
+- Frequência de mudanças após validação
+- Satisfação do usuário com funcionalidades
+- Estabilidade do sistema
+
+**Dashboard de Métricas:**
+```markdown
+## Dashboard de Desenvolvimento
+
+### Métricas de Produtividade
+- **Tempo médio por funcionalidade:** [X horas]
+- **Bugs pós-validação:** [X%]
+- **Retrabalho necessário:** [X%]
+- **Velocidade:** [X funcionalidades/semana]
+
+### Métricas de Qualidade
+- **Sucesso na primeira tentativa:** [X%]
+- **Mudanças pós-validação:** [X%]
+- **Satisfação do usuário:** [X/10]
+- **Estabilidade:** [X% uptime]
+
+### Tendências
+- [Gráfico ou descrição de tendências]
+- [Áreas de melhoria identificadas]
+- [Próximas ações]
+```
+
+### 14. Processo de Implementação Refinado
+- **Fluxo completo de desenvolvimento incremental:**
+
+```markdown
+## Processo de Implementação
+
+### 1. Análise e Planejamento
+- [ ] Mapeamento de impacto e interdependências
+- [ ] Definição de estratégia por tipo de funcionalidade
+- [ ] Decomposição em camadas
+- [ ] Confirmação de escopo
+
+### 2. Implementação Incremental
+- [ ] Implementar camada básica
+- [ ] Validar funcionalidade
+- [ ] Implementar camada seguinte
+- [ ] Validar integração
+
+### 3. Validação Estruturada
+- [ ] Validação técnica
+- [ ] Validação de integração
+- [ ] Validação de UX
+- [ ] Documentar débito técnico se necessário
+
+### 4. Reflexão e Ajuste
+- [ ] Revisão pós-implementação
+- [ ] Identificar lições aprendidas
+- [ ] Ajustar processo se necessário
+- [ ] Atualizar métricas
+
+### 5. Documentação
+- [ ] Atualizar README
+- [ ] Atualizar CHANGELOG
+- [ ] Documentar decisões técnicas
+- [ ] Registrar métricas de qualidade
+```
