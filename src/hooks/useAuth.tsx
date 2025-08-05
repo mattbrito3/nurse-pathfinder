@@ -116,12 +116,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-    
-    return { error };
+    try {
+      console.log('🔐 Tentando login...');
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        console.error('❌ Erro no login:', error);
+        return { error };
+      }
+      
+      // Verificar se o usuário está confirmado
+      if (data.user && !data.user.email_confirmed_at) {
+        console.log('⚠️ Usuário não confirmou email');
+        return { 
+          error: { 
+            message: 'Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada.' 
+          } 
+        };
+      }
+      
+      console.log('✅ Login bem-sucedido');
+      return { error: null };
+    } catch (error) {
+      console.error('❌ Erro inesperado no login:', error);
+      return { error };
+    }
   };
 
   const signInWithGoogle = async () => {
