@@ -19,72 +19,16 @@ const Register = () => {
   const [error, setError] = useState<string | null>(null);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showCodeVerification, setShowCodeVerification] = useState(false);
-  const [pendingSignupData, setPendingSignupData] = useState<any>(null);
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
-  const { signUp, signUpWithoutEmailConfirmation, testEdgeFunction } = useAuth();
+  const { signUp } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
     const [searchParams] = useSearchParams();
   
-  // Verificar se o usuário voltou da verificação
-  useEffect(() => {
-    const verified = searchParams.get('verified');
-    const verifiedEmail = searchParams.get('email');
-    
-    if (verified === 'true' && verifiedEmail) {
-      console.log('🔄 Usuário voltou da verificação:', { verifiedEmail });
-      
-      // Tentar recuperar dados do localStorage
-      const storedSignupData = localStorage.getItem('pendingSignupData');
-      let signupData = null;
-      
-      if (storedSignupData) {
-        try {
-          signupData = JSON.parse(storedSignupData);
-          console.log('📦 Dados recuperados do localStorage:', signupData);
-        } catch (error) {
-          console.error('❌ Erro ao parsear dados do localStorage:', error);
-        }
-      }
-      
-      // Se não tem dados no localStorage, usar pendingSignupData (caso ainda esteja na memória)
-      if (!signupData && pendingSignupData) {
-        signupData = pendingSignupData;
-        console.log('📦 Usando dados da memória:', signupData);
-      }
-      
-      if (signupData) {
-        // Verificar se o email verificado corresponde ao email do signupData
-        if (signupData.email === verifiedEmail) {
-          console.log('✅ Email verificado corresponde aos dados de cadastro');
-          // Restaurar dados e chamar handleCodeVerified automaticamente
-          setPendingSignupData(signupData);
-          handleCodeVerified(verifiedEmail);
-        } else {
-          console.log('❌ Email verificado não corresponde aos dados de cadastro');
-          setError('Email verificado não corresponde ao email do cadastro.');
-          localStorage.removeItem('pendingSignupData');
-        }
-      } else {
-        console.log('❌ Nenhum dado de cadastro encontrado');
-        setError('Dados de cadastro não encontrados. Tente novamente.');
-      }
-    }
-  }, [searchParams]);
+  // Removido: useEffect complexo para verificação customizada
   
-  // Limpar localStorage quando sair da página (opcional)
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      // Não limpar aqui, deixar para quando o cadastro for completado
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, []);
+  // Removido: useEffect de limpeza de localStorage
   
   // Validação de email em tempo real
   const emailValidation = useEmailValidation(signupEmail, {
@@ -163,59 +107,16 @@ const Register = () => {
       return;
     }
 
-    // Store signup data and show verification
-    const signupData = { email, password, fullName };
-    setPendingSignupData(signupData);
-    
-    // Salvar no localStorage para persistir durante a verificação
-    localStorage.setItem('pendingSignupData', JSON.stringify(signupData));
-    console.log('💾 Dados salvos no localStorage:', { email, fullName });
-    
-    setShowCodeVerification(true);
-    setIsLoading(false);
-  };
-
-  const handleCodeVerified = async (verifiedEmail: string) => {
-    console.log('🔄 handleCodeVerified chamado com:', { verifiedEmail, pendingSignupData });
-    
-    // Tentar recuperar dados do localStorage se pendingSignupData não estiver disponível
-    let signupData = pendingSignupData;
-    
-    if (!signupData) {
-      console.log('🔍 Tentando recuperar dados do localStorage...');
-      const storedData = localStorage.getItem('pendingSignupData');
-      
-      if (storedData) {
-        try {
-          signupData = JSON.parse(storedData);
-          console.log('✅ Dados recuperados do localStorage:', signupData);
-        } catch (error) {
-          console.error('❌ Erro ao parsear dados do localStorage:', error);
-        }
-      }
-    }
-    
-    if (!signupData) {
-      console.error('❌ Nenhum dado de cadastro encontrado');
-      setError('Dados de cadastro não encontrados. Tente novamente.');
-      return;
-    }
-
-    setIsLoading(true);
     try {
-      const { email, password, fullName } = signupData;
-      console.log('📝 Dados para criação:', { email, fullName, passwordLength: password.length });
+      console.log('🔄 Iniciando registro com Supabase Auth nativo...');
       
-      // Usar função que não envia email de confirmação (já foi verificado)
-      console.log('🔄 Chamando signUpWithoutEmailConfirmation...');
-      const { error } = await signUpWithoutEmailConfirmation(email, password, fullName);
-      console.log('📡 Resposta do signUpWithoutEmailConfirmation:', { error });
-
+      // Usar o fluxo nativo do Supabase
+      const { error } = await signUp(email, password, fullName);
+      
       if (error) {
-        console.error('❌ Signup error:', error);
+        console.error('❌ Erro no registro:', error);
         if (error.message.includes('already registered') || error.message.includes('already exists')) {
           setError('Este email já está cadastrado. Tente fazer login ou recuperar sua senha.');
-          // Reset da validação de email
           emailValidation.resetValidation();
         } else if (error.message.includes('Password should be at least')) {
           setError('A senha deve ter pelo menos 8 caracteres.');
@@ -224,48 +125,75 @@ const Register = () => {
         } else {
           setError(error.message || 'Erro ao criar conta. Tente novamente.');
         }
-        setShowCodeVerification(false);
-             } else {
-         console.log('✅ Usuário criado com sucesso!');
-         
-         // Limpar dados do localStorage após sucesso
-         localStorage.removeItem('pendingSignupData');
-         console.log('🧹 Dados removidos do localStorage');
-         
-         toast({
-           title: "Conta criada com sucesso!",
-           description: "Bem-vindo ao Dose Certa!",
-         });
-         navigate('/profile');
-       }
-    } catch (error) {
-      console.error('❌ Signup error:', error);
-      setError('Erro ao criar conta. Tente novamente.');
-      setShowCodeVerification(false);
+      } else {
+        console.log('✅ Registro iniciado com sucesso!');
+        toast({
+          title: "Verificação enviada!",
+          description: "Verifique seu email e clique no link para confirmar sua conta.",
+        });
+        
+        // Mostrar tela de verificação
+        setShowCodeVerification(true);
+      }
+    } catch (error: any) {
+      console.error('❌ Erro inesperado:', error);
+      setError('Erro inesperado. Tente novamente.');
     }
 
     setIsLoading(false);
   };
 
-  if (showCodeVerification && pendingSignupData) {
+  const handleEmailSent = () => {
+    // Função simples para quando o email é enviado
+    console.log('📧 Email de verificação enviado');
+  };
+
+  if (showCodeVerification) {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-4">
-        <SimpleEmailVerification
-          email={pendingSignupData.email}
-          onEmailChange={(newEmail) => {
-            setPendingSignupData({
-              ...pendingSignupData,
-              email: newEmail
-            });
-          }}
-          onVerified={handleCodeVerified}
-          onBack={() => {
-            setShowCodeVerification(false);
-            setPendingSignupData(null);
-          }}
-          title="Verificar Email"
-          description="Clique no link que enviaremos para seu email"
-        />
+        <Card className="w-full max-w-md border-border/80 shadow-card">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl text-foreground">
+              Verifique seu Email
+            </CardTitle>
+            <CardDescription>
+              Enviamos um link de verificação para seu email
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="p-4 bg-primary/10 rounded-full">
+                <svg className="h-8 w-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="space-y-2">
+                <p className="text-muted-foreground">
+                  Clique no link que enviamos para seu email para confirmar sua conta.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Não recebeu o email? Verifique sua pasta de spam.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowCodeVerification(false)}
+                className="flex-1"
+              >
+                Voltar
+              </Button>
+              <Button 
+                onClick={() => navigate('/login')}
+                className="flex-1"
+              >
+                Fazer Login
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -449,24 +377,7 @@ const Register = () => {
                </div>
              </div>
              
-             {/* Botão de teste temporário */}
-             <div className="text-center mt-4">
-               <Button 
-                 variant="outline"
-                 size="sm"
-                 onClick={async () => {
-                   console.log('🧪 Testando Edge Function...');
-                   const { error } = await testEdgeFunction();
-                   if (error) {
-                     console.error('❌ Teste falhou:', error);
-                   } else {
-                     console.log('✅ Teste passou!');
-                   }
-                 }}
-               >
-                 Testar Edge Function
-               </Button>
-             </div>
+                           {/* Removido: Botão de teste temporário */}
           </CardContent>
         </Card>
       </div>
