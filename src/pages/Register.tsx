@@ -178,14 +178,32 @@ const Register = () => {
   const handleCodeVerified = async (verifiedEmail: string) => {
     console.log('🔄 handleCodeVerified chamado com:', { verifiedEmail, pendingSignupData });
     
-    if (!pendingSignupData) {
-      console.error('❌ pendingSignupData não encontrado');
+    // Tentar recuperar dados do localStorage se pendingSignupData não estiver disponível
+    let signupData = pendingSignupData;
+    
+    if (!signupData) {
+      console.log('🔍 Tentando recuperar dados do localStorage...');
+      const storedData = localStorage.getItem('pendingSignupData');
+      
+      if (storedData) {
+        try {
+          signupData = JSON.parse(storedData);
+          console.log('✅ Dados recuperados do localStorage:', signupData);
+        } catch (error) {
+          console.error('❌ Erro ao parsear dados do localStorage:', error);
+        }
+      }
+    }
+    
+    if (!signupData) {
+      console.error('❌ Nenhum dado de cadastro encontrado');
+      setError('Dados de cadastro não encontrados. Tente novamente.');
       return;
     }
 
     setIsLoading(true);
     try {
-      const { email, password, fullName } = pendingSignupData;
+      const { email, password, fullName } = signupData;
       console.log('📝 Dados para criação:', { email, fullName, passwordLength: password.length });
       
       // Usar função que não envia email de confirmação (já foi verificado)
