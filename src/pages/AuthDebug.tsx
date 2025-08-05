@@ -227,6 +227,54 @@ const AuthDebug = () => {
     }
   };
 
+  const testCreateConfirmedUser = async () => {
+    if (!email) {
+      setError('Digite um email para testar');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('🧪 Testando Edge Function create-confirmed-user...');
+      
+      const { data, error } = await supabase.functions.invoke('create-confirmed-user', {
+        body: {
+          email: email,
+          password: 'Teste123!',
+          fullName: 'Usuário Teste'
+        }
+      });
+
+      console.log('📡 Resposta:', { data, error });
+
+      if (error) {
+        setError(`Erro na Edge Function: ${error.message}`);
+        return;
+      }
+
+      if (data.error) {
+        setError(`Erro retornado: ${data.error}`);
+        return;
+      }
+
+      toast({
+        title: "Teste bem-sucedido!",
+        description: "Edge Function create-confirmed-user funcionando.",
+      });
+
+      // Atualizar status do usuário
+      await checkEmailStatus();
+
+    } catch (error: any) {
+      console.error('❌ Erro no teste:', error);
+      setError(error.message || 'Erro durante o teste');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -378,6 +426,15 @@ const AuthDebug = () => {
                 >
                   <CheckCircle className="h-4 w-4" />
                   Forçar Confirmação
+                </Button>
+
+                <Button 
+                  onClick={testCreateConfirmedUser}
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  <User className="h-4 w-4" />
+                  Testar create-confirmed-user
                 </Button>
               </div>
             </CardContent>
