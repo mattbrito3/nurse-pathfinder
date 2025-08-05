@@ -37,6 +37,7 @@ const MyFlashcardsPage = lazy(() => import("./pages/flashcards/MyFlashcardsPage"
 const EditFlashcardPage = lazy(() => import("./pages/flashcards/EditFlashcardPage"));
 const PaymentCheckout = lazy(() => import("./pages/PaymentCheckout"));
 const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
+const AuthDebug = lazy(() => import("./pages/AuthDebug"));
 
 // Configuração otimizada do React Query
 const queryClient = new QueryClient({
@@ -104,6 +105,7 @@ const App = () => {
               <Route path="/pricing" element={<Pricing />} />
               <Route path="/payment-checkout" element={<PaymentCheckout />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
+              <Route path="/auth-debug" element={<AuthDebug />} />
               
               {/* Rotas do Dashboard */}
               <Route path="/dashboard" element={<Dashboard />} />

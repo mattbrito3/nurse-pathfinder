@@ -33,7 +33,7 @@ const VerifyEmail = () => {
       console.log('🔄 Verificando token:', verificationToken.substring(0, 8) + '...');
       
       // Verificação usando função RPC customizada
-      const { data, error } = await supabase.rpc('verify_email_token', {
+      const { data, error } = await supabase.rpc('verify_email_token_and_create_user', {
         p_token: verificationToken
       }).single();
 
