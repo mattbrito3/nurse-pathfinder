@@ -30,11 +30,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
       return savedTheme;
     }
     
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-    
+    // Default to light theme - always start with light mode
+    // Users can manually switch to dark mode if they prefer
     return 'light';
   });
 
@@ -51,20 +48,20 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     localStorage.setItem('nurse-pathfinder-theme', theme);
   }, [theme]);
 
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    
-    const handleChange = (e: MediaQueryListEvent) => {
-      const savedTheme = localStorage.getItem('nurse-pathfinder-theme');
-      if (!savedTheme) {
-        setThemeState(e.matches ? 'dark' : 'light');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  // Remove system theme change listener since we want light as default
+  // useEffect(() => {
+  //   const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  //   
+  //   const handleChange = (e: MediaQueryListEvent) => {
+  //     const savedTheme = localStorage.getItem('nurse-pathfinder-theme');
+  //     if (!savedTheme) {
+  //       setThemeState(e.matches ? 'dark' : 'light');
+  //     }
+  //   };
+  //
+  //   mediaQuery.addEventListener('change', handleChange);
+  //   return () => mediaQuery.removeEventListener('change', handleChange);
+  // }, []);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
