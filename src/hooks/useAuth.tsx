@@ -42,27 +42,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    // Detectar ambiente e configurar URL de redirecionamento
-    const isDev = window.location.hostname === 'localhost';
-    const redirectUrl = isDev 
-      ? 'http://localhost:8080/auth/callback'
-      : 'https://dosecerta.online/auth/callback';
+    // Usar Edge Function para enviar email de verificação
+    console.log('🔄 Usando Edge Function para envio de email...');
     
-    console.log('🔄 Iniciando registro com redirecionamento para:', redirectUrl);
-    console.log('🔧 Ambiente:', isDev ? 'Desenvolvimento' : 'Produção');
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          full_name: fullName
+    try {
+      // Primeiro criar usuário sem confirmação
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: 'https://dosecerta.online/auth/callback',
+          data: {
+            full_name: fullName
+          }
         }
+      });
+      
+      if (signUpError) {
+        console.error('❌ Erro no signUp:', signUpError);
+        return { error: signUpError };
       }
-    });
-    
-    return { error };
+      
+      // Se usuário foi criado, enviar email via Edge Function
+      if (signUpData.user) {
+        console.log('✅ Usuário criado, enviando email via Edge Function...');
+        
+        const { data: emailData, error: emailError } = await supabase.functions.invoke('send-verification-email', {
+          body: {
+            email,
+            fullName,
+            userId: signUpData.user.id
+          }
+        });
+        
+        if (emailError) {
+          console.error('❌ Erro ao enviar email:', emailError);
+          return { error: { message: 'Erro ao enviar email de verificação' } };
+        }
+        
+        console.log('✅ Email enviado com sucesso via Edge Function');
+        return { error: null };
+      }
+      
+      return { error: null };
+    } catch (error) {
+      console.error('❌ Erro ao criar usuário:', error);
+      return { error };
+    }
   };
 
   const signUpWithoutEmailConfirmation = async (email: string, password: string, fullName: string) => {
