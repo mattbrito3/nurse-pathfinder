@@ -1,0 +1,5 @@
+[33m442f403[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat: implementar melhorias mobile abrangentes
+[33m6270770[m docs: documentação completa da solução de verificação de email - guias técnicos e referência rápida
+[33m36cae43[m fix: implementar Edge Function verify-email-token para confirmar usuário corretamente
+[33m098ea64[m fix: Edge Function send-verification-email agora cria usuário e envia email - fluxo único
+[33m9ebc2f1[m fix: usar Edge Function send-verification-email para contornar problema SMTP do Supabase

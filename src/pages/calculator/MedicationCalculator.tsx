@@ -325,213 +325,187 @@ const MedicationCalculator = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header - Melhorado para mobile */}
+      {/* Header */}
       <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b border-border/40">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Button variant="ghost" size="sm" className="h-10 px-2 sm:px-3" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Voltar ao Dashboard</span>
-              <span className="sm:hidden">Voltar</span>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar ao Dashboard
             </Button>
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Calculator className="h-4 w-4 text-primary" />
               </div>
-              <h1 className="text-lg sm:text-xl font-bold text-foreground">Calculadora de Medicação</h1>
+              <h1 className="text-xl font-bold text-foreground">Calculadora de Medicação</h1>
             </div>
           </div>
           {isFreePlan && (
-            <Button variant="outline" size="sm" className="h-10 px-3" onClick={() => navigate('/pricing')}>
-              <Crown className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Upgrade</span>
-              <span className="sm:hidden">Pro</span>
+            <Button variant="outline" onClick={() => navigate('/pricing')}>
+              <Crown className="h-4 w-4 mr-2" />
+              Upgrade
             </Button>
           )}
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-4 sm:py-6">
+      <div className="container mx-auto px-4 py-6">
         <div className="max-w-4xl mx-auto">
           
           {/* Indicador de uso para plano gratuito */}
           <UsageIndicator />
 
-          {/* Alerta de segurança - Melhorado para mobile */}
-          <Alert className="mb-4 sm:mb-6 border-red-200 bg-red-50">
-            <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5" />
-            <AlertDescription className="text-red-800 text-sm sm:text-base leading-relaxed">
+          {/* Alerta de segurança */}
+          <Alert className="mb-6 border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-800">
               <strong>Importante:</strong> Esta calculadora é uma ferramenta educativa. Sempre valide os cálculos e consulte protocolos institucionais antes da administração.
             </AlertDescription>
           </Alert>
 
-          {/* Tabs - Melhorados para mobile */}
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as CalculationType | 'history')}>
-            <TabsList className={`grid w-full gap-1 p-1 ${shouldShowPremiumTabs ? 'grid-cols-5' : 'grid-cols-2'}`}>
-              <TabsTrigger value="dosage" className="text-xs sm:text-sm px-2 sm:px-3 py-2">Dosagem</TabsTrigger>
+            <TabsList className={`grid w-full ${shouldShowPremiumTabs ? 'grid-cols-5' : 'grid-cols-2'}`}>
+              <TabsTrigger value="dosage">Dosagem</TabsTrigger>
               
               {/* ✅ Abas premium condicionais */}
               {shouldShowPremiumTabs && (
                 <>
-                  <TabsTrigger value="infusion" className="text-xs sm:text-sm px-2 sm:px-3 py-2">Gotejamento</TabsTrigger>
-                  <TabsTrigger value="conversion" className="text-xs sm:text-sm px-2 sm:px-3 py-2">Conversão</TabsTrigger>
-                  <TabsTrigger value="concentration" className="text-xs sm:text-sm px-2 sm:px-3 py-2">Diluição</TabsTrigger>
+                  <TabsTrigger value="infusion">Gotejamento</TabsTrigger>
+                  <TabsTrigger value="conversion">Conversão</TabsTrigger>
+                  <TabsTrigger value="concentration">Diluição</TabsTrigger>
                 </>
               )}
               
               {canUseFeature('history') ? (
-                <TabsTrigger value="history" className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2">
-                  <History className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Histórico</span>
-                  <span className="sm:hidden">Hist</span>
+                <TabsTrigger value="history" className="flex items-center gap-2">
+                  <History className="h-4 w-4" />
+                  Histórico
                 </TabsTrigger>
               ) : isFreePlan ? (
-                <TabsTrigger value="history" disabled className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3 py-2 opacity-50">
-                  <Lock className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Histórico</span>
-                  <span className="sm:hidden">Hist</span>
+                <TabsTrigger value="history" disabled className="flex items-center gap-2 opacity-50">
+                  <Lock className="h-4 w-4" />
+                  Histórico
                 </TabsTrigger>
               ) : null}
             </TabsList>
 
-            {/* Cálculo de Dosagem - Melhorado para mobile */}
-            <TabsContent value="dosage" className="space-y-4 sm:space-y-6 mt-4 sm:mt-6">
-              <Card className="border-0 shadow-sm sm:shadow-md">
-                <CardHeader className="pb-4 sm:pb-6">
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            {/* Cálculo de Dosagem - Sempre disponível */}
+            <TabsContent value="dosage" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
                     <Calculator className="h-5 w-5" />
                     Cálculo de Dosagem por Peso
                   </CardTitle>
-                  <CardDescription className="text-sm sm:text-base">
+                  <CardDescription>
                     Calcule a dose e volume necessário baseado no peso do paciente
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6 sm:space-y-8">
-                  {/* Formulário de dosagem - Layout mobile-first */}
-                  <div className="space-y-4 sm:space-y-6">
-                    {/* Primeira linha - Peso e Nome do Medicamento */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                      <div className="space-y-3 sm:space-y-4">
-                        <Label htmlFor="patientWeight" className="text-sm sm:text-base font-medium">
-                          Peso do Paciente (kg)
-                        </Label>
-                        <Input
-                          id="patientWeight"
-                          type="number"
-                          value={dosageData.patientWeight || ''}
-                          onChange={(e) => setDosageData({...dosageData, patientWeight: parseFloat(e.target.value) || 0})}
-                          placeholder="Ex: 70"
-                          className="h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-lg border-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
-                      <div className="space-y-3 sm:space-y-4">
-                        <Label htmlFor="medicationName" className="text-sm sm:text-base font-medium">
-                          Nome do Medicamento
-                        </Label>
-                        <Input
-                          id="medicationName"
-                          value={dosageData.medicationName}
-                          onChange={(e) => setDosageData({...dosageData, medicationName: e.target.value})}
-                          placeholder="Ex: Dipirona"
-                          className="h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-lg border-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
+                <CardContent className="space-y-4">
+                  {/* Formulário de dosagem */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="patientWeight">Peso do Paciente (kg)</Label>
+                      <Input
+                        id="patientWeight"
+                        type="number"
+                        value={dosageData.patientWeight || ''}
+                        onChange={(e) => setDosageData({...dosageData, patientWeight: parseFloat(e.target.value) || 0})}
+                        placeholder="Ex: 70"
+                        className="h-12 text-base"
+                      />
                     </div>
-
-                    {/* Segunda linha - Dose Prescrita e Unidade */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                      <div className="space-y-3 sm:space-y-4">
-                        <Label htmlFor="prescribedDose" className="text-sm sm:text-base font-medium">
-                          Dose Prescrita
-                        </Label>
-                        <Input
-                          id="prescribedDose"
-                          type="number"
-                          value={dosageData.prescribedDose || ''}
-                          onChange={(e) => setDosageData({...dosageData, prescribedDose: parseFloat(e.target.value) || 0})}
-                          placeholder="Ex: 10"
-                          className="h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-lg border-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
-                      <div className="space-y-3 sm:space-y-4">
-                        <Label htmlFor="prescribedUnit" className="text-sm sm:text-base font-medium">
-                          Unidade da Dose
-                        </Label>
-                        <Select value={dosageData.prescribedUnit} onValueChange={(value) => setDosageData({...dosageData, prescribedUnit: value as any})}>
-                          <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-lg border-2 focus:border-primary focus:ring-2 focus:ring-primary/20">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="mg/kg">mg/kg</SelectItem>
-                            <SelectItem value="mcg/kg">mcg/kg</SelectItem>
-                            <SelectItem value="mg">mg (dose fixa)</SelectItem>
-                            <SelectItem value="g">g (dose fixa)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="medicationName">Nome do Medicamento</Label>
+                      <Input
+                        id="medicationName"
+                        value={dosageData.medicationName}
+                        onChange={(e) => setDosageData({...dosageData, medicationName: e.target.value})}
+                        placeholder="Ex: Dipirona"
+                        className="h-12 text-base"
+                      />
                     </div>
-
-                    {/* Terceira linha - Concentração Disponível e Unidade */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                      <div className="space-y-3 sm:space-y-4">
-                        <Label htmlFor="availableConcentration" className="text-sm sm:text-base font-medium">
-                          Concentração Disponível
-                        </Label>
-                        <Input
-                          id="availableConcentration"
-                          type="number"
-                          value={dosageData.availableConcentration || ''}
-                          onChange={(e) => setDosageData({...dosageData, availableConcentration: parseFloat(e.target.value) || 0})}
-                          placeholder="Ex: 500"
-                          className="h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-lg border-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
-                      <div className="space-y-3 sm:space-y-4">
-                        <Label htmlFor="concentrationUnit" className="text-sm sm:text-base font-medium">
-                          Unidade da Concentração
-                        </Label>
-                        <Select value={dosageData.concentrationUnit} onValueChange={(value) => setDosageData({...dosageData, concentrationUnit: value as any})}>
-                          <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-lg border-2 focus:border-primary focus:ring-2 focus:ring-primary/20">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="mg/ml">mg/ml</SelectItem>
-                            <SelectItem value="mcg/ml">mcg/ml</SelectItem>
-                            <SelectItem value="g/ml">g/ml</SelectItem>
-                            <SelectItem value="mg/ampola">mg/ampola (seca)</SelectItem>
-                            <SelectItem value="g/ampola">g/ampola (seca)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Campo condicional para volume de diluição */}
-                    {(dosageData.concentrationUnit === 'mg/ampola' || dosageData.concentrationUnit === 'g/ampola') && (
-                      <div className="space-y-3 sm:space-y-4">
-                        <Label htmlFor="ampouleVolume" className="text-sm sm:text-base font-medium">
-                          Volume para Diluição (ml)
-                        </Label>
-                        <Input
-                          id="ampouleVolume"
-                          type="number"
-                          value={dosageData.ampouleVolume || ''}
-                          onChange={(e) => setDosageData({...dosageData, ampouleVolume: parseFloat(e.target.value) || 0})}
-                          placeholder="Ex: 10"
-                          className="h-12 sm:h-14 text-base sm:text-lg px-4 sm:px-6 rounded-lg border-2 focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                      </div>
-                    )}
-
-                    {/* Botão de cálculo - Melhorado para mobile */}
-                    <Button 
-                      onClick={handleDosageCalculation} 
-                      className="w-full h-14 sm:h-16 text-base sm:text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200"
-                      disabled={!canCalculate() && isFreePlan}
-                    >
-                      <Calculator className="h-5 w-5 mr-2 sm:mr-3" />
-                      Calcular Dosagem
-                    </Button>
                   </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="prescribedDose">Dose Prescrita</Label>
+                      <Input
+                        id="prescribedDose"
+                        type="number"
+                        value={dosageData.prescribedDose || ''}
+                        onChange={(e) => setDosageData({...dosageData, prescribedDose: parseFloat(e.target.value) || 0})}
+                        placeholder="Ex: 10"
+                        className="h-12 text-base"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="prescribedUnit">Unidade da Dose</Label>
+                      <Select value={dosageData.prescribedUnit} onValueChange={(value) => setDosageData({...dosageData, prescribedUnit: value as any})}>
+                        <SelectTrigger className="h-12 text-base">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mg/kg">mg/kg</SelectItem>
+                          <SelectItem value="mcg/kg">mcg/kg</SelectItem>
+                          <SelectItem value="mg">mg (dose fixa)</SelectItem>
+                          <SelectItem value="g">g (dose fixa)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="availableConcentration">Concentração Disponível</Label>
+                      <Input
+                        id="availableConcentration"
+                        type="number"
+                        value={dosageData.availableConcentration || ''}
+                        onChange={(e) => setDosageData({...dosageData, availableConcentration: parseFloat(e.target.value) || 0})}
+                        placeholder="Ex: 500"
+                        className="h-12 text-base"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="concentrationUnit">Unidade da Concentração</Label>
+                      <Select value={dosageData.concentrationUnit} onValueChange={(value) => setDosageData({...dosageData, concentrationUnit: value as any})}>
+                        <SelectTrigger className="h-12 text-base">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mg/ml">mg/ml</SelectItem>
+                          <SelectItem value="mcg/ml">mcg/ml</SelectItem>
+                          <SelectItem value="g/ml">g/ml</SelectItem>
+                          <SelectItem value="mg/ampola">mg/ampola (seca)</SelectItem>
+                          <SelectItem value="g/ampola">g/ampola (seca)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {(dosageData.concentrationUnit === 'mg/ampola' || dosageData.concentrationUnit === 'g/ampola') && (
+                    <div className="space-y-2">
+                      <Label htmlFor="ampouleVolume">Volume para Diluição (ml)</Label>
+                      <Input
+                        id="ampouleVolume"
+                        type="number"
+                        value={dosageData.ampouleVolume || ''}
+                        onChange={(e) => setDosageData({...dosageData, ampouleVolume: parseFloat(e.target.value) || 0})}
+                        placeholder="Ex: 10"
+                        className="h-12 text-base"
+                      />
+                    </div>
+                  )}
+
+                  <Button 
+                    onClick={handleDosageCalculation} 
+                    className="w-full h-12 text-base font-semibold"
+                    disabled={!canCalculate() && isFreePlan}
+                  >
+                    <Calculator className="h-5 w-5 mr-2" />
+                    Calcular Dosagem
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
