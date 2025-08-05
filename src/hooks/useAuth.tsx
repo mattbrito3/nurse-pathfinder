@@ -42,34 +42,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    // Usar Edge Function para criar usuário já confirmado
-    console.log('🔄 Usando Edge Function para registro...');
+    // Detectar ambiente e configurar URL de redirecionamento
+    const isDev = window.location.hostname === 'localhost';
+    const redirectUrl = isDev 
+      ? 'http://localhost:8080/auth/callback'
+      : 'https://dosecerta.online/auth/callback';
     
-    try {
-      const { data, error } = await supabase.functions.invoke('create-confirmed-user', {
-        body: {
-          email,
-          password,
-          fullName
+    console.log('🔄 Iniciando registro com redirecionamento para:', redirectUrl);
+    console.log('🔧 Ambiente:', isDev ? 'Desenvolvimento' : 'Produção');
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName
         }
-      });
-      
-      if (error) {
-        console.error('❌ Erro na Edge Function:', error);
-        return { error };
       }
-      
-      if (data.error) {
-        console.error('❌ Erro retornado pela Edge Function:', data.error);
-        return { error: { message: data.error } };
-      }
-      
-      console.log('✅ Usuário criado com sucesso via Edge Function');
-      return { error: null };
-    } catch (error) {
-      console.error('❌ Erro ao criar usuário:', error);
-      return { error };
-    }
+    });
+    
+    return { error };
   };
 
   const signUpWithoutEmailConfirmation = async (email: string, password: string, fullName: string) => {
