@@ -9,6 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Lock, Loader2, CheckCircle, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { validateResetToken, processPasswordReset } from "@/services/resetPasswordService";
 
 const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -51,46 +52,37 @@ const ResetPassword = () => {
   };
 
   useEffect(() => {
-    const checkAuthStatus = async () => {
+    const checkToken = async () => {
       try {
-        // Aguardar um pouco para o Supabase processar o hash da URL
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const token = searchParams.get('token');
         
-        // Verificar se o usuário está autenticado
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('❌ Erro ao verificar sessão:', error);
-          setError('Link de recuperação inválido ou expirado.');
+        if (!token) {
+          setError('Token de reset não encontrado. Verifique o link do email.');
           return;
         }
+
+        console.log('🔍 Verificando token de reset...');
         
-        if (!session) {
-          // Se não há sessão, verificar se há hash na URL
-          const hash = window.location.hash;
-          if (hash) {
-            console.log('🔗 Hash detectado, aguardando processamento...');
-            // Aguardar mais um pouco e verificar novamente
-            setTimeout(async () => {
-              const { data: { session: retrySession } } = await supabase.auth.getSession();
-              if (!retrySession) {
-                setError('Link de recuperação inválido ou expirado.');
-              }
-            }, 2000);
-          } else {
-            setError('Link de recuperação inválido ou expirado.');
-          }
-        } else {
-          console.log('✅ Sessão válida detectada');
+        // Validar token usando o serviço
+        const validationResult = await validateResetToken(token);
+
+        if (!validationResult.success) {
+          console.error('❌ Token inválido:', validationResult.message);
+          setError(validationResult.message || 'Token de reset inválido.');
+          return;
         }
+
+        console.log('✅ Token válido para:', validationResult.email);
+        setError(null);
+        
       } catch (error) {
-        console.error('❌ Erro ao verificar autenticação:', error);
-        setError('Erro ao processar link de recuperação.');
+        console.error('❌ Erro ao verificar token:', error);
+        setError('Erro ao processar token de reset.');
       }
     };
 
-    checkAuthStatus();
-  }, []);
+    checkToken();
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -117,12 +109,18 @@ const ResetPassword = () => {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
+      const token = searchParams.get('token');
+      
+      if (!token) {
+        setError('Token de reset não encontrado.');
+        return;
+      }
 
-      if (error) {
-        throw error;
+      // Processar reset de senha usando o serviço
+      const resetResult = await processPasswordReset(token, password);
+
+      if (!resetResult.success) {
+        throw new Error(resetResult.message || 'Erro ao alterar senha');
       }
 
       toast({
@@ -140,7 +138,7 @@ const ResetPassword = () => {
       setError(
         error.message === 'New password should be different from the old password.'
           ? 'A nova senha deve ser diferente da senha anterior.'
-          : 'Erro ao alterar senha. Tente novamente.'
+          : error.message || 'Erro ao alterar senha. Tente novamente.'
       );
     }
 

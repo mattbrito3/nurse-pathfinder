@@ -163,55 +163,69 @@ serve(async (req) => {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Gerar link de recuperação usando a API admin
-    const { data: resetData, error: resetError } = await supabase.auth.admin.generateLink({
-      type: 'recovery',
-      email: email,
-      options: {
-        redirectTo: `${Deno.env.get('FRONTEND_URL') || 'http://localhost:8080'}/reset-password`
-      }
-    });
-
-    if (resetError) {
-      console.error('❌ Erro ao gerar link de reset:', resetError);
-      
-      // Se o erro for de usuário não encontrado, retornar sucesso mesmo assim (segurança)
-      if (resetError.message.includes('User with this email not found') || 
-          resetError.message.includes('User not found') || 
-          resetError.message.includes('not found') ||
-          resetError.code === 'user_not_found') {
-        console.log('❌ Usuário não encontrado:', email);
-        return new Response(
-          JSON.stringify({ 
-            success: true,
-            message: 'Se o email existir em nossa base, você receberá um link de recuperação.'
-          } as PasswordResetResponse),
-          { 
-            status: 200, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        );
-      }
-      
-      throw new Error('Erro interno ao processar reset de senha');
+    // Verificar se o usuário existe primeiro
+    const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
+    
+    if (userError) {
+      console.error('❌ Erro ao verificar usuários:', userError);
+      throw new Error('Erro interno ao verificar usuário');
+    }
+    
+    const userExists = userData.users.some(user => user.email === email);
+    
+    if (!userExists) {
+      console.log('❌ Usuário não encontrado:', email);
+      return new Response(
+        JSON.stringify({ 
+          success: true,
+          message: 'Se o email existir em nossa base, você receberá um link de recuperação.'
+        } as PasswordResetResponse),
+        { 
+          status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
-    // Extrair o link de recuperação
-    const recoveryLink = resetData.properties.action_link;
+    // Gerar token de reset usando função do banco
+    console.log('🔧 Gerando token para usuário existente:', email);
+    
+    const { data: tokenData, error: tokenError } = await supabase
+      .rpc('create_password_reset_token', { p_email: email });
+
+    if (tokenError) {
+      console.error('❌ Erro ao gerar token de reset:', tokenError);
+      console.error('❌ Detalhes do erro:', JSON.stringify(tokenError, null, 2));
+      throw new Error(`Erro ao gerar token: ${tokenError.message}`);
+    }
+
+    if (!tokenData || tokenData.length === 0) {
+      console.error('❌ Token não gerado');
+      throw new Error('Erro ao gerar token de reset');
+    }
+
+    const token = tokenData[0].token;
+    const expiresAt = tokenData[0].expires_at;
+    
+    // Gerar link de recuperação com token customizado
+    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'http://localhost:8080';
+    const recoveryLink = `${frontendUrl}/reset-password?token=${token}`;
+    
     console.log('🔗 Link de recuperação gerado:', recoveryLink);
+    console.log('⏰ Token expira em:', expiresAt);
 
     // Tentar enviar email via Resend primeiro
     const resendSuccess = await sendEmailViaResend(email, recoveryLink);
 
     if (!resendSuccess) {
-      // Fallback: usar o método padrão do Supabase se Resend não estiver configurado
-      console.log('⚠️ Resend não configurado, usando método padrão do Supabase');
-      const { error: fallbackError } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${Deno.env.get('FRONTEND_URL') || 'http://localhost:8080'}/reset-password`
-      });
-
-      if (fallbackError) {
-        console.error('❌ Erro no fallback:', fallbackError);
+      // Fallback: tentar novamente com Resend ou usar método alternativo
+      console.log('⚠️ Resend falhou, tentando novamente...');
+      
+      // Tentar enviar novamente
+      const retrySuccess = await sendEmailViaResend(email, recoveryLink);
+      
+      if (!retrySuccess) {
+        console.error('❌ Falha ao enviar email via Resend');
         throw new Error('Erro ao enviar email de recuperação');
       }
     }
