@@ -138,7 +138,7 @@ export const SimpleBacklog: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Backlog Nurse Pathfinder</h1>
+          <h1 className="text-3xl font-bold">Backlog Dose Certa</h1>
           <p className="text-muted-foreground">
             Suas ideias e tarefas em um lugar só
           </p>

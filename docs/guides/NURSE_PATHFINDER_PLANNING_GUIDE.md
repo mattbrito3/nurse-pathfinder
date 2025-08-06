@@ -1,4 +1,4 @@
-# 🎯 Guia Prático - Sistema de Planejamento Nurse Pathfinder
+# 🎯 Guia Prático - Sistema de Planejamento Dose Certa
 
 ## 📋 **Como usar o sistema na prática:**
 

@@ -1,6 +1,6 @@
 # Guia de Deployment - Sistema de Reset de Senha
 
-Este guia documenta o processo de deployment do sistema completo de reset de senha implementado no Nurse Pathfinder.
+Este guia documenta o processo de deployment do sistema completo de reset de senha implementado no Dose Certa.
 
 ## 📋 Pré-requisitos
 

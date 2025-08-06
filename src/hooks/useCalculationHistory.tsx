@@ -628,7 +628,7 @@ export const useCalculationHistory = (page = 0) => {
       report += `\n═══════════════════════════════════════\n\n`;
     });
 
-    report += `Relatório gerado por Nurse Pathfinder\n`;
+    report += `Relatório gerado por Dose Certa\n`;
     report += `https://nurse-pathfinder.com\n`;
 
     return report;

@@ -26,7 +26,7 @@ const plans = [
   },
   {
     name: "Estudante",
-    price: "R$ 29",
+    price: "R$ 18,99",
     period: "/mês",
     description: "Ideal para estudantes de enfermagem",
     icon: Zap,
@@ -41,24 +41,6 @@ const plans = [
     buttonText: "Assinar Plano",
     buttonVariant: "medical" as const,
     popular: true
-  },
-  {
-    name: "Profissional",
-    price: "R$ 59",
-    period: "/mês",
-    description: "Para profissionais que buscam excelência",
-    icon: Crown,
-    features: [
-      "Todas as funcionalidades do Estudante",
-      "Calculadora com protocolos avançados",
-      "Simulados personalizados",
-      "Certificados de conclusão",
-      "Suporte 24/7",
-      "Acesso prioritário a novos conteúdos"
-    ],
-    buttonText: "Assinar Pro",
-    buttonVariant: "medical" as const,
-    popular: false
   }
 ];
 
@@ -80,20 +62,20 @@ const Pricing = () => {
   };
 
   return (
-    <section id="planos" className="py-20 bg-muted/30">
+    <section id="planos" className="py-12 md:py-20 bg-muted/30">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-5xl font-bold mb-4 text-foreground">
+        <div className="text-center mb-8 md:mb-16">
+          <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold mb-4 text-foreground">
             Planos que se adaptam ao seu{" "}
             <span className="bg-gradient-primary bg-clip-text text-transparent">ritmo</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto px-4">
             Escolha o plano ideal para sua jornada na enfermagem. 
             Todos os planos incluem acesso mobile e sincronização em nuvem.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <Card 
               key={index} 
@@ -111,23 +93,23 @@ const Pricing = () => {
                 </div>
               )}
 
-              <CardHeader className="text-center pb-4">
+              <CardHeader className="text-center pb-4 md:pb-6">
                 <div className={`w-16 h-16 rounded-full ${plan.popular ? 'bg-gradient-primary' : 'bg-muted'} flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300`}>
                   <plan.icon className={`h-8 w-8 ${plan.popular ? 'text-white' : 'text-primary'}`} />
                 </div>
-                <CardTitle className="text-2xl font-bold text-foreground">
+                <CardTitle className="text-xl md:text-2xl font-bold text-foreground">
                   {plan.name}
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
                   {plan.description}
                 </CardDescription>
                 <div className="mt-4">
-                  <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                  <span className="text-3xl md:text-4xl font-bold text-foreground">{plan.price}</span>
                   <span className="text-muted-foreground">{plan.period}</span>
                 </div>
               </CardHeader>
 
-              <CardContent className="space-y-6">
+              <CardContent className="space-y-6 md:space-y-8 flex flex-col h-full">
                 {plan.name === "Gratuito" ? (
                   <Button 
                     variant="medical" 
@@ -142,13 +124,13 @@ const Pricing = () => {
                     planName={plan.name}
                     planPrice={plan.price}
                     planPeriod={plan.period}
-                    className={`w-full py-6 text-lg ${plan.popular ? 'shadow-soft' : ''}`}
+                    className={`w-full py-4 md:py-6 text-base md:text-lg ${plan.popular ? 'shadow-soft' : ''}`}
                   >
                     {plan.buttonText}
                   </UnifiedPaymentButton>
                 )}
 
-                <ul className="space-y-3">
+                <ul className="space-y-3 flex-grow">
                   {plan.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start gap-3">
                       <Check className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
@@ -161,12 +143,12 @@ const Pricing = () => {
           ))}
         </div>
 
-        <div className="text-center mt-16 space-y-4">
+        <div className="text-center mt-8 md:mt-16 space-y-4">
           <p className="text-muted-foreground">
             Todos os planos incluem garantia de 30 dias. 
             <a href="#" className="text-primary hover:underline ml-1">Saiba mais</a>
           </p>
-          <div className="flex justify-center items-center gap-6 text-sm text-muted-foreground">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-3 md:gap-6 text-sm text-muted-foreground">
             <span>✓ Sem taxas de cancelamento</span>
             <span>✓ Atualizações gratuitas</span>
           </div>

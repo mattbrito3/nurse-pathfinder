@@ -81,9 +81,9 @@ export const sendVerificationEmailMailgun = async (
         user_id: 'public_key',
         template_params: {
           to_email: email,
-          subject: 'Código de Verificação - Nurse Pathfinder',
+          subject: 'Código de Verificação - Dose Certa',
           message: `
-🩺 Nurse Pathfinder
+🩺 Dose Certa
 
 Olá! Seu código de verificação é:
 
@@ -152,10 +152,10 @@ export const sendVerificationEmailWithFallbacks = async (
       },
       body: JSON.stringify({
         access_key: 'YOUR_WEB3FORMS_KEY', // Free key needed
-        subject: 'Código de Verificação - Nurse Pathfinder',
+        subject: 'Código de Verificação - Dose Certa',
         email: email,
         message: `
-          🩺 Nurse Pathfinder - Código de Verificação
+          🩺 Dose Certa - Código de Verificação
           
           Olá ${userName || 'Usuário'}!
           

@@ -1,6 +1,6 @@
 # Arquitetura Técnica - Sistema de Reset de Senha
 
-Este documento descreve a arquitetura técnica do sistema completo de reset de senha implementado no Nurse Pathfinder.
+Este documento descreve a arquitetura técnica do sistema completo de reset de senha implementado no Dose Certa.
 
 ## 🏗️ Visão Geral da Arquitetura
 

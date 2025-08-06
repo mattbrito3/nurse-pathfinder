@@ -50,10 +50,8 @@ const Pricing = () => {
   // Helper function to map plan to type
   const getPlanType = (planName: string): 'professional' | 'annual' => {
     const name = planName.toLowerCase();
-    if (name.includes('profissional')) return 'annual';    // R$ 59,00
-    if (name.includes('estudante')) return 'professional'; // R$ 29,00
-    if (name.includes('anual')) return 'annual';           // R$ 59,00
-    return 'professional'; // Default: R$ 29,00
+    if (name.includes('estudante')) return 'professional'; // R$ 18,99
+    return 'professional'; // Default: R$ 18,99
   };
 
   const getCurrentPlanName = () => {

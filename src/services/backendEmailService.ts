@@ -84,8 +84,8 @@ export const sendEmailDirectApproach = async (
       body: JSON.stringify({
         email_service: 'resend_simulation',
         to: userEmail,
-        from: 'Nurse Pathfinder <noreply@nursepathfinder.com>',
-        subject: '🩺 Código de Verificação - Nurse Pathfinder',
+        from: 'Dose Certa <noreply@dosecerta.com>',
+        subject: '🩺 Código de Verificação - Dose Certa',
         verification_code: verificationCode,
         user_name: userName || 'Usuário',
         api_key: 're_3hMvo4A6_2EY5MKCR1U713FYZQj8oeg3Z',
@@ -134,7 +134,7 @@ export const sendEmailViaMailtoFixed = async (
   try {
     console.log('📧 Using improved mailto approach...');
     
-    const subject = '🩺 Código de Verificação - Nurse Pathfinder';
+          const subject = '🩺 Código de Verificação - Dose Certa';
     const body = `
 Olá ${userName || 'Usuário'}!
 
@@ -148,7 +148,7 @@ Para usar:
 3. Clique em "Verificar"
 
 ---
-Nurse Pathfinder
+        Dose Certa
 Plataforma de Estudos para Enfermagem
     `.trim();
 

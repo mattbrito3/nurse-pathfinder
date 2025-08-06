@@ -1,5 +1,5 @@
 /**
- * Real Email Service for Nurse Pathfinder
+ * Real Email Service for Dose Certa
  * Fixed version with working email services
  */
 
@@ -30,8 +30,8 @@ export const sendEmailViaEmailJS = async (
         user_id: 'user_1',
         template_params: {
           to_email: email,
-          from_name: 'Nurse Pathfinder',
-          subject: '🩺 Código de Verificação - Nurse Pathfinder',
+          from_name: 'Dose Certa',
+          subject: '🩺 Código de Verificação - Dose Certa',
           message: `
 Olá ${userName || 'Usuário'}!
 
@@ -44,10 +44,10 @@ Este código expira em 10 minutos por segurança.
 Se você não solicitou este código, ignore este email.
 
 ---
-Nurse Pathfinder
+Dose Certa
 Plataforma de Estudos para Enfermagem
           `,
-          reply_to: 'noreply@nursepathfinder.com'
+          reply_to: 'noreply@dosecerta.com'
         }
       })
     });
@@ -86,7 +86,7 @@ export const sendEmailViaNetlify = async (
     formData.append('email', email);
     formData.append('code', code);
     formData.append('user_name', userName || 'Usuário');
-    formData.append('subject', 'Código de Verificação - Nurse Pathfinder');
+    formData.append('subject', 'Código de Verificação - Dose Certa');
     formData.append('message', `Código de verificação: ${code}`);
 
     const response = await fetch('/', {
@@ -130,8 +130,8 @@ export const sendEmailViaWeb3Forms = async (
       },
       body: JSON.stringify({
         access_key: '2c4e5f8a-1b3d-4a2c-9e7f-6d8b5a1c3e9f', // Valid demo key
-        from_name: 'Nurse Pathfinder',
-        subject: '🩺 Código de Verificação - Nurse Pathfinder',
+        from_name: 'Dose Certa',
+        subject: '🩺 Código de Verificação - Dose Certa',
         email: email,
         message: `
 Olá ${userName || 'Usuário'}!
@@ -145,7 +145,7 @@ Este código expira em 10 minutos por segurança.
 Se você não solicitou este código, ignore este email.
 
 ---
-Nurse Pathfinder
+Dose Certa
 Plataforma de Estudos para Enfermagem
         `,
         redirect: false
@@ -189,7 +189,7 @@ export const sendEmailViaGetForm = async (
       },
       body: JSON.stringify({
         email: email,
-        subject: 'Código de Verificação - Nurse Pathfinder',
+        subject: 'Código de Verificação - Dose Certa',
         code: code,
         user_name: userName || 'Usuário',
         message: `Código de verificação: ${code}`
@@ -225,7 +225,7 @@ export const sendEmailViaBrowserClient = async (
 ): Promise<EmailResponse> => {
   try {
     // Create the email content
-    const subject = encodeURIComponent('🩺 Código de Verificação - Nurse Pathfinder');
+    const subject = encodeURIComponent('🩺 Código de Verificação - Dose Certa');
     const body = encodeURIComponent(`
 Olá ${userName || 'Usuário'}!
 
@@ -238,7 +238,7 @@ Este código expira em 10 minutos.
 Se você não solicitou este código, ignore este email.
 
 ---
-Nurse Pathfinder
+Dose Certa
 Plataforma de Estudos para Enfermagem
     `);
     

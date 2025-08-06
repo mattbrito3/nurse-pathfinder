@@ -166,28 +166,14 @@ INSERT INTO subscription_plans (name, description, price, currency, interval, fe
     false
 ),
 (
-    'Profissional',
-    'Ideal para estudantes e profissionais ativos',
-    19.90,
+    'Estudante',
+    'Ideal para estudantes de enfermagem',
+    18.99,
     'BRL',
     'month',
     '["Flashcards ilimitados", "Calculadora avançada", "Analytics detalhados", "Histórico completo", "Suporte prioritário"]',
-    'price_professional_monthly', -- Replace with actual Stripe price ID
+    'price_student_monthly', -- Replace with actual Stripe price ID
     true,
-    null, -- unlimited
-    null, -- unlimited
-    true,
-    true
-),
-(
-    'Anual Profissional',
-    'Plano anual com 2 meses grátis',
-    199.00,
-    'BRL',
-    'year',
-    '["Flashcards ilimitados", "Calculadora avançada", "Analytics detalhados", "Histórico completo", "Suporte prioritário", "2 meses grátis"]',
-    'price_professional_yearly', -- Replace with actual Stripe price ID
-    false,
     null, -- unlimited
     null, -- unlimited
     true,

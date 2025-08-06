@@ -21,14 +21,14 @@ export const sendViaFormSubmit = async (
   try {
     console.log('🚀 Sending via FormSubmit...');
     
-    const response = await fetch('https://formsubmit.co/ajax/nursepathfinder@outlook.com', {
+    const response = await fetch('https://formsubmit.co/ajax/doseCerta@outlook.com', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
       body: JSON.stringify({
-        _subject: '🩺 Código de Verificação - Nurse Pathfinder',
+        _subject: '🩺 Código de Verificação - Dose Certa',
         _template: 'table',
         _captcha: 'false',
         _autoresponse: `Olá ${userName || 'Usuário'}!
@@ -38,7 +38,7 @@ Seu código de verificação é: ${code}
 Este código expira em 10 minutos.
 
 ---
-Nurse Pathfinder Team`,
+Dose Certa Team`,
         name: userName || 'Usuário',
         email: email,
         verification_code: code,
@@ -80,7 +80,7 @@ export const sendViaGetform = async (
       body: JSON.stringify({
         name: userName || 'Usuário',
         email: email,
-        subject: '🩺 Código de Verificação - Nurse Pathfinder',
+        subject: '🩺 Código de Verificação - Dose Certa',
         verification_code: code,
         message: `
 Olá ${userName || 'Usuário'}!
@@ -94,7 +94,7 @@ Este código expira em 10 minutos por segurança.
 Se você não solicitou este código, ignore este email.
 
 ---
-Nurse Pathfinder
+Dose Certa
 Plataforma de Estudos para Enfermagem
         `
       })
@@ -132,7 +132,7 @@ export const sendViaFormspree = async (
       body: JSON.stringify({
         name: userName || 'Usuário',
         email: email,
-        subject: '🩺 Código de Verificação - Nurse Pathfinder',
+        subject: '🩺 Código de Verificação - Dose Certa',
         verification_code: code,
         message: `Código de verificação: ${code}`
       })
@@ -162,7 +162,7 @@ export const sendViaBrowserEmail = async (
   try {
     console.log('🚀 Opening browser email client...');
     
-    const subject = encodeURIComponent('🩺 Código de Verificação - Nurse Pathfinder');
+    const subject = encodeURIComponent('🩺 Código de Verificação - Dose Certa');
     const body = encodeURIComponent(`
 Olá ${userName || 'Usuário'}!
 
@@ -173,7 +173,7 @@ Seu código de verificação é:
 Este código expira em 10 minutos.
 
 ---
-Nurse Pathfinder
+Dose Certa
     `);
     
     const mailtoLink = `mailto:${email}?subject=${subject}&body=${body}`;

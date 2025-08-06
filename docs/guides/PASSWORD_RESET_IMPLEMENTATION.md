@@ -2,7 +2,7 @@
 
 ## 📋 Visão Geral
 
-Este documento descreve a implementação completa do sistema de reset de senha para o Nurse Pathfinder, seguindo as melhores práticas de segurança e UX.
+Este documento descreve a implementação completa do sistema de reset de senha para o Dose Certa, seguindo as melhores práticas de segurança e UX.
 
 ## 🎯 Problema Resolvido
 

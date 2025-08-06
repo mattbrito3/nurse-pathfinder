@@ -36,7 +36,7 @@ export const sendRealEmail = async (
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: [email],
-        subject: '🩺 Código de Verificação - Nurse Pathfinder',
+        subject: '🩺 Código de Verificação - Dose Certa',
         html: `
 <!DOCTYPE html>
 <html>
@@ -50,7 +50,7 @@ export const sendRealEmail = async (
         
         <!-- Header -->
         <div style="text-align: center; margin-bottom: 40px;">
-            <h1 style="color: #2563eb; margin: 0; font-size: 28px;">🩺 Nurse Pathfinder</h1>
+            <h1 style="color: #2563eb; margin: 0; font-size: 28px;">🩺 Dose Certa</h1>
             <p style="color: #64748b; margin: 10px 0 0 0; font-size: 16px;">Plataforma de Estudos para Enfermagem</p>
         </div>
 
@@ -96,7 +96,7 @@ export const sendRealEmail = async (
         <!-- Footer -->
         <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
             <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-                © 2024 Nurse Pathfinder - Transformando o estudo de enfermagem
+                © 2024 Dose Certa - Transformando o estudo de enfermagem
             </p>
         </div>
     </div>
@@ -104,7 +104,7 @@ export const sendRealEmail = async (
 </html>
         `,
         text: `
-🩺 Nurse Pathfinder - Código de Verificação
+🩺 Dose Certa - Código de Verificação
 
 Olá ${userName || 'Usuário'}!
 
@@ -121,7 +121,7 @@ Como usar:
 Se você não solicitou este código, ignore este email.
 
 ---
-© 2024 Nurse Pathfinder
+© 2024 Dose Certa
 Plataforma de Estudos para Enfermagem
         `
       })
@@ -164,7 +164,7 @@ export const sendViaBrowserClient = async (
   userName?: string
 ): Promise<EmailResponse> => {
   try {
-    const subject = '🩺 Código de Verificação - Nurse Pathfinder';
+    const subject = '🩺 Código de Verificação - Dose Certa';
     const body = `
 Olá ${userName || 'Usuário'}!
 
@@ -175,7 +175,7 @@ Este código expira em 10 minutos.
 Copie o código acima e cole na aplicação para continuar.
 
 ---
-Nurse Pathfinder
+Dose Certa
 Plataforma de Estudos para Enfermagem
     `.trim();
 

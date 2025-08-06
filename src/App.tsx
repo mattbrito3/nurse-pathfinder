@@ -42,6 +42,15 @@ const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
 const AuthDebug = lazy(() => import("./pages/AuthDebug"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 
+// Páginas legais
+const TermosDeUso = lazy(() => import("./pages/legal/TermosDeUso"));
+const PoliticaDePrivacidade = lazy(() => import("./pages/legal/PoliticaDePrivacidade"));
+const Cookies = lazy(() => import("./pages/legal/Cookies"));
+const Assinatura = lazy(() => import("./pages/legal/Assinatura"));
+
+// Componentes legais
+const CookieConsent = lazy(() => import("./components/CookieConsent"));
+
 
 // Configuração otimizada do React Query
 const queryClient = new QueryClient({
@@ -94,6 +103,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <Suspense fallback={<PageLoader />}>
+            <CookieConsent />
             <Routes>
               <Route path="/" element={<Index />} />
               
@@ -128,7 +138,11 @@ const App = () => {
               <Route path="/dashboard/flashcards/browse/:categoryId" element={<BrowsePage />} />
               <Route path="/dashboard/flashcards/study/:sessionId" element={<StudyPage />} />
 
-
+              {/* Rotas Legais */}
+              <Route path="/legal/termos-de-uso" element={<TermosDeUso />} />
+              <Route path="/legal/politica-de-privacidade" element={<PoliticaDePrivacidade />} />
+              <Route path="/legal/cookies" element={<Cookies />} />
+              <Route path="/legal/assinatura" element={<Assinatura />} />
               
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

@@ -33,8 +33,7 @@ Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profission
 
 ### 💳 **Sistema de Assinatura**
 - **Plano Gratuito**: Acesso limitado à calculadora (7 usos/dia, apenas dosagem)
-- **Plano Estudante (R$ 29/mês)**: Acesso completo às funcionalidades
-- **Plano Profissional (R$ 59/mês)**: Recursos avançados + suporte prioritário
+- **Plano Estudante (R$ 18,99/mês)**: Acesso completo às funcionalidades
 - **Pagamentos seguros** via Stripe
 
 ### 👤 **Gestão de Usuário**
@@ -108,7 +107,7 @@ Uma plataforma web moderna e intuitiva desenvolvida para estudantes e profission
 
 ### **Sistema de Backlog Simples**
 **Decisão**: Implementar sistema de backlog interno em vez de usar ferramentas externas
-**Contexto**: Necessidade de manter controle de funcionalidades específicas do Nurse Pathfinder sem dependência de ferramentas externas
+**Contexto**: Necessidade de manter controle de funcionalidades específicas do Dose Certa sem dependência de ferramentas externas
 **Benefícios**: 
 - Controle total sobre categorização e priorização
 - Integração direta com o fluxo de desenvolvimento

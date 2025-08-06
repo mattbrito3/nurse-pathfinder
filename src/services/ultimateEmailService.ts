@@ -27,7 +27,7 @@ export const sendViaEmailJS = async (
       },
       body: JSON.stringify({
         to: email,
-        subject: '🩺 Código de Verificação - Nurse Pathfinder',
+        subject: '🩺 Código de Verificação - Dose Certa',
         code: code,
         user: userName || 'Usuário'
       })
@@ -64,7 +64,7 @@ export const sendViaBrowserEmail = async (
   userName?: string
 ): Promise<EmailResponse> => {
   try {
-    const subject = '🩺 Código de Verificação - Nurse Pathfinder';
+    const subject = '🩺 Código de Verificação - Dose Certa';
     const body = `
 Olá ${userName || 'Usuário'}!
 
@@ -77,7 +77,7 @@ Este código expira em 10 minutos.
 Copie e cole este código na aplicação para continuar.
 
 ---
-Nurse Pathfinder
+Dose Certa
 Plataforma de Estudos para Enfermagem
     `.trim();
 

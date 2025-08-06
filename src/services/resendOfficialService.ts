@@ -34,15 +34,15 @@ export const sendVerificationEmail = async (
     console.log('👤 User:', userName);
 
     console.log('📤 Sending email with parameters:');
-    console.log('- From:', 'Nurse Pathfinder <onboarding@resend.dev>');
+    console.log('- From:', 'Dose Certa <onboarding@resend.dev>');
     console.log('- To:', [userEmail]);
-    console.log('- Subject:', '🩺 Código de Verificação - Nurse Pathfinder');
+    console.log('- Subject:', '🩺 Código de Verificação - Dose Certa');
     console.log('- React Template:', 'VerificationEmailTemplate');
 
     const { data, error } = await resend.emails.send({
-      from: 'Nurse Pathfinder <onboarding@resend.dev>',
+      from: 'Dose Certa <onboarding@resend.dev>',
       to: [userEmail], // 📧 EMAIL DO USUÁRIO AQUI
-      subject: '🩺 Código de Verificação - Nurse Pathfinder',
+      subject: '🩺 Código de Verificação - Dose Certa',
       react: VerificationEmailTemplate({ 
         firstName: userName || 'Usuário',
         verificationCode: verificationCode
@@ -96,7 +96,7 @@ export const sendViaBrowserFallback = async (
   userName?: string
 ): Promise<EmailResponse> => {
   try {
-    const subject = '🩺 Código de Verificação - Nurse Pathfinder';
+    const subject = '🩺 Código de Verificação - Dose Certa';
     const body = `
 Olá ${userName || 'Usuário'}!
 
@@ -105,7 +105,7 @@ Seu código de verificação é: ${verificationCode}
 Este código expira em 10 minutos.
 
 ---
-Nurse Pathfinder
+Dose Certa
     `.trim();
 
     const mailtoURL = `mailto:${userEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;

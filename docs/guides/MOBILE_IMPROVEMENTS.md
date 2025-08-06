@@ -2,7 +2,7 @@
 
 ## 📱 Resumo das Melhorias
 
-Este documento detalha as melhorias implementadas para otimizar a experiência mobile da aplicação Nurse Pathfinder, focando especificamente na **Calculadora de Medicação** e na página de **Analytics**.
+Este documento detalha as melhorias implementadas para otimizar a experiência mobile da aplicação Dose Certa, focando especificamente na **Calculadora de Medicação** e na página de **Analytics**.
 
 ## 🎯 Problemas Identificados e Soluções
 

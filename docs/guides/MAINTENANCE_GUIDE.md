@@ -1,6 +1,6 @@
 # Guia de Manutenção - Sistema de Reset de Senha
 
-Este guia fornece instruções para manutenção e monitoramento do sistema de reset de senha implementado no Nurse Pathfinder.
+Este guia fornece instruções para manutenção e monitoramento do sistema de reset de senha implementado no Dose Certa.
 
 ## 📊 Monitoramento Diário
 

@@ -26,13 +26,13 @@ import {
   Bell
 } from 'lucide-react';
 import { 
-  nursePathfinderPlanner, 
-  NursePathfinderFeature, 
+  doseCertaPlanner, 
+  doseCertaFeature, 
   Sprint, 
-  NursePathfinderMetrics,
-  addNursePathfinderFeature,
+  doseCertaMetrics,
+  adddoseCertaFeature,
   generateSprint
-} from '../utils/nursePathfinderPlanning';
+} from '../utils/doseCertaPlanning';
 
 interface PlanningProps {
   className?: string;
@@ -74,9 +74,9 @@ const getStatusColor = (status: string) => {
   }
 };
 
-export const NursePathfinderPlanning: React.FC<PlanningProps> = ({ className }) => {
-  const [metrics, setMetrics] = useState<NursePathfinderMetrics | null>(null);
-  const [features, setFeatures] = useState<NursePathfinderFeature[]>([]);
+export const doseCertaPlanning: React.FC<PlanningProps> = ({ className }) => {
+  const [metrics, setMetrics] = useState<doseCertaMetrics | null>(null);
+  const [features, setFeatures] = useState<doseCertaFeature[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [activeTab, setActiveTab] = useState('overview');
   const [planningReport, setPlanningReport] = useState<string>('');
@@ -87,14 +87,14 @@ export const NursePathfinderPlanning: React.FC<PlanningProps> = ({ className }) 
   }, []);
 
   const loadData = () => {
-    const currentMetrics = nursePathfinderPlanner.getMetrics();
-    const allFeatures = nursePathfinderPlanner['features'] || [];
-    const allSprints = nursePathfinderPlanner['sprints'] || [];
+    const currentMetrics = doseCertaPlanner.getMetrics();
+    const allFeatures = doseCertaPlanner['features'] || [];
+    const allSprints = doseCertaPlanner['sprints'] || [];
     
     setMetrics(currentMetrics);
     setFeatures(allFeatures);
     setSprints(allSprints);
-    setPlanningReport(nursePathfinderPlanner.generatePlanningReport());
+    setPlanningReport(doseCertaPlanner.generatePlanningReport());
   };
 
   const handleGenerateSprint = (capacity: number) => {
@@ -103,7 +103,7 @@ export const NursePathfinderPlanning: React.FC<PlanningProps> = ({ className }) 
   };
 
   const handleStartFeature = (featureId: string) => {
-    nursePathfinderPlanner.updateFeature(featureId, {
+    doseCertaPlanner.updateFeature(featureId, {
       status: 'Em Desenvolvimento',
       startDate: new Date()
     });
@@ -113,7 +113,7 @@ export const NursePathfinderPlanning: React.FC<PlanningProps> = ({ className }) 
   const handleCompleteFeature = (featureId: string) => {
     const feature = features.find(f => f.id === featureId);
     if (feature) {
-      nursePathfinderPlanner.updateFeature(featureId, {
+      doseCertaPlanner.updateFeature(featureId, {
         status: 'Concluído',
         endDate: new Date(),
         actualTime: feature.estimatedTime // Simplificado
@@ -139,7 +139,7 @@ export const NursePathfinderPlanning: React.FC<PlanningProps> = ({ className }) 
     <div className={`p-6 space-y-6 ${className}`}>
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Planejamento Nurse Pathfinder</h1>
+          <h1 className="text-3xl font-bold">Planejamento Dose Certa</h1>
           <p className="text-muted-foreground">
             Planejamento estratégico e acompanhamento de funcionalidades
           </p>

@@ -1,5 +1,5 @@
-// Sistema de Planejamento Específico para Nurse Pathfinder
-export interface NursePathfinderFeature {
+// Sistema de Planejamento Específico para Dose Certa
+export interface doseCertaFeature {
   id: string;
   name: string;
   description: string;
@@ -34,7 +34,7 @@ export interface Sprint {
   retrospective: string;
 }
 
-export interface NursePathfinderMetrics {
+export interface doseCertaMetrics {
   totalFeatures: number;
   completedFeatures: number;
   inProgressFeatures: number;
@@ -47,8 +47,8 @@ export interface NursePathfinderMetrics {
   criticalIssues: string[];
 }
 
-export class NursePathfinderPlanner {
-  private features: NursePathfinderFeature[] = [];
+export class doseCertaPlanner {
+  private features: doseCertaFeature[] = [];
   private sprints: Sprint[] = [];
   
   constructor() {
@@ -58,9 +58,9 @@ export class NursePathfinderPlanner {
     }
   }
   
-  // Inicializar features padrão do Nurse Pathfinder
+  // Inicializar features padrão do Dose Certa
   private initializeDefaultFeatures(): void {
-    const defaultFeatures: Omit<NursePathfinderFeature, 'id' | 'createdAt' | 'updatedAt'>[] = [
+    const defaultFeatures: Omit<doseCertaFeature, 'id' | 'createdAt' | 'updatedAt'>[] = [
       {
         name: "Melhorar Calculadora de Medicamentos",
         description: "Adicionar mais fórmulas médicas e validações de segurança",
@@ -225,8 +225,8 @@ export class NursePathfinderPlanner {
   }
   
   // Adicionar nova feature
-  addFeature(feature: Omit<NursePathfinderFeature, 'id'>): string {
-    const newFeature: NursePathfinderFeature = {
+  addFeature(feature: Omit<doseCertaFeature, 'id'>): string {
+    const newFeature: doseCertaFeature = {
       ...feature,
       id: this.generateId(),
       createdAt: new Date(),
@@ -239,7 +239,7 @@ export class NursePathfinderPlanner {
   }
   
   // Atualizar feature
-  updateFeature(id: string, updates: Partial<NursePathfinderFeature>): boolean {
+  updateFeature(id: string, updates: Partial<doseCertaFeature>): boolean {
     const feature = this.features.find(f => f.id === id);
     if (!feature) return false;
     
@@ -249,17 +249,17 @@ export class NursePathfinderPlanner {
   }
   
   // Obter features por categoria
-  getFeaturesByCategory(category: NursePathfinderFeature['category']): NursePathfinderFeature[] {
+  getFeaturesByCategory(category: doseCertaFeature['category']): doseCertaFeature[] {
     return this.features.filter(f => f.category === category);
   }
   
   // Obter features por status
-  getFeaturesByStatus(status: NursePathfinderFeature['status']): NursePathfinderFeature[] {
+  getFeaturesByStatus(status: doseCertaFeature['status']): doseCertaFeature[] {
     return this.features.filter(f => f.status === status);
   }
   
   // Obter features por prioridade
-  getFeaturesByPriority(priority: NursePathfinderFeature['priority']): NursePathfinderFeature[] {
+  getFeaturesByPriority(priority: doseCertaFeature['priority']): doseCertaFeature[] {
     return this.features.filter(f => f.priority === priority);
   }
   
@@ -305,7 +305,7 @@ export class NursePathfinderPlanner {
   }
   
   // Obter métricas do projeto
-  getMetrics(): NursePathfinderMetrics {
+  getMetrics(): doseCertaMetrics {
     const completedFeatures = this.getFeaturesByStatus('Concluído');
     const inProgressFeatures = this.getFeaturesByStatus('Em Desenvolvimento');
     const backlogFeatures = this.getFeaturesByStatus('Backlog');
@@ -353,7 +353,7 @@ export class NursePathfinderPlanner {
     const highPriorityBacklog = backlogFeatures.filter(f => f.priority === 'Alta' || f.priority === 'Crítica');
     
     return `
-## Relatório de Planejamento - Nurse Pathfinder
+## Relatório de Planejamento - Dose Certa
 
 ### Resumo Geral
 - **Total de funcionalidades:** ${metrics.totalFeatures}
@@ -417,7 +417,7 @@ ${this.generateRecommendations(metrics)}
     return (velocityChange / previousSprint.velocity) * 100;
   }
   
-  private generateRecommendations(metrics: NursePathfinderMetrics): string {
+  private generateRecommendations(metrics: doseCertaMetrics): string {
     const recommendations = [];
     
     if (metrics.criticalIssues.length > 0) {
@@ -451,7 +451,7 @@ ${this.generateRecommendations(metrics)}
   
   private saveToStorage(): void {
     try {
-      localStorage.setItem('nursePathfinderPlanning', JSON.stringify({
+      localStorage.setItem('doseCertaPlanning', JSON.stringify({
         features: this.features,
         sprints: this.sprints
       }));
@@ -462,7 +462,7 @@ ${this.generateRecommendations(metrics)}
   
   private loadFromStorage(): void {
     try {
-      const stored = localStorage.getItem('nursePathfinderPlanning');
+      const stored = localStorage.getItem('doseCertaPlanning');
       if (stored) {
         const parsed = JSON.parse(stored);
         this.features = (parsed.features || []).map((feature: any) => ({
@@ -485,20 +485,20 @@ ${this.generateRecommendations(metrics)}
 }
 
 // Instância global do planner
-export const nursePathfinderPlanner = new NursePathfinderPlanner();
+export const doseCertaPlanner = new doseCertaPlanner();
 
 // Funções utilitárias
-export const addNursePathfinderFeature = (
+export const adddoseCertaFeature = (
   name: string,
   description: string,
-  category: NursePathfinderFeature['category'],
-  priority: NursePathfinderFeature['priority'],
+  category: doseCertaFeature['category'],
+  priority: doseCertaFeature['priority'],
   estimatedTime: number,
   userImpact: number,
   technicalComplexity: number,
   businessValue: number
 ): string => {
-  return nursePathfinderPlanner.addFeature({
+  return doseCertaPlanner.addFeature({
     name,
     description,
     category,
@@ -517,9 +517,9 @@ export const addNursePathfinderFeature = (
 };
 
 export const generateSprint = (capacity: number): Sprint => {
-  return nursePathfinderPlanner.generateSuggestedSprint(capacity);
+  return doseCertaPlanner.generateSuggestedSprint(capacity);
 };
 
-export const getNursePathfinderMetrics = (): NursePathfinderMetrics => {
-  return nursePathfinderPlanner.getMetrics();
+export const getdoseCertaMetrics = (): doseCertaMetrics => {
+  return doseCertaPlanner.getMetrics();
 }; 

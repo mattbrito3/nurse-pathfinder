@@ -14,7 +14,7 @@ const PaymentCheckout = () => {
   // Dados do plano vindos da URL
   const planType = searchParams.get('planType') as 'professional' | 'annual' || 'professional';
   const planName = searchParams.get('planName') || 'Estudante';
-  const planPrice = searchParams.get('planPrice') || 'R$ 29,00';
+  const planPrice = searchParams.get('planPrice') || 'R$ 18,99';
   const planPeriod = searchParams.get('planPeriod') || '/mês';
 
   // Se não há usuário logado, redirecionar para login

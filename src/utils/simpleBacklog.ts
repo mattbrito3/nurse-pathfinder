@@ -1,4 +1,4 @@
-// Sistema Simples de Backlog - Nurse Pathfinder
+// Sistema Simples de Backlog - Dose Certa
 export interface BacklogItem {
   id: string;
   title: string;
@@ -167,7 +167,7 @@ export class SimpleBacklog {
   
   private saveToStorage(): void {
     try {
-      localStorage.setItem('nursePathfinderBacklog', JSON.stringify(this.items));
+      localStorage.setItem('doseCertaBacklog', JSON.stringify(this.items));
     } catch (error) {
       console.warn('Não foi possível salvar backlog no localStorage:', error);
     }
@@ -175,7 +175,7 @@ export class SimpleBacklog {
   
   private loadFromStorage(): void {
     try {
-      const stored = localStorage.getItem('nursePathfinderBacklog');
+      const stored = localStorage.getItem('doseCertaBacklog');
       if (stored) {
         const parsed = JSON.parse(stored);
         this.items = parsed.map((item: any) => ({

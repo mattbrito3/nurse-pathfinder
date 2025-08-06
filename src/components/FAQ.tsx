@@ -31,7 +31,7 @@ const faqData = [
   {
     id: 4,
     question: "Como estudante, o investimento realmente vale a pena para minha formação?",
-    answer: "Estudantes que usam o Dose Certa relatam 40% mais confiança em cálculos clínicos e 60% melhor performance em avaliações práticas. Por R$ 29/mês (menos que um almoço por semana), você tem acesso às mesmas ferramentas usadas por profissionais experientes, acelerando sua curva de aprendizado e preparação para o mercado.",
+    answer: "Estudantes que usam o Dose Certa relatam 40% mais confiança em cálculos clínicos e 60% melhor performance em avaliações práticas. Por R$ 18,99/mês (menos que um almoço por semana), você tem acesso às mesmas ferramentas usadas por profissionais experientes, acelerando sua curva de aprendizado e preparação para o mercado.",
     icon: Star,
     category: "investimento",
     strategy: "Justifica investimento com resultados mensuráveis e comparação relativa (custo de almoço). Conecta ferramenta com sucesso acadêmico."

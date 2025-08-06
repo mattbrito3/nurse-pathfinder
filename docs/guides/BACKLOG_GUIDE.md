@@ -1,8 +1,8 @@
-# 📝 Backlog Simples - Nurse Pathfinder
+# 📝 Backlog Simples - Dose Certa
 
 ## 🎯 **O que é?**
 
-Um sistema **super simples** para você não esquecer das suas ideias e acompanhar o que foi feito no Nurse Pathfinder.
+Um sistema **super simples** para você não esquecer das suas ideias e acompanhar o que foi feito no Dose Certa.
 
 ---
 
