@@ -17,7 +17,8 @@ nurse-pathfinder/
 │   ├── 🚀 deployment/         # Guias de deploy
 │   ├── ⚡ features/           # Documentação de funcionalidades
 │   ├── 🔌 api/               # Documentação de APIs
-│   └── 🏗️ architecture/      # Documentação de arquitetura
+│   ├── 🏗️ architecture/      # Documentação de arquitetura
+│   └── 📄 legal/             # Documentos legais
 ├── ⚙️ config/                 # Arquivos de configuração
 ├── 📜 scripts/                # Scripts de automação
 ├── 💡 examples/               # Exemplos e testes
@@ -28,53 +29,70 @@ nurse-pathfinder/
 └── 📋 README.md              # Este arquivo
 ```
 
-## ✨ Funcionalidades
+## ✨ Funcionalidades Implementadas
 
-### 🧮 **Calculadora de Medicação**
+### 🧮 **Calculadora de Medicação** ✅
 - **Dosagem por peso**: Cálculos precisos baseados no peso do paciente
 - **Taxa de infusão**: Cálculo de gotejamento e velocidade de infusão
 - **Conversão de unidades**: Conversões entre diferentes unidades médicas
 - **Concentração de soluções**: Cálculos de diluição e concentração
 - **Histórico de cálculos**: Salve e consulte cálculos anteriores
+- **Validação em tempo real**: Verificação de entrada para evitar erros
+- **Interface intuitiva**: Design responsivo e fácil de usar
 
-### 📚 **Glossário Médico Interativo**
-- **Mais de 270+ termos médicos** organizados por categorias
+### 📚 **Glossário Médico Interativo** ✅
+- **270+ termos médicos** organizados por categorias
 - **Sistema de busca avançada** com filtros por dificuldade
 - **Categorias especializadas**: Cardiovascular, Respiratório, Neurológico, etc.
 - **Favoritos**: Marque termos importantes para estudo rápido
 - **Definições completas** com sinônimos e termos relacionados
+- **Interface responsiva**: Funciona perfeitamente em mobile e desktop
 
-### 🎯 **Sistema de Flashcards**
+### 🎯 **Sistema de Flashcards** ✅
+- **270+ flashcards pré-criados** com conteúdo profissional
+- **Sistema de revisão espaçada** (algoritmo SM-2) para otimizar o aprendizado
 - **Criação de flashcards personalizados** para estudo
-- **Flashcards pré-criados** com conteúdo profissional
-- **Sistema de revisão espaçada** para otimizar o aprendizado
 - **Filtros por categoria e dificuldade**
 - **Estatísticas de progresso** de estudos
+- **Sessões de estudo** com tracking de performance
+- **Níveis de domínio**: Novo, Iniciante, Básico, Intermediário, Avançado, Dominado
+- **Sistema de favoritos** para marcar cards importantes
 
-### 💳 **Sistema de Assinatura**
+### 📊 **Analytics e Progresso** ✅
+- **Dashboard analítico** com métricas de progresso
+- **Gráficos interativos** de performance
+- **Estatísticas por categoria** de estudo
+- **Tracking de streaks** de estudo
+- **Distribuição de domínio** dos flashcards
+- **Progresso semanal** e mensal
+- **Atualizações em tempo real** via Supabase Realtime
+
+### 👤 **Sistema de Autenticação Completo** ✅
+- **Autenticação segura** com Supabase Auth
+- **Login com Google OAuth** (✅ Implementado e funcionando)
+- **Vinculação de contas** Google + Email/Senha
+- **Verificação de email** via Resend (✅ Funcionando)
+- **Recuperação de senha** completa com emails personalizados (✅ Funcionando)
+- **Validação de força de senha** em tempo real
+- **Setup de perfil** para usuários Google
+- **Perfis personalizados** com estatísticas de uso
+- **Ferramentas de debug** para diagnóstico de problemas
+
+### 📄 **Documentos Legais** ✅
+- **Termos de Uso** completos e atualizados
+- **Política de Privacidade** em conformidade com LGPD
+- **Política de Cookies** para conformidade
+- **Termos de Assinatura** com planos atualizados
+- **Banner de consentimento** de cookies
+- **Links no footer** para todos os documentos
+
+### 💳 **Sistema de Assinatura** 🚧
 - **Plano Gratuito**: Acesso limitado à calculadora (7 usos/dia, apenas dosagem)
 - **Plano Estudante (R$ 18,99/mês)**: Acesso completo às funcionalidades
 - **🚧 Sistema de pagamentos**: Em atualização para nova solução mais segura
 
 > **📢 Atualização Importante (Janeiro 2025)**  
 > O sistema de pagamentos foi completamente renovado. A integração anterior foi removida e estamos implementando uma nova solução mais segura e eficiente. Durante este período, todas as funcionalidades principais da plataforma permanecem disponíveis.
-
-### 👤 **Gestão de Usuário**
-- **Autenticação segura** com Supabase Auth
-- **Login com Google OAuth** (✅ Implementado)
-- **Vinculação de contas** Google + Email/Senha
-- **Verificação de email** via Resend (✅ Funcionando)
-- **Recuperação de senha** completa com emails personalizados (✅ Funcionando)
-- **Validação de força de senha** em tempo real
-- **Campo de email editável** na verificação
-- **Setup de perfil** para usuários Google
-- **Perfis personalizados** com estatísticas de uso
-- **Dashboard analítico** com métricas de progresso
-- **Histórico completo** de atividades
-- **Ferramentas de debug** para diagnóstico de problemas
-- **Rotas organizadas** (/login, /register, /profile)
-- **Sincronização de perfil** - nome atualizado automaticamente no sistema
-- **Validação de email simplificada** - interface mais limpa
 
 ## 🔧 Sistema de Reset de Senha
 
@@ -131,6 +149,7 @@ O sistema de reset de senha foi implementado com as melhores práticas de segura
 - **React Query** - Gerenciamento de estado servidor
 - **React Hook Form** - Formulários performáticos
 - **React Router** - Roteamento SPA
+- **Recharts** - Gráficos e visualizações
 
 ### **Backend & Database**
 - **Supabase** - Backend as a Service
@@ -150,6 +169,7 @@ O sistema de reset de senha foi implementado com as melhores práticas de segura
 - **TypeScript ESLint** - Regras específicas para TS
 - **PostCSS** - Processamento de CSS
 - **Autoprefixer** - Prefixos CSS automáticos
+- **Playwright** - Testes automatizados
 
 ## 🚀 Instalação e Configuração
 
@@ -203,6 +223,10 @@ No Supabase Dashboard > SQL Editor, execute os arquivos de migração em ordem:
 -- 20250122000001_create_medical_glossary.sql
 -- 20250122000002_insert_initial_glossary_data.sql
 -- 20250123000001_create_flashcards_system.sql
+-- 20250123000002_populate_flashcard_data.sql
+-- 20250126000001_expand_flashcards_to_270.sql
+-- 20250126000002_complete_flashcards_expansion.sql
+-- 20250126000003_final_flashcards_completion.sql
 -- 20250126200000_create_user_profiles.sql
 -- 20250126210000_create_subscription_system.sql
 -- 20250128000001_create_calculator_usage.sql
@@ -271,37 +295,54 @@ npm run preview          # Preview do build
 # Qualidade de código
 npm run lint             # Executa ESLint
 
+# Testes
+npm run test             # Executa testes Playwright
+npm run test:ui          # Interface de testes
+npm run test:headed      # Testes com navegador visível
+npm run test:debug       # Modo debug dos testes
+
 # Utilitários
 npm run stop             # Para processos Vite
 ```
 
 ## 🧪 Funcionalidades Principais
 
-### **Calculadora de Medicação**
+### **Calculadora de Medicação** ✅
 - Suporte a múltiplos tipos de cálculo
 - Validação de entrada em tempo real
 - Histórico de cálculos persistente
 - Limitações baseadas no plano de assinatura
+- Interface responsiva e intuitiva
 
-### **Glossário Médico**
+### **Glossário Médico** ✅
 - Base de conhecimento com 270+ termos
 - Sistema de busca inteligente
 - Categorização por especialidade
 - Níveis de dificuldade (básico, intermediário, avançado)
+- Sistema de favoritos
 
-### **Sistema de Flashcards**
-- Algoritmo de repetição espaçada
+### **Sistema de Flashcards** ✅
+- Algoritmo de repetição espaçada (SM-2)
+- 270+ flashcards pré-criados
 - Criação de conteúdo personalizado
 - Tracking de progresso de estudos
 - Análise de performance
+- Sessões de estudo com estatísticas
 
-### **Sistema de Assinatura**
+### **Sistema de Analytics** ✅
+- Dashboard completo com métricas
+- Gráficos interativos de progresso
+- Estatísticas por categoria
+- Tracking de streaks de estudo
+- Atualizações em tempo real
+
+### **Sistema de Assinatura** 🚧
 - 🚧 Sistema em atualização para nova solução de pagamento
 - Controle de acesso baseado em planos
 - Diferentes níveis de funcionalidades
-- Preparado para integração com Mercado Pago
+- Preparado para integração com nova solução
 
-### **Sistema de Recuperação de Senha**
+### **Sistema de Recuperação de Senha** ✅
 - **Edge Function customizada** para gerenciar reset de senha
 - **Emails personalizados** com template HTML profissional
 - **Links seguros** com expiração automática
@@ -310,7 +351,7 @@ npm run stop             # Para processos Vite
 - **Verificação robusta de tokens** com delays para processamento
 - **Redirecionamento correto** para ambiente de desenvolvimento
 
-### **Sistema de Autenticação Google**
+### **Sistema de Autenticação Google** ✅
 - **OAuth 2.0 completo** com Google
 - **Vinculação de contas** para emails existentes
 - **Setup de perfil** para novos usuários Google
@@ -336,6 +377,7 @@ npm run stop             # Para processos Vite
 - **`docs/features/`** - Documentação técnica de funcionalidades
 - **`docs/api/`** - Documentação de APIs
 - **`docs/architecture/`** - Documentação de arquitetura
+- **`docs/legal/`** - Documentos legais
 
 ### **Guias Principais**
 - **Setup Inicial**: `docs/guides/README.md`
@@ -388,4 +430,4 @@ Para suporte e dúvidas:
 **💡 Dose Certa** - Transformando o estudo de enfermagem através da tecnologia.
 
 **Versão**: 1.0.0
-**Última atualização**: 2025-08-06 
+**Última atualização**: 2025-01-08 
