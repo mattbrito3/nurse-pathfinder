@@ -208,7 +208,7 @@ serve(async (req) => {
     const expiresAt = tokenData[0].expires_at;
     
     // Gerar link de recuperação com token customizado
-    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'http://localhost:8080';
+    const frontendUrl = Deno.env.get('FRONTEND_URL') || 'https://dosecerta.online';
     const recoveryLink = `${frontendUrl}/reset-password?token=${token}`;
     
     console.log('🔗 Link de recuperação gerado:', recoveryLink);
