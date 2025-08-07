@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { Preference, Payment, MercadoPagoConfig } from "mercadopago";
 
 export interface MercadoPagoPreference {
   id: string;
@@ -16,27 +16,23 @@ export interface MercadoPagoPayment {
   };
 }
 
+// Instância do cliente Mercado Pago
+const mpClient = new MercadoPagoConfig({
+  accessToken: import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN as string,
+});
+
 class MercadoPagoService {
-  private baseUrl = 'https://api.mercadopago.com';
-  private accessToken: string;
-  private isTestMode = true; // Force test mode
+  private preference: Preference;
+  private payment: Payment;
 
   constructor() {
-    // Use environment variable
-    this.accessToken = import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN || '';
+    this.preference = new Preference(mpClient);
+    this.payment = new Payment(mpClient);
     
     // Debug: Log token (only first 10 characters for security)
-    console.log('🔑 MercadoPago Token loaded:', this.accessToken ? `${this.accessToken.substring(0, 10)}...` : 'NOT FOUND');
+    console.log('🔑 MercadoPago Token loaded:', import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN ? `${import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN.substring(0, 10)}...` : 'NOT FOUND');
     console.log('🌍 Environment:', import.meta.env.VITE_ENVIRONMENT || 'development');
     console.log('🌐 App URL:', import.meta.env.VITE_APP_URL || 'NOT FOUND');
-    console.log('🔧 All env vars:', Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')));
-    
-    if (!this.accessToken) {
-      console.error('❌ VITE_MERCADOPAGO_ACCESS_TOKEN não encontrado!');
-      console.error('🔍 Tentando token hardcoded para teste...');
-      // Fallback para teste
-      this.accessToken = 'APP_USR-8244676714734530-080414-5c3f084aff9b293fac876acd202da87b-2606458554';
-    }
   }
 
   /**
@@ -44,49 +40,54 @@ class MercadoPagoService {
    */
   async createPreference(userId: string, planName: string, amount: number): Promise<MercadoPagoPreference> {
     try {
-             const preference = {
-         items: [
-           {
-             title: `Plano ${planName} - DoseCerta`,
-             unit_price: amount,
-             quantity: 1,
-             currency_id: 'BRL'
-           }
-         ],
-         external_reference: userId,
-         back_urls: {
-           success: `${import.meta.env.VITE_APP_URL}/pricing?payment=success`,
-           failure: `${import.meta.env.VITE_APP_URL}/pricing?payment=failure`,
-           pending: `${import.meta.env.VITE_APP_URL}/pricing?payment=pending`
-         },
-         auto_return: 'approved',
-         notification_url: `${import.meta.env.VITE_SUPABASE_FUNCTIONS_URL}/mercadopago-webhook-public`,
-         expires: true,
-         expiration_date_to: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
-       };
-
-       console.log('📤 MercadoPago Preference Data:', JSON.stringify(preference, null, 2));
-
-      const response = await fetch(`${this.baseUrl}/checkout/preferences`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
-          'Content-Type': 'application/json'
+      const preferenceData = {
+        external_reference: userId,
+        metadata: {
+          userId,
+          planName,
         },
-        body: JSON.stringify(preference)
+        items: [
+          {
+            id: `plano-${planName.toLowerCase()}`,
+            title: `Plano ${planName} - DoseCerta`,
+            description: `Assinatura do plano ${planName}`,
+            quantity: 1,
+            unit_price: amount,
+            currency_id: 'BRL',
+            category_id: 'education', // Categoria educação
+          }
+        ],
+        payment_methods: {
+          installments: 12, // Número máximo de parcelas
+        },
+        auto_return: 'approved',
+        back_urls: {
+          success: `${import.meta.env.VITE_APP_URL}/pricing?payment=success`,
+          failure: `${import.meta.env.VITE_APP_URL}/pricing?payment=failure`,
+          pending: `${import.meta.env.VITE_APP_URL}/pricing?payment=pending`
+        },
+        notification_url: `${import.meta.env.VITE_SUPABASE_FUNCTIONS_URL}/mercadopago-webhook-public`,
+        expires: true,
+        expiration_date_to: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
+      };
+
+      console.log('📤 MercadoPago Preference Data:', JSON.stringify(preferenceData, null, 2));
+
+      const createdPreference = await this.preference.create({
+        body: preferenceData
       });
 
-      console.log('📡 MercadoPago API Response Status:', response.status);
-      console.log('📡 MercadoPago API Response Headers:', Object.fromEntries(response.headers.entries()));
+      console.log('📡 MercadoPago API Response:', createdPreference);
 
-      if (!response.ok) {
-        const errorData = await response.text();
-        console.error('❌ MercadoPago API Error Response:', errorData);
-        throw new Error(`MercadoPago API error: ${response.status} - ${errorData}`);
+      if (!createdPreference.id) {
+        throw new Error('No preference ID returned');
       }
 
-      const data = await response.json();
-      return data;
+      return {
+        id: createdPreference.id,
+        init_point: createdPreference.init_point,
+        sandbox_init_point: createdPreference.sandbox_init_point
+      };
     } catch (error) {
       console.error('❌ Error creating MercadoPago preference:', error);
       throw error;
@@ -98,17 +99,17 @@ class MercadoPagoService {
    */
   async getPayment(paymentId: string): Promise<MercadoPagoPayment> {
     try {
-      const response = await fetch(`${this.baseUrl}/v1/payments/${paymentId}`, {
-        headers: {
-          'Authorization': `Bearer ${this.accessToken}`
+      const paymentData = await this.payment.get({ id: paymentId });
+      
+      return {
+        id: paymentData.id,
+        status: paymentData.status,
+        external_reference: paymentData.external_reference,
+        transaction_amount: paymentData.transaction_amount,
+        payer: {
+          email: paymentData.payer?.email || ''
         }
-      });
-
-      if (!response.ok) {
-        throw new Error(`MercadoPago API error: ${response.status}`);
-      }
-
-      return await response.json();
+      };
     } catch (error) {
       console.error('❌ Error getting payment:', error);
       throw error;
@@ -128,14 +129,14 @@ class MercadoPagoService {
           transaction_amount: amount,
           currency_id: 'BRL'
         },
-                 back_url: `${import.meta.env.VITE_APP_URL}/pricing?subscription=success`,
+        back_url: `${import.meta.env.VITE_APP_URL}/pricing?subscription=success`,
         external_reference: userId
       };
 
-      const response = await fetch(`${this.baseUrl}/preapproval`, {
+      const response = await fetch('https://api.mercadopago.com/preapproval', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(subscription)
@@ -157,9 +158,9 @@ class MercadoPagoService {
    */
   async getSubscription(subscriptionId: string): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/preapproval/${subscriptionId}`, {
+      const response = await fetch(`https://api.mercadopago.com/preapproval/${subscriptionId}`, {
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`
+          'Authorization': `Bearer ${import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN}`
         }
       });
 
@@ -179,10 +180,10 @@ class MercadoPagoService {
    */
   async cancelSubscription(subscriptionId: string): Promise<any> {
     try {
-      const response = await fetch(`${this.baseUrl}/preapproval/${subscriptionId}`, {
+      const response = await fetch(`https://api.mercadopago.com/preapproval/${subscriptionId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${this.accessToken}`,
+          'Authorization': `Bearer ${import.meta.env.VITE_MERCADOPAGO_ACCESS_TOKEN}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({

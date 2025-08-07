@@ -6,10 +6,87 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { Payment, MercadoPagoConfig } from "https://esm.sh/mercadopago@2.2.0"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// Instância do cliente Mercado Pago
+const mpClient = new MercadoPagoConfig({
+  accessToken: Deno.env.get('VITE_MERCADOPAGO_ACCESS_TOKEN') as string,
+});
+
+const payment = new Payment(mpClient);
+
+// Função para verificar a assinatura do Mercado Pago
+function verifyMercadoPagoSignature(request: Request, body: string): boolean {
+  const xSignature = request.headers.get("x-signature");
+  const xRequestId = request.headers.get("x-request-id");
+  
+  if (!xSignature || !xRequestId) {
+    console.log('⚠️ Missing x-signature or x-request-id header');
+    return false;
+  }
+
+  const signatureParts = xSignature.split(",");
+  let ts = "";
+  let v1 = "";
+  
+  signatureParts.forEach((part) => {
+    const [key, value] = part.split("=");
+    if (key.trim() === "ts") {
+      ts = value.trim();
+    } else if (key.trim() === "v1") {
+      v1 = value.trim();
+    }
+  });
+
+  if (!ts || !v1) {
+    console.log('⚠️ Invalid x-signature header format');
+    return false;
+  }
+
+  const url = new URL(request.url);
+  const dataId = url.searchParams.get("data.id");
+
+  let manifest = "";
+  if (dataId) {
+    manifest += `id:${dataId};`;
+  }
+  if (xRequestId) {
+    manifest += `request-id:${xRequestId};`;
+  }
+  manifest += `ts:${ts};`;
+
+  const secret = Deno.env.get('MERCADOPAGO_WEBHOOK_SECRET') as string;
+  
+  // Criar HMAC SHA256
+  const encoder = new TextEncoder();
+  const key = encoder.encode(secret);
+  const message = encoder.encode(manifest);
+  
+  // Usar Web Crypto API para criar HMAC
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    key,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, message);
+  const generatedHash = Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  if (generatedHash !== v1) {
+    console.log('⚠️ Invalid signature');
+    return false;
+  }
+  
+  return true;
 }
 
 serve(async (req) => {
@@ -63,6 +140,22 @@ serve(async (req) => {
       console.log('📨 Raw body:', body)
     }
 
+    // Verify webhook signature (optional but recommended)
+    if (mercadopagoWebhookSecret && signature) {
+      const isValidSignature = await verifyMercadoPagoSignature(req, body);
+      if (!isValidSignature) {
+        console.log('❌ Invalid webhook signature');
+        return new Response(
+          JSON.stringify({ error: 'Invalid signature' }),
+          { 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 401 
+          }
+        );
+      }
+      console.log('✅ Webhook signature verified');
+    }
+
     // If we have valid webhook data, process it
     if (webhookData && webhookData.type) {
       const { type, data } = webhookData
@@ -85,7 +178,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Public webhook received and logged' }),
+      JSON.stringify({ success: true, message: 'Public webhook received and processed' }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
@@ -107,34 +200,43 @@ serve(async (req) => {
 async function handlePayment(supabase: any, paymentData: any) {
   console.log('💳 Processing payment:', paymentData.id)
   
-  const { id, status, external_reference, transaction_amount, payer } = paymentData
+  try {
+    // Get full payment data using SDK
+    const fullPaymentData = await payment.get({ id: paymentData.id });
+    console.log('📨 Full payment data:', JSON.stringify(fullPaymentData, null, 2));
+    
+    const { id, status, external_reference, transaction_amount, payer } = fullPaymentData
 
-  // Update payment history
-  const { error: paymentError } = await supabase
-    .from('payment_history')
-    .upsert({
-      payment_provider: 'mercadopago',
-      payment_id: id.toString(),
-      external_reference,
-      amount: transaction_amount,
-      currency: 'BRL',
-      status: status,
-      payer_email: payer?.email,
-      payment_data: paymentData,
-      created_at: new Date().toISOString()
-    })
+    // Update payment history
+    const { error: paymentError } = await supabase
+      .from('payment_history')
+      .upsert({
+        payment_provider: 'mercadopago',
+        payment_id: id.toString(),
+        external_reference,
+        amount: transaction_amount,
+        currency: 'BRL',
+        status: status,
+        payer_email: payer?.email,
+        payment_data: fullPaymentData,
+        created_at: new Date().toISOString()
+      })
 
-  if (paymentError) {
-    console.error('❌ Error updating payment history:', paymentError)
-    throw paymentError
+    if (paymentError) {
+      console.error('❌ Error updating payment history:', paymentError)
+      throw paymentError
+    }
+
+    // If payment is approved, update subscription
+    if (status === 'approved' || fullPaymentData.date_approved !== null) {
+      await updateSubscriptionFromPayment(supabase, fullPaymentData)
+    }
+
+    console.log('✅ Payment processed successfully')
+  } catch (error) {
+    console.error('❌ Error processing payment:', error)
+    throw error
   }
-
-  // If payment is approved, update subscription
-  if (status === 'approved') {
-    await updateSubscriptionFromPayment(supabase, paymentData)
-  }
-
-  console.log('✅ Payment processed successfully')
 }
 
 async function handleSubscription(supabase: any, subscriptionData: any) {
@@ -172,9 +274,9 @@ async function handleSubscriptionPayment(supabase: any, paymentData: any) {
 }
 
 async function updateSubscriptionFromPayment(supabase: any, paymentData: any) {
-  const { external_reference, transaction_amount } = paymentData
+  const { external_reference, transaction_amount, metadata } = paymentData
 
-  // Determine plan based on amount
+  // Determine plan based on amount or metadata
   let planId = 1 // Default to student plan (R$ 18,99)
   if (transaction_amount >= 18.99) {
     planId = 1 // Student plan
