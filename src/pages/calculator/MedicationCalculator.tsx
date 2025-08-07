@@ -54,6 +54,8 @@ const MedicationCalculator = () => {
     totalVolume: 0,
     totalTime: 0,
     timeUnit: 'h',
+    drugAmount: 0,
+    drugUnit: 'mg',
     equipmentType: 'macro',
   });
 
@@ -61,6 +63,8 @@ const MedicationCalculator = () => {
     value: 0,
     fromUnit: 'mg',
     toUnit: 'g',
+    drugAmount: 0,
+    drugUnit: 'mg',
     category: 'weight'
   });
 
@@ -530,6 +534,72 @@ const MedicationCalculator = () => {
                       <Calculator className="h-5 w-5 mr-2 sm:mr-3" />
                       Calcular Dosagem
                     </Button>
+
+                    {/* Resultado do cálculo */}
+                    {dosageData.result && (
+                      <div className="mt-6 space-y-4">
+                        <Card className="border-green-200 bg-green-50">
+                          <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-green-800">
+                              <CheckCircle className="h-5 w-5" />
+                              Resultado do Cálculo
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {/* Resultado principal */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="text-center p-4 bg-white rounded-lg border">
+                                <div className="text-2xl font-bold text-green-600">
+                                  {dosageData.result.totalDose.toFixed(2)}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  Dose Total ({dosageData.prescribedUnit.replace('/kg', '')})
+                                </div>
+                              </div>
+                              <div className="text-center p-4 bg-white rounded-lg border">
+                                <div className="text-2xl font-bold text-blue-600">
+                                  {dosageData.result.volumeToAdminister.toFixed(2)} ml
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  Volume a Administrar
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Passos do cálculo */}
+                            {dosageData.result.steps && dosageData.result.steps.length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-gray-800">Passos do Cálculo:</h4>
+                                <div className="bg-white p-4 rounded-lg border space-y-2">
+                                  {dosageData.result.steps.map((step, index) => (
+                                    <div key={index} className="text-sm text-gray-700">
+                                      {step}
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Alertas de segurança */}
+                            {dosageData.result.alerts && dosageData.result.alerts.length > 0 && (
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-orange-800">Alertas de Segurança:</h4>
+                                <div className="space-y-2">
+                                  {dosageData.result.alerts.map((alert, index) => (
+                                    <Alert key={index} className="border-orange-200 bg-orange-50">
+                                      <AlertTriangle className="h-4 w-4 text-orange-600" />
+                                      <AlertDescription className="text-orange-800">
+                                        {alert}
+                                      </AlertDescription>
+                                    </Alert>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
