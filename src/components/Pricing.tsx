@@ -17,8 +17,7 @@ const plans = [
       "Calculadora básica de medicação",
       "Acesso a 100 termos do glossário",
       "50 flashcards por mês",
-      "Suporte por email",
-      "Acesso por 7 dias"
+      "Direito a 7 usos diários na calculadora de medicação"
     ],
     buttonText: "Começar Grátis",
     buttonVariant: "medical-outline" as const,
@@ -34,7 +33,6 @@ const plans = [
       "Calculadora avançada de medicação",
       "Acesso completo ao glossário",
       "Flashcards ilimitados",
-      "Suporte prioritário",
       "Acesso offline",
       "Histórico de progresso"
     ],
