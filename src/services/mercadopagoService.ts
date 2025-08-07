@@ -28,9 +28,14 @@ class MercadoPagoService {
     // Debug: Log token (only first 10 characters for security)
     console.log('🔑 MercadoPago Token loaded:', this.accessToken ? `${this.accessToken.substring(0, 10)}...` : 'NOT FOUND');
     console.log('🌍 Environment:', import.meta.env.VITE_ENVIRONMENT || 'development');
+    console.log('🌐 App URL:', import.meta.env.VITE_APP_URL || 'NOT FOUND');
+    console.log('🔧 All env vars:', Object.keys(import.meta.env).filter(key => key.startsWith('VITE_')));
     
     if (!this.accessToken) {
       console.error('❌ VITE_MERCADOPAGO_ACCESS_TOKEN não encontrado!');
+      console.error('🔍 Tentando token hardcoded para teste...');
+      // Fallback para teste
+      this.accessToken = 'APP_USR-8244676714734530-080414-5c3f084aff9b293fac876acd202da87b-2606458554';
     }
   }
 
@@ -55,7 +60,7 @@ class MercadoPagoService {
            pending: `${import.meta.env.VITE_APP_URL}/pricing?payment=pending`
          },
          auto_return: 'approved',
-         notification_url: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mercadopago-webhook`,
+         notification_url: `${import.meta.env.VITE_SUPABASE_FUNCTIONS_URL}/mercadopago-webhook`,
          expires: true,
          expiration_date_to: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
        };

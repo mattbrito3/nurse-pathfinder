@@ -27,7 +27,7 @@ O arquivo `.env.test` contém todas as configurações necessárias para o ambie
 ```env
 # Ambiente de Teste - DoseCerta
 VITE_ENVIRONMENT=test
-VITE_APP_URL=https://test.dosecerta.online
+VITE_APP_URL=https://teste.dosecerta.online
 VITE_APP_NAME=Dose Certa (Teste)
 
 # MercadoPago Configuration (Produção)
@@ -48,19 +48,19 @@ npm run build
 ## 🌐 Configuração do Subdomínio
 
 ### 1. DNS
-Configure o subdomínio `test.dosecerta.online` para apontar para o servidor de teste.
+Configure o subdomínio `teste.dosecerta.online` para apontar para o servidor de teste.
 
 ### 2. Webhook do Mercado Pago
 Configure o webhook no Mercado Pago para apontar para:
 ```
-https://test.dosecerta.online/api/mercadopago-webhook
+https://teste.dosecerta.online/api/mercadopago-webhook
 ```
 
 ### 3. URLs de Retorno
 As URLs de retorno do Mercado Pago serão:
-- **Sucesso:** `https://test.dosecerta.online/pricing?payment=success`
-- **Falha:** `https://test.dosecerta.online/pricing?payment=failure`
-- **Pendente:** `https://test.dosecerta.online/pricing?payment=pending`
+- **Sucesso:** `https://teste.dosecerta.online/pricing?payment=success`
+- **Falha:** `https://teste.dosecerta.online/pricing?payment=failure`
+- **Pendente:** `https://teste.dosecerta.online/pricing?payment=pending`
 
 ## 🚀 Deploy
 
@@ -90,7 +90,7 @@ Faça upload dos arquivos da pasta `dist/` para o servidor de teste.
 - [ ] Atualização de assinaturas
 
 ### 2. Teste de Pagamento
-1. Acesse `https://test.dosecerta.online/pricing`
+1. Acesse `https://teste.dosecerta.online/pricing`
 2. Faça login com uma conta de teste
 3. Clique em "Assinar Plano"
 4. Complete o pagamento no Mercado Pago
