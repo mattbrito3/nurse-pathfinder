@@ -16,7 +16,7 @@ verify_jwt = false
 verify_jwt = false
 [functions.mercadopago-webhook-public]
 enabled = true
-verify_jwt = true
+verify_jwt = false
 import_map = "./functions/mercadopago-webhook-public/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx

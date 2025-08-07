@@ -21,7 +21,7 @@ const mpClient = new MercadoPagoConfig({
 const payment = new Payment(mpClient);
 
 // Função para verificar a assinatura do Mercado Pago
-function verifyMercadoPagoSignature(request: Request, body: string): boolean {
+async function verifyMercadoPagoSignature(request: Request, body: string): Promise<boolean> {
   const xSignature = request.headers.get("x-signature");
   const xRequestId = request.headers.get("x-request-id");
   
@@ -102,9 +102,9 @@ serve(async (req) => {
   }
 
   try {
-    // Get environment variables
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    // Get environment variables (support alt names without SUPABASE_ prefix)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || Deno.env.get('PROJECT_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || Deno.env.get('SERVICE_ROLE_KEY')!
     const mercadopagoWebhookSecret = Deno.env.get('MERCADOPAGO_WEBHOOK_SECRET')
 
     console.log('🔧 Environment variables loaded')
@@ -129,7 +129,7 @@ serve(async (req) => {
     console.log('  - Body content:', body)
 
     // Try to parse JSON if possible
-    let webhookData = null
+    let webhookData: any = null
     try {
       if (body && body.trim()) {
         webhookData = JSON.parse(body)
@@ -156,6 +156,11 @@ serve(async (req) => {
       console.log('✅ Webhook signature verified');
     }
 
+    // Extract query params as fallback (Mercado Pago envia type e data.id na URL)
+    const url = new URL(req.url);
+    const qpType = url.searchParams.get('type');
+    const qpDataId = url.searchParams.get('data.id');
+
     // If we have valid webhook data, process it
     if (webhookData && webhookData.type) {
       const { type, data } = webhookData
@@ -172,6 +177,15 @@ serve(async (req) => {
           break
         default:
           console.log('⚠️ Unhandled webhook type:', type)
+      }
+    } else if (qpType && qpDataId) {
+      console.log('ℹ️ Processing via query params fallback:', { qpType, qpDataId });
+      switch (qpType) {
+        case 'payment':
+          await handlePayment(supabase, { id: qpDataId });
+          break;
+        default:
+          console.log('⚠️ Unhandled webhook type via query params:', qpType);
       }
     } else {
       console.log('ℹ️ No valid webhook data to process')
@@ -214,6 +228,7 @@ async function handlePayment(supabase: any, paymentData: any) {
         payment_provider: 'mercadopago',
         payment_id: id.toString(),
         external_reference,
+        user_id: external_reference, // alinhar com consultas do app
         amount: transaction_amount,
         currency: 'BRL',
         status: status,

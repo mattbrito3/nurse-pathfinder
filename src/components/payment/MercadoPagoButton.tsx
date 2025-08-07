@@ -47,8 +47,9 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
       );
 
       // Redirect to MercadoPago checkout
-      const checkoutUrl = import.meta.env.DEV 
-        ? preference.sandbox_init_point 
+      const useSandbox = import.meta.env.VITE_USE_MERCADOPAGO_SANDBOX === 'true' || import.meta.env.DEV;
+      const checkoutUrl = useSandbox && preference.sandbox_init_point
+        ? preference.sandbox_init_point
         : preference.init_point;
 
       window.location.href = checkoutUrl;
