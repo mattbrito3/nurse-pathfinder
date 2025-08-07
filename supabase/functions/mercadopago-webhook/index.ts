@@ -7,8 +7,14 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  console.log('🚀 Webhook endpoint called!')
+  console.log('📡 Method:', req.method)
+  console.log('📡 URL:', req.url)
+  console.log('📡 Headers:', Object.fromEntries(req.headers.entries()))
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
+    console.log('✅ CORS preflight request handled')
     return new Response('ok', { headers: corsHeaders })
   }
 
@@ -18,12 +24,19 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const mercadopagoWebhookSecret = Deno.env.get('MERCADOPAGO_WEBHOOK_SECRET')
 
+    console.log('🔧 Environment variables loaded')
+    console.log('🔧 Supabase URL:', supabaseUrl)
+    console.log('🔧 Webhook Secret:', mercadopagoWebhookSecret ? 'Present' : 'Missing')
+
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Get the request body
     const body = await req.text()
     const signature = req.headers.get('x-signature') || req.headers.get('x-signature-256')
+
+    console.log('📨 Request body received:', body)
+    console.log('🔐 Signature:', signature ? 'Present' : 'Missing')
 
     // Verify webhook signature (optional but recommended)
     if (mercadopagoWebhookSecret && signature) {

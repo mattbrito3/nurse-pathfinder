@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, Crown, Star, Zap } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import UnifiedPaymentButton from "@/components/payment/UnifiedPaymentButton";
+import { useEffect } from "react";
 
 const plans = [
   {
@@ -44,7 +45,40 @@ const plans = [
 
 const Pricing = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
+
+  // Handle payment return parameters
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    const subscriptionStatus = searchParams.get('subscription');
+    
+    if (paymentStatus) {
+      switch (paymentStatus) {
+        case 'success':
+          toast.success('Pagamento realizado com sucesso!', {
+            description: 'Seu plano foi ativado. Bem-vindo ao DoseCerta!'
+          });
+          break;
+        case 'failure':
+          toast.error('Pagamento não foi concluído', {
+            description: 'Houve um problema com o pagamento. Tente novamente.'
+          });
+          break;
+        case 'pending':
+          toast.info('Pagamento em processamento', {
+            description: 'Seu pagamento está sendo processado. Você receberá uma confirmação em breve.'
+          });
+          break;
+      }
+    }
+
+    if (subscriptionStatus === 'success') {
+      toast.success('Assinatura ativada com sucesso!', {
+        description: 'Sua assinatura mensal foi configurada.'
+      });
+    }
+  }, [searchParams]);
 
   const handlePlanClick = (planName: string, buttonText: string) => {
     if (buttonText === "Começar Grátis") {
@@ -53,10 +87,8 @@ const Pricing = () => {
       } else {
         navigate('/dashboard');
       }
-    } else {
-      // Redirect to pricing page for paid plans
-      navigate('/pricing');
     }
+    // For paid plans, the UnifiedPaymentButton will handle the payment
   };
 
   return (
@@ -134,14 +166,26 @@ const Pricing = () => {
                 </ul>
 
                 <div className="pt-4">
-                  <Button 
-                    variant={plan.buttonVariant}
-                    size="lg"
-                    className="w-full py-6 text-lg hover-lift btn-pulse"
-                    onClick={() => handlePlanClick(plan.name, plan.buttonText)}
-                  >
-                    {plan.buttonText}
-                  </Button>
+                  {plan.buttonText === "Assinar Plano" ? (
+                    <UnifiedPaymentButton
+                      planType="professional"
+                      planName={plan.name}
+                      planPrice="18.99"
+                      planPeriod="month"
+                      className="w-full py-6 text-lg hover-lift btn-pulse"
+                    >
+                      {plan.buttonText}
+                    </UnifiedPaymentButton>
+                  ) : (
+                    <Button 
+                      variant={plan.buttonVariant}
+                      size="lg"
+                      className="w-full py-6 text-lg hover-lift btn-pulse"
+                      onClick={() => handlePlanClick(plan.name, plan.buttonText)}
+                    >
+                      {plan.buttonText}
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
