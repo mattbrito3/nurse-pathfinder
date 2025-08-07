@@ -77,21 +77,43 @@ class MercadoPagoService {
 
       console.log('📤 MercadoPago Preference Data:', JSON.stringify(preferenceData, null, 2));
 
-      const createdPreference = await this.preference.create({
-        body: preferenceData
-      });
-
-      console.log('📡 MercadoPago API Response:', createdPreference);
-
-      if (!createdPreference.id) {
-        throw new Error('No preference ID returned');
+      // Tentar criar preferência via Edge Function (mais seguro e estável em prod)
+      try {
+        const functionsUrl = (import.meta as any).env.VITE_SUPABASE_FUNCTIONS_URL || `${(import.meta as any).env.VITE_SUPABASE_URL}/functions/v1`;
+        const resp = await fetch(`${functionsUrl}/create-mp-preference`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            planName,
+            amount,
+            appUrl: (import.meta as any).env.VITE_APP_URL,
+          })
+        });
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(`Edge Function error: ${resp.status} - ${text}`);
+        }
+        const efPref = await resp.json();
+        console.log('📡 Preference via Edge Function:', efPref);
+        return {
+          id: efPref.id,
+          init_point: efPref.init_point,
+          sandbox_init_point: efPref.sandbox_init_point,
+        };
+      } catch (efErr) {
+        console.warn('⚠️ Edge Function fallback to SDK:', efErr);
+        const createdPreference = await this.preference.create({ body: preferenceData });
+        console.log('📡 Preference via SDK:', createdPreference);
+        if (!createdPreference.id) {
+          throw new Error('No preference ID returned');
+        }
+        return {
+          id: createdPreference.id,
+          init_point: createdPreference.init_point,
+          sandbox_init_point: createdPreference.sandbox_init_point,
+        };
       }
-
-      return {
-        id: createdPreference.id,
-        init_point: createdPreference.init_point,
-        sandbox_init_point: createdPreference.sandbox_init_point
-      };
     } catch (error) {
       console.error('❌ Error creating MercadoPago preference:', error);
       throw error;
