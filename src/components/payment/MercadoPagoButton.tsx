@@ -37,7 +37,12 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
 
     try {
       // Extract amount from price string (e.g., "R$ 18,99" -> 18.99)
-      const amount = parseFloat(planPrice.replace('R$', '').replace(',', '.').trim());
+      let amount = parseFloat(planPrice.replace('R$', '').replace(',', '.').trim());
+      // Optional: force amount via env for real card low-value testing (e.g., 1.00)
+      const forced = (import.meta as any).env.VITE_MP_FORCE_AMOUNT;
+      if (forced && !Number.isNaN(parseFloat(forced))) {
+        amount = parseFloat(forced);
+      }
 
       // Create payment preference
       const preference = await mercadopagoService.createPreference(

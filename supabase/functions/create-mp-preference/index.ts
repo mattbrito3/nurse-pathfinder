@@ -1,6 +1,4 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { MercadoPagoConfig, Preference } from "https://esm.sh/mercadopago@2.2.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,9 +27,6 @@ serve(async (req) => {
       });
     }
 
-    const mpClient = new MercadoPagoConfig({ accessToken });
-    const preference = new Preference(mpClient);
-
     const baseAppUrl = appUrl || Deno.env.get("APP_URL") || "https://teste.dosecerta.online";
     const functionsUrl = Deno.env.get("PROJECT_URL") || Deno.env.get("SUPABASE_URL");
 
@@ -44,7 +39,7 @@ serve(async (req) => {
           title: `Plano ${planName} - DoseCerta`,
           description: `Assinatura do plano ${planName}`,
           quantity: 1,
-          unit_price: Number(amount),
+          unit_price: Number(Deno.env.get('MP_FORCE_AMOUNT') || amount),
           currency_id: "BRL",
           category_id: "education",
         },
@@ -61,17 +56,26 @@ serve(async (req) => {
       expiration_date_to: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     };
 
-    const created = await preference.create({ body: preferenceData as any });
-    if (!created.id) {
-      throw new Error("No preference ID returned");
+    // Chamada REST direta (SDK do MP não é compatível com Edge Runtime/Deno)
+    const resp = await fetch("https://api.mercadopago.com/checkout/preferences", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(preferenceData),
+    });
+
+    if (!resp.ok) {
+      const bodyText = await resp.text();
+      throw new Error(`MercadoPago error: ${resp.status} - ${bodyText}`);
     }
 
+    const created = await resp.json();
+    if (!created?.id) throw new Error("No preference ID returned");
+
     return new Response(
-      JSON.stringify({
-        id: created.id,
-        init_point: created.init_point,
-        sandbox_init_point: created.sandbox_init_point,
-      }),
+      JSON.stringify({ id: created.id, init_point: created.init_point, sandbox_init_point: created.sandbox_init_point }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
