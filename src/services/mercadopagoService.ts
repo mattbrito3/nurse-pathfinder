@@ -60,7 +60,7 @@ class MercadoPagoService {
            pending: `${import.meta.env.VITE_APP_URL}/pricing?payment=pending`
          },
          auto_return: 'approved',
-         notification_url: `${import.meta.env.VITE_SUPABASE_FUNCTIONS_URL}/mercadopago-webhook`,
+         notification_url: `${import.meta.env.VITE_SUPABASE_FUNCTIONS_URL}/mercadopago-webhook-public`,
          expires: true,
          expiration_date_to: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
        };

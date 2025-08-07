@@ -1,3 +1,9 @@
+// Follow this setup guide to integrate the Deno language server with your editor:
+// https://deno.land/manual/getting_started/setup_your_environment
+// This enables autocomplete, go to definition, etc.
+
+// Setup type definitions for built-in Supabase Runtime APIs
+import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -7,7 +13,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  console.log('🚀 Webhook endpoint called!')
+  console.log('🚀 Public Webhook endpoint called!')
   console.log('📡 Method:', req.method)
   console.log('📡 URL:', req.url)
   console.log('📡 Headers:', Object.fromEntries(req.headers.entries()))
@@ -79,7 +85,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Webhook received and logged' }),
+      JSON.stringify({ success: true, message: 'Public webhook received and logged' }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
@@ -192,4 +198,4 @@ async function updateSubscriptionFromPayment(supabase: any, paymentData: any) {
   }
 
   console.log('✅ Subscription updated from payment')
-} 
+}
