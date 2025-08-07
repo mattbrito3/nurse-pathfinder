@@ -1,17 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Calculator, BookOpen, Brain, FileText, User, Settings, LogOut, BarChart3 } from "lucide-react";
+import { Calculator, BookOpen, Brain, FileText, User, Settings, LogOut, BarChart3, Home, Edit, Menu, X } from "lucide-react";
 import { useFormattedDashboardStats } from "@/hooks/useDashboardStats";
 
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { stats, isLoading: statsLoading, formatNumber, getDescription } = useFormattedDashboardStats();
 
   // Redirecionar se não estiver logado
@@ -87,8 +88,8 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
             <Button variant="ghost" onClick={() => navigate('/')} size="sm" className="shrink-0">
-              <span className="sm:hidden">←</span>
-              <span className="hidden sm:inline">← Voltar ao Site</span>
+              <Home className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Voltar ao Site</span>
             </Button>
             <h1 className="text-lg sm:text-xl font-bold text-foreground truncate">
               <span className="sm:hidden">Dose Certa</span>
@@ -98,17 +99,75 @@ const Dashboard = () => {
           
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <span className="text-xs sm:text-sm text-muted-foreground hidden lg:block max-w-32 truncate">
-              Olá, {user.user_metadata?.full_name || user.email?.split('@')[0]}
+              Olá, {user.user_metadata?.full_name || user.email}
             </span>
-            <ThemeToggle />
-            <Button variant="ghost" size="icon" onClick={() => navigate('/profile')} className="shrink-0">
-              <User className="h-4 w-4" />
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/profile')}
+              className="hidden sm:flex"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              Editar Perfil
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleSignOut} className="shrink-0">
-              <LogOut className="h-4 w-4" />
+            
+            <ThemeToggle />
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleSignOut}
+              className="hidden sm:flex"
+            >
+              <LogOut className="h-4 w-4 mr-2" />
+              Sair
+            </Button>
+
+            {/* Mobile menu button */}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="sm:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
+
+        {/* Mobile menu */}
+        {isMenuOpen && (
+          <div className="sm:hidden border-t border-border/40">
+            <div className="container mx-auto px-4 py-4 space-y-4">
+              <div className="flex flex-col gap-2">
+                <span className="text-sm text-muted-foreground">
+                  Olá, {user.user_metadata?.full_name || user.email}
+                </span>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => navigate('/profile')}
+                  className="justify-start"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar Perfil
+                </Button>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  className="justify-start"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <div className="container mx-auto px-4 py-4 sm:py-8">

@@ -57,6 +57,7 @@ All colors MUST be HSL.
     /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-bounce: all 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-spring: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
     --sidebar-background: 0 0% 98%;
 
@@ -125,6 +126,182 @@ All colors MUST be HSL.
 
   html {
     scroll-behavior: smooth;
+  }
+
+  /* Progress bar for scroll */
+  .scroll-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--secondary)));
+    z-index: 9999;
+    transition: width 0.1s ease;
+  }
+
+  /* Parallax container */
+  .parallax-container {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .parallax-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 120%;
+    background-size: cover;
+    background-position: center;
+    transform: translateY(0);
+    transition: transform 0.1s ease-out;
+    will-change: transform;
+  }
+
+  /* Smooth reveal animations */
+  .reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .reveal-on-scroll.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stagger animation delays */
+  .stagger-1 { transition-delay: 0.1s; }
+  .stagger-2 { transition-delay: 0.2s; }
+  .stagger-3 { transition-delay: 0.3s; }
+  .stagger-4 { transition-delay: 0.4s; }
+  .stagger-5 { transition-delay: 0.5s; }
+  .stagger-6 { transition-delay: 0.6s; }
+
+  /* Micro-interactions */
+  .hover-lift {
+    transition: var(--transition-spring);
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hero);
+  }
+
+  .hover-scale {
+    transition: var(--transition-smooth);
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.05);
+  }
+
+  .hover-glow {
+    transition: var(--transition-smooth);
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+  }
+
+  /* Button animations */
+  .btn-pulse {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-pulse::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: hsl(var(--primary-foreground) / 0.2);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn-pulse:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  /* Typing effect */
+  .typing-effect {
+    overflow: hidden;
+    border-right: 2px solid hsl(var(--primary));
+    white-space: nowrap;
+    animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+  }
+
+  @keyframes typing {
+    from { width: 0; }
+    to { width: 100%; }
+  }
+
+  @keyframes blink-caret {
+    from, to { border-color: transparent; }
+    50% { border-color: hsl(var(--primary)); }
+  }
+
+  /* Floating animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+
+  /* Gradient text animation */
+  .gradient-text-animate {
+    background: linear-gradient(45deg, hsl(var(--primary)), hsl(var(--secondary)), hsl(var(--primary)));
+    background-size: 200% 200%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* Dark mode specific animations */
+  .dark .hover-glow:hover {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.2);
+  }
+
+  .dark .btn-pulse::before {
+    background: hsl(var(--primary-foreground) / 0.1);
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    .parallax-bg {
+      transform: none !important;
+    }
+
+    .float {
+      animation: none;
+    }
+
+    .gradient-text-animate {
+      animation: none;
+    }
   }
 }
 
@@ -289,6 +466,75 @@ All colors MUST be HSL.
   }
 }
 
+/* iOS Safari specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  /* Prevent zoom on input focus in iOS Safari */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="url"],
+  textarea,
+  select {
+    font-size: 16px !important;
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+  /* Improve scrolling performance on iOS */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Fix for iOS Safari viewport height issues */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+
+  /* Prevent text selection on buttons in iOS */
+  button {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Fix for iOS Safari flexbox issues */
+  .flex {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+  }
+
+  /* Fix for iOS Safari grid issues */
+  .grid {
+    display: -webkit-grid;
+    display: grid;
+  }
+}
+
+/* iPhone specific viewport fixes */
+@supports (padding: max(0px)) {
+  .container {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* iPhone notch and safe area support */
+@supports (padding-top: env(safe-area-inset-top)) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
 /* Mobile-specific improvements - respecting the existing design system */
 @media (max-width: 768px) {
   /* Prevent zoom on iOS inputs */
@@ -323,5 +569,493 @@ All colors MUST be HSL.
 
   .recharts-legend-item-text {
     font-size: 11px !important;
+  }
+
+  /* Reduce animation intensity on mobile for better performance */
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
+  .float {
+    animation: float 8s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+}
+
+/* iPhone 16 Pro Max (430px) and similar large phones */
+@media (max-width: 430px) {
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  h1 {
+    font-size: 1.875rem !important;
+    line-height: 2.25rem !important;
+  }
+
+  h2 {
+    font-size: 1.625rem !important;
+    line-height: 2rem !important;
+  }
+
+  h3 {
+    font-size: 1.375rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  .btn-pulse {
+    padding: 0.875rem 1.25rem !important;
+    font-size: 0.9375rem !important;
+  }
+
+  .card {
+    padding: 1.25rem !important;
+  }
+
+  .grid {
+    gap: 1rem !important;
+  }
+
+  .nav-item {
+    padding: 0.625rem 1rem !important;
+    font-size: 0.9375rem !important;
+  }
+
+  .hero-title {
+    font-size: 2.25rem !important;
+    line-height: 2.75rem !important;
+  }
+
+  .hero-subtitle {
+    font-size: 1.125rem !important;
+    line-height: 1.625rem !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+
+  .stats-item {
+    padding: 1rem !important;
+  }
+
+  .stats-number {
+    font-size: 1.75rem !important;
+  }
+
+  .stats-label {
+    font-size: 0.875rem !important;
+  }
+}
+
+/* iPhone 16 Pro (393px) and iPhone 15 Pro Max (430px) */
+@media (max-width: 393px) {
+  .container {
+    padding-left: 0.875rem !important;
+    padding-right: 0.875rem !important;
+  }
+
+  h1 {
+    font-size: 1.75rem !important;
+    line-height: 2.125rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+    line-height: 1.875rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.625rem !important;
+  }
+
+  .btn-pulse {
+    padding: 0.75rem 1.125rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .card {
+    padding: 1.125rem !important;
+  }
+
+  .grid {
+    gap: 0.875rem !important;
+  }
+
+  .nav-item {
+    padding: 0.5rem 0.875rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .hero-title {
+    font-size: 2rem !important;
+    line-height: 2.5rem !important;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.625rem !important;
+  }
+
+  .stats-item {
+    padding: 0.875rem !important;
+  }
+
+  .stats-number {
+    font-size: 1.625rem !important;
+  }
+
+  .stats-label {
+    font-size: 0.8125rem !important;
+  }
+}
+
+/* iPhone 16 (393px) and iPhone 15 Pro (393px) */
+@media (max-width: 390px) {
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  h1 {
+    font-size: 1.625rem !important;
+    line-height: 2rem !important;
+  }
+
+  h2 {
+    font-size: 1.375rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  h3 {
+    font-size: 1.125rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  .btn-pulse {
+    padding: 0.625rem 1rem !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .card {
+    padding: 1rem !important;
+  }
+
+  .grid {
+    gap: 0.75rem !important;
+  }
+
+  .nav-item {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.8125rem !important;
+  }
+
+  .hero-title {
+    font-size: 1.875rem !important;
+    line-height: 2.25rem !important;
+  }
+
+  .hero-subtitle {
+    font-size: 0.9375rem !important;
+    line-height: 1.375rem !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+
+  .stats-item {
+    padding: 0.75rem !important;
+  }
+
+  .stats-number {
+    font-size: 1.5rem !important;
+  }
+
+  .stats-label {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* iPhone 15 (393px) and iPhone 14 Pro Max (430px) */
+@media (max-width: 375px) {
+  .container {
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+    line-height: 1.875rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+    line-height: 1.625rem !important;
+  }
+
+  h3 {
+    font-size: 1rem !important;
+    line-height: 1.375rem !important;
+  }
+
+  .btn-pulse {
+    padding: 0.5rem 0.875rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .card {
+    padding: 0.875rem !important;
+  }
+
+  .grid {
+    gap: 0.625rem !important;
+  }
+
+  .nav-item {
+    padding: 0.375rem 0.625rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .hero-title {
+    font-size: 1.75rem !important;
+    line-height: 2rem !important;
+  }
+
+  .hero-subtitle {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.375rem !important;
+  }
+
+  .stats-item {
+    padding: 0.625rem !important;
+  }
+
+  .stats-number {
+    font-size: 1.375rem !important;
+  }
+
+  .stats-label {
+    font-size: 0.6875rem !important;
+  }
+}
+
+/* iPhone 14 (390px) and iPhone 13 Pro Max (428px) */
+@media (max-width: 360px) {
+  .container {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  h1 {
+    font-size: 1.375rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.125rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 0.9375rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .btn-pulse {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.6875rem !important;
+  }
+
+  .card {
+    padding: 0.75rem !important;
+  }
+
+  .grid {
+    gap: 0.5rem !important;
+  }
+
+  .nav-item {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.6875rem !important;
+  }
+
+  .hero-title {
+    font-size: 1.625rem !important;
+    line-height: 1.875rem !important;
+  }
+
+  .hero-subtitle {
+    font-size: 0.8125rem !important;
+    line-height: 1.125rem !important;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.25rem !important;
+  }
+
+  .stats-item {
+    padding: 0.5rem !important;
+  }
+
+  .stats-number {
+    font-size: 1.25rem !important;
+  }
+
+  .stats-label {
+    font-size: 0.625rem !important;
+  }
+}
+
+/* Extra small devices (phones, 320px and up) */
+@media (max-width: 480px) {
+  /* Container padding adjustment */
+  .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Typography adjustments for very small screens */
+  h1 {
+    font-size: 1.75rem !important;
+    line-height: 2rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  /* Button adjustments */
+  .btn-pulse {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Card spacing adjustments */
+  .card {
+    padding: 1rem !important;
+  }
+
+  /* Grid adjustments for very small screens */
+  .grid {
+    gap: 0.75rem !important;
+  }
+
+  /* Navigation adjustments */
+  .nav-item {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  /* Hero section adjustments */
+  .hero-title {
+    font-size: 2rem !important;
+    line-height: 2.5rem !important;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  /* Stats adjustments */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+
+  .stats-item {
+    padding: 0.75rem !important;
+  }
+
+  .stats-number {
+    font-size: 1.5rem !important;
+  }
+
+  .stats-label {
+    font-size: 0.75rem !important;
+  }
+}
+
+/* Very small devices (phones, 320px and down) */
+@media (max-width: 320px) {
+  /* Further reduce padding and spacing */
+  .container {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  /* Typography for very small screens */
+  h1 {
+    font-size: 1.5rem !important;
+    line-height: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.25rem !important;
+    line-height: 1.5rem !important;
+  }
+
+  /* Button size adjustments */
+  button {
+    padding: 0.5rem 0.75rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Grid single column for very small screens */
+  .grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Stats single column */
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Navigation compact */
+  .nav-item {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Hero section very compact */
+  .hero-title {
+    font-size: 1.75rem !important;
+    line-height: 2rem !important;
+  }
+
+  .hero-subtitle {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
   }
 }

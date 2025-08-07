@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Heart, Menu, X, User, LogOut } from "lucide-react";
+import { Heart, Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { 
@@ -54,8 +54,8 @@ const Header = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => navigate('/dashboard')}>
-                  <User className="h-4 w-4 mr-2" />
-                  Meu Perfil
+                  <LayoutDashboard className="h-4 w-4 mr-2" />
+                  Dashboard
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={handleSignOut}>
@@ -118,8 +118,8 @@ const Header = () => {
               {user ? (
                 <>
                   <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard')}>
-                    <User className="h-4 w-4 mr-2" />
-                    Meu Perfil
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Dashboard
                   </Button>
 
                   <Button variant="ghost" size="sm" onClick={handleSignOut}>

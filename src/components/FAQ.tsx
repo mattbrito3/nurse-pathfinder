@@ -77,81 +77,90 @@ const FAQ = () => {
     <section id="faq" className="py-20 bg-gradient-to-br from-gray-50 via-blue-50/30 to-emerald-50/30 dark:from-slate-900/50 dark:via-slate-800/30 dark:to-slate-900/50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-5xl font-bold mb-4 text-gray-900 dark:text-foreground">
+          <h2 
+            className="text-3xl lg:text-5xl font-bold mb-4 text-gray-900 dark:text-foreground"
+            data-aos="fade-up"
+          >
             Perguntas
-            <span className="bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400 bg-clip-text text-transparent"> Frequentes</span>
+            <span className="bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400 bg-clip-text text-transparent gradient-text-animate"> Frequentes</span>
           </h2>
-          <p className="text-xl text-gray-600 dark:text-muted-foreground max-w-3xl mx-auto">
+          <p 
+            className="text-xl text-gray-600 dark:text-muted-foreground max-w-3xl mx-auto"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
             Respondemos às principais dúvidas de profissionais e estudantes de enfermagem 
             sobre como o Dose Certa pode transformar sua prática clínica.
           </p>
         </div>
 
         <div className="max-w-4xl mx-auto space-y-4">
-          {faqData.map((faq) => {
+          {faqData.map((faq, index) => {
             const isOpen = openItems.includes(faq.id);
             const IconComponent = faq.icon;
             
             return (
               <Card 
                 key={faq.id}
-                className="group hover:shadow-xl transition-all duration-300 border-gray-200 dark:border-slate-700/50 shadow-lg shadow-gray-200/50 dark:shadow-slate-900/20 overflow-hidden bg-white/80 dark:bg-slate-800/40 backdrop-blur-sm"
+                className="group hover:shadow-xl transition-all duration-300 border-gray-200 dark:border-slate-700/50 shadow-lg shadow-gray-200/50 dark:shadow-slate-900/20 overflow-hidden bg-white/80 dark:bg-slate-800/40 backdrop-blur-sm hover-lift"
+                data-aos="fade-up"
+                data-aos-delay={index * 100}
               >
                 <CardHeader 
-                  className="cursor-pointer pb-4 hover:bg-gray-50 dark:hover:bg-slate-700/20 transition-colors duration-200"
+                  className="cursor-pointer p-6 hover:bg-gray-50/50 dark:hover:bg-slate-700/30 transition-colors duration-200"
                   onClick={() => toggleItem(faq.id)}
                 >
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-600/50 dark:to-slate-700/50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300 border border-gray-300 dark:border-slate-600/30">
-                      <IconComponent className="h-6 w-6 text-gray-600 dark:text-slate-300 group-hover:text-gray-700 dark:group-hover:text-slate-200 transition-colors duration-200" />
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                        <IconComponent className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-foreground group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-200">
+                          {faq.question}
+                        </CardTitle>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-lg font-semibold text-gray-800 dark:text-slate-200 text-left group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">
-                        {faq.question}
-                      </CardTitle>
-                    </div>
-                    <div className="shrink-0">
+                    <div className="flex-shrink-0">
                       {isOpen ? (
-                        <ChevronUp className="h-5 w-5 text-gray-500 dark:text-slate-400 group-hover:text-gray-600 dark:group-hover:text-slate-300 transition-colors duration-200" />
+                        <ChevronUp className="h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform duration-200" />
                       ) : (
-                        <ChevronDown className="h-5 w-5 text-gray-500 dark:text-slate-400 group-hover:text-gray-600 dark:group-hover:text-slate-300 transition-colors duration-200" />
+                        <ChevronDown className="h-5 w-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 group-hover:rotate-180" />
                       )}
                     </div>
                   </div>
                 </CardHeader>
                 
-                {isOpen && (
-                  <CardContent className="pt-0 pb-6 bg-gray-50/50 dark:bg-slate-700/20 border-t border-gray-200 dark:border-slate-700/30">
-                    <div className="ml-16">
-                      <p className="text-gray-600 dark:text-slate-300 leading-relaxed text-base">
+                <div 
+                  className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                    isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  <CardContent className="px-6 pb-6">
+                    <div className="pl-14">
+                      <CardDescription className="text-gray-600 dark:text-gray-300 leading-relaxed text-base">
                         {faq.answer}
-                      </p>
+                      </CardDescription>
                     </div>
                   </CardContent>
-                )}
+                </div>
               </Card>
             );
           })}
         </div>
 
-        <div className="text-center mt-16">
-          <div className="bg-gradient-to-br from-white/90 to-gray-50/80 dark:from-slate-800/80 dark:to-slate-700/60 backdrop-blur-sm rounded-2xl p-8 max-w-2xl mx-auto shadow-xl border border-gray-200 dark:border-slate-600/30">
-            <h3 className="text-2xl font-bold text-gray-800 dark:text-slate-200 mb-4">
-              Ainda tem dúvidas?
-            </h3>
-            <p className="text-gray-600 dark:text-slate-300 mb-6">
-              Nossa equipe de enfermeiros especialistas está pronta para esclarecer 
-              qualquer questão específica sobre sua área de atuação.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="medical" size="lg" className="px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg">
-                Falar com Especialista
-              </Button>
-              <Button variant="outline" size="lg" className="px-8 border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-white hover:border-gray-400 dark:hover:border-slate-500">
-                Testar Gratuitamente
-              </Button>
-            </div>
-          </div>
+        <div 
+          className="text-center mt-16"
+          data-aos="fade-up"
+          data-aos-delay="800"
+        >
+          <Button 
+            variant="medical" 
+            size="lg" 
+            className="px-8 py-6 text-lg hover-lift btn-pulse"
+          >
+            Ainda tem dúvidas? Fale conosco
+          </Button>
         </div>
       </div>
     </section>

@@ -45,11 +45,18 @@ const Features = () => {
     <section id="funcionalidades" className="py-20 bg-background">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-5xl font-bold mb-4 text-foreground">
+          <h2 
+            className="text-3xl lg:text-5xl font-bold mb-4 text-foreground"
+            data-aos="fade-up"
+          >
             Funcionalidades
-            <span className="bg-gradient-primary bg-clip-text text-transparent"> Completas</span>
+            <span className="bg-gradient-primary bg-clip-text text-transparent gradient-text-animate"> Completas</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p 
+            className="text-xl text-muted-foreground max-w-3xl mx-auto"
+            data-aos="fade-up"
+            data-aos-delay="100"
+          >
             Todas as ferramentas que você precisa para se destacar na enfermagem, 
             reunidas em uma plataforma moderna e intuitiva.
           </p>
@@ -59,10 +66,12 @@ const Features = () => {
           {features.map((feature, index) => (
             <Card 
               key={index} 
-              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 dark:border-slate-700/50 shadow-lg shadow-gray-200/50 dark:shadow-slate-900/20 bg-white/80 dark:bg-slate-800/40 backdrop-blur-sm"
+              className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-gray-200 dark:border-slate-700/50 shadow-lg shadow-gray-200/50 dark:shadow-slate-900/20 bg-white/80 dark:bg-slate-800/40 backdrop-blur-sm hover-lift"
+              data-aos="fade-up"
+              data-aos-delay={100 + (index * 100)}
             >
               <CardHeader className="pb-4">
-                <div className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`w-12 h-12 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 hover-scale`}>
                   <feature.icon className={`h-6 w-6 ${feature.color} transition-colors duration-200`} />
                 </div>
                 <CardTitle className="text-xl font-semibold text-gray-800 dark:text-slate-200 group-hover:text-gray-900 dark:group-hover:text-white transition-colors duration-200">
@@ -78,8 +87,16 @@ const Features = () => {
           ))}
         </div>
 
-        <div className="text-center mt-16">
-          <Button variant="medical" size="lg" className="px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300">
+        <div 
+          className="text-center mt-16"
+          data-aos="fade-up"
+          data-aos-delay="600"
+        >
+          <Button 
+            variant="medical" 
+            size="lg" 
+            className="px-8 py-6 text-lg bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover-lift btn-pulse"
+          >
             Explorar Todas as Funcionalidades
           </Button>
         </div>
