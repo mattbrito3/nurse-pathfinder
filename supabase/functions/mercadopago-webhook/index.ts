@@ -1,0 +1,169 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  try {
+    // Get environment variables
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const mercadopagoWebhookSecret = Deno.env.get('MERCADOPAGO_WEBHOOK_SECRET')
+
+    // Create Supabase client
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Get the request body
+    const body = await req.text()
+    const signature = req.headers.get('x-signature') || req.headers.get('x-signature-256')
+
+    // Verify webhook signature (optional but recommended)
+    if (mercadopagoWebhookSecret && signature) {
+      // TODO: Implement signature verification
+      console.log('🔐 Webhook signature verification needed')
+    }
+
+    // Parse the webhook data
+    const webhookData = JSON.parse(body)
+    console.log('📨 Webhook received:', JSON.stringify(webhookData, null, 2))
+
+    // Handle different webhook types
+    const { type, data } = webhookData
+
+    switch (type) {
+      case 'payment':
+        await handlePayment(supabase, data)
+        break
+      case 'subscription_preapproval':
+        await handleSubscription(supabase, data)
+        break
+      case 'subscription_authorized_payment':
+        await handleSubscriptionPayment(supabase, data)
+        break
+      default:
+        console.log('⚠️ Unhandled webhook type:', type)
+    }
+
+    return new Response(
+      JSON.stringify({ success: true, message: 'Webhook processed successfully' }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      }
+    )
+
+  } catch (error) {
+    console.error('❌ Webhook error:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500 
+      }
+    )
+  }
+})
+
+async function handlePayment(supabase: any, paymentData: any) {
+  console.log('💳 Processing payment:', paymentData.id)
+  
+  const { id, status, external_reference, transaction_amount, payer } = paymentData
+
+  // Update payment history
+  const { error: paymentError } = await supabase
+    .from('payment_history')
+    .upsert({
+      payment_provider: 'mercadopago',
+      payment_id: id.toString(),
+      external_reference,
+      amount: transaction_amount,
+      currency: 'BRL',
+      status: status,
+      payer_email: payer?.email,
+      payment_data: paymentData,
+      created_at: new Date().toISOString()
+    })
+
+  if (paymentError) {
+    console.error('❌ Error updating payment history:', paymentError)
+    throw paymentError
+  }
+
+  // If payment is approved, update subscription
+  if (status === 'approved') {
+    await updateSubscriptionFromPayment(supabase, paymentData)
+  }
+
+  console.log('✅ Payment processed successfully')
+}
+
+async function handleSubscription(supabase: any, subscriptionData: any) {
+  console.log('📅 Processing subscription:', subscriptionData.id)
+  
+  const { id, status, external_reference, reason, auto_recurring } = subscriptionData
+
+  // Update user subscription
+  const { error: subError } = await supabase
+    .from('user_subscriptions')
+    .upsert({
+      user_id: external_reference, // Assuming external_reference is user_id
+      subscription_plan_id: 1, // Default to student plan
+      mercadopago_subscription_id: id.toString(),
+      status: status,
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+
+  if (subError) {
+    console.error('❌ Error updating subscription:', subError)
+    throw subError
+  }
+
+  console.log('✅ Subscription processed successfully')
+}
+
+async function handleSubscriptionPayment(supabase: any, paymentData: any) {
+  console.log('🔄 Processing subscription payment:', paymentData.id)
+  
+  // Handle recurring payment for subscription
+  await handlePayment(supabase, paymentData)
+}
+
+async function updateSubscriptionFromPayment(supabase: any, paymentData: any) {
+  const { external_reference, transaction_amount } = paymentData
+
+  // Determine plan based on amount
+  let planId = 1 // Default to student plan (R$ 18,99)
+  if (transaction_amount >= 18.99) {
+    planId = 1 // Student plan
+  }
+
+  // Update user subscription
+  const { error: updateError } = await supabase
+    .from('user_subscriptions')
+    .upsert({
+      user_id: external_reference,
+      subscription_plan_id: planId,
+      status: 'active',
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      updated_at: new Date().toISOString()
+    })
+
+  if (updateError) {
+    console.error('❌ Error updating subscription from payment:', updateError)
+    throw updateError
+  }
+
+  console.log('✅ Subscription updated from payment')
+} 

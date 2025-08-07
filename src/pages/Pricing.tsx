@@ -13,9 +13,9 @@ import {
   CreditCard,
   Shield,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  Star
 } from 'lucide-react';
-import { useSubscription } from '@/hooks/useSubscription';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import UnifiedPaymentButton from '@/components/payment/UnifiedPaymentButton';
@@ -24,13 +24,45 @@ const Pricing = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
-  const {
-    plans,
-    currentSubscription,
-    plansLoading,
-    formatPrice,
-    hasPremiumAccess
-  } = useSubscription();
+
+  // Planos simplificados - apenas Estudante
+  const plans = [
+    {
+      id: 1,
+      name: "Gratuito",
+      price: 0,
+      interval: "month",
+      description: "Perfeito para começar seus estudos",
+      features: [
+        "Calculadora básica de medicação",
+        "Acesso a 100 termos do glossário",
+        "50 flashcards por mês",
+        "Direito a 7 usos diários na calculadora",
+        "Acesso básico ao dashboard"
+      ],
+      popular: false
+    },
+    {
+      id: 2,
+      name: "Estudante",
+      price: 18.99,
+      interval: "month",
+      description: "Ideal para estudantes de enfermagem",
+      features: [
+        "Calculadora avançada de medicação",
+        "Acesso completo ao glossário médico",
+        "Flashcards ilimitados",
+        "Acesso offline a todo conteúdo",
+        "Histórico detalhado de progresso",
+        "Sistema de repetição espaçada",
+        "Análises de performance avançadas",
+        "Suporte prioritário por email",
+        "Sincronização em nuvem",
+        "Acesso mobile completo"
+      ],
+      popular: true
+    }
+  ];
 
   // Handle payment status from URL params
   useEffect(() => {
@@ -47,32 +79,26 @@ const Pricing = () => {
     }
   }, [searchParams, navigate]);
 
-  // Helper function to map plan to type
+  // Helper functions
   const getPlanType = (planName: string): 'professional' | 'annual' => {
     const name = planName.toLowerCase();
-    if (name.includes('estudante')) return 'professional'; // R$ 18,99
-    return 'professional'; // Default: R$ 18,99
+    if (name.includes('estudante')) return 'professional';
+    return 'professional';
   };
 
   const getCurrentPlanName = () => {
-    if (!currentSubscription) return 'Gratuito';
-    return currentSubscription.subscription_plans?.name || 'Gratuito';
+    // Simplificado - sempre retorna Gratuito por enquanto
+    return 'Gratuito';
   };
 
   const isCurrentPlan = (planName: string) => {
     return getCurrentPlanName() === planName;
   };
 
-  if (plansLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Carregando planos...</p>
-        </div>
-      </div>
-    );
-  }
+  const formatPrice = (price: number) => {
+    if (price === 0) return 'R$ 0';
+    return `R$ ${price.toFixed(2).replace('.', ',')}`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -128,7 +154,7 @@ const Pricing = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
             {plans.map((plan) => {
               const isPopular = plan.popular;
               const isFree = plan.price === 0;
@@ -164,11 +190,11 @@ const Pricing = () => {
                   <CardHeader className="text-center pb-4">
                     <div className="mb-4">
                       {isFree ? (
-                        <Shield className="h-12 w-12 mx-auto text-muted-foreground" />
+                        <Star className="h-12 w-12 mx-auto text-muted-foreground" />
                       ) : isPopular ? (
-                        <Crown className="h-12 w-12 mx-auto text-primary" />
+                        <Zap className="h-12 w-12 mx-auto text-primary" />
                       ) : (
-                        <Zap className="h-12 w-12 mx-auto text-orange-500" />
+                        <Shield className="h-12 w-12 mx-auto text-orange-500" />
                       )}
                     </div>
                     
@@ -182,11 +208,6 @@ const Pricing = () => {
                       <div className="text-sm text-muted-foreground">
                         {plan.interval === 'year' ? '/ano' : '/mês'}
                       </div>
-                      {plan.interval === 'year' && plan.price > 0 && (
-                        <div className="text-xs text-green-600 font-medium mt-1">
-                          Economize 2 meses!
-                        </div>
-                      )}
                     </div>
                   </CardHeader>
 
@@ -227,7 +248,7 @@ const Pricing = () => {
                           className={`w-full ${isPopular ? 'bg-primary hover:bg-primary/90' : ''}`}
                         >
                           <CreditCard className="h-4 w-4 mr-2" />
-                          {hasPremiumAccess ? 'Trocar Plano' : 'Assinar Agora'}
+                          Assinar Plano
                         </UnifiedPaymentButton>
                       )}
                     </div>
@@ -238,7 +259,7 @@ const Pricing = () => {
           </div>
 
           {/* Features Comparison */}
-          <div className="bg-background rounded-lg border p-8">
+          <div className="bg-background rounded-lg border p-8 max-w-4xl mx-auto">
             <h3 className="text-2xl font-bold text-center mb-8">Compare os recursos</h3>
             
             <div className="overflow-x-auto">
@@ -260,9 +281,6 @@ const Pricing = () => {
                     <td className="text-center py-4 px-4">
                       <span className="text-green-600 font-medium">Ilimitados</span>
                     </td>
-                    <td className="text-center py-4 px-4">
-                      <span className="text-green-600 font-medium">Ilimitados</span>
-                    </td>
                   </tr>
                   <tr>
                     <td className="py-4 pr-6 font-medium">Calculadora de medicação</td>
@@ -272,17 +290,20 @@ const Pricing = () => {
                     <td className="text-center py-4 px-4">
                       <Check className="h-5 w-5 text-green-500 mx-auto" />
                     </td>
-                    <td className="text-center py-4 px-4">
-                      <Check className="h-5 w-5 text-green-500 mx-auto" />
-                    </td>
                   </tr>
                   <tr>
-                    <td className="py-4 pr-6 font-medium">Analytics avançados</td>
+                    <td className="py-4 pr-6 font-medium">Acesso offline</td>
                     <td className="text-center py-4 px-4">
                       <X className="h-5 w-5 text-red-400 mx-auto" />
                     </td>
                     <td className="text-center py-4 px-4">
                       <Check className="h-5 w-5 text-green-500 mx-auto" />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-4 pr-6 font-medium">Análises avançadas</td>
+                    <td className="text-center py-4 px-4">
+                      <X className="h-5 w-5 text-red-400 mx-auto" />
                     </td>
                     <td className="text-center py-4 px-4">
                       <Check className="h-5 w-5 text-green-500 mx-auto" />
@@ -292,9 +313,6 @@ const Pricing = () => {
                     <td className="py-4 pr-6 font-medium">Suporte prioritário</td>
                     <td className="text-center py-4 px-4">
                       <X className="h-5 w-5 text-red-400 mx-auto" />
-                    </td>
-                    <td className="text-center py-4 px-4">
-                      <Check className="h-5 w-5 text-green-500 mx-auto" />
                     </td>
                     <td className="text-center py-4 px-4">
                       <Check className="h-5 w-5 text-green-500 mx-auto" />
