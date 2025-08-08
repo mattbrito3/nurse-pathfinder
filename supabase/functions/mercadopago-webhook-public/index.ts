@@ -236,7 +236,6 @@ async function handlePayment(supabase: any, paymentData: any) {
       .upsert({
         payment_provider: 'mercadopago',
         payment_id: id.toString(),
-        external_reference,
         user_id: external_reference, // alinhar com consultas do app
         amount: transaction_amount,
         currency: 'BRL',
