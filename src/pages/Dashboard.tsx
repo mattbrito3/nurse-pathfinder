@@ -16,12 +16,14 @@ const Dashboard = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { stats, isLoading: statsLoading, formatNumber, getDescription } = useFormattedDashboardStats();
 
-  // Detect payment=success and poll subscription for up to 15s
-  const hasPaymentSuccess = useMemo(() => new URLSearchParams(location.search).get('payment') === 'success', [location.search]);
+  // Detect payment state from query
+  const paymentState = useMemo(() => new URLSearchParams(location.search).get('payment'), [location.search]);
   useEffect(() => {
-    if (!user || !hasPaymentSuccess) return;
+    const shouldPoll = paymentState === 'success' || paymentState === 'pending';
+    if (!user || !shouldPoll) return;
     let mounted = true;
     let attempts = 0;
+    const maxAttempts = paymentState === 'pending' ? 60 : 15; // Pix pode demorar mais
     const poll = async () => {
       try {
         // hit a cheap endpoint: select active subscription for this user
@@ -39,13 +41,13 @@ const Dashboard = () => {
         }
       } catch {}
       attempts += 1;
-      if (mounted && attempts < 15) {
+      if (mounted && attempts < maxAttempts) {
         setTimeout(poll, 1000);
       }
     };
     poll();
     return () => { mounted = false; };
-  }, [user, hasPaymentSuccess, navigate]);
+  }, [user, paymentState, navigate]);
 
   // Redirecionar se não estiver logado
   useEffect(() => {

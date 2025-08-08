@@ -49,7 +49,7 @@ serve(async (req) => {
       back_urls: {
         success: `${baseAppUrl}/dashboard?payment=success`,
         failure: `${baseAppUrl}/pricing?payment=failure`,
-        pending: `${baseAppUrl}/pricing?payment=pending`,
+        pending: `${baseAppUrl}/dashboard?payment=pending`,
       },
       notification_url: `${functionsUrl}/functions/v1/mercadopago-webhook-public`,
       expires: true,
