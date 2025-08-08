@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { CreditCard, Loader2 } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
@@ -24,8 +24,10 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const hasOpenedRef = useRef(false);
 
   const handlePayment = async () => {
+    if (hasOpenedRef.current) return; // evita abrir mais de uma aba
     if (!user) {
       toast.error('Faça login para continuar', {
         description: 'Você precisa estar logado para assinar um plano'
@@ -57,6 +59,7 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
         ? preference.sandbox_init_point
         : preference.init_point;
       const win = window.open(checkoutUrl, '_blank', 'noopener');
+      hasOpenedRef.current = true;
       if (!win) {
         // fallback se popup bloquear: redireciona mesma aba
         window.location.href = checkoutUrl;
