@@ -242,8 +242,8 @@ async function handlePayment(supabase: any, paymentData: any) {
       throw paymentError
     }
 
-    // If payment is approved, update subscription
-    if (status === 'approved' || fullPaymentData.date_approved !== null) {
+    // If payment is approved or credited (Pix), update subscription
+    if (status === 'approved' || status === 'credited' || fullPaymentData.date_approved !== null) {
       await updateSubscriptionFromPayment(supabase, fullPaymentData)
     }
 
