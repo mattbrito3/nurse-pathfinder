@@ -47,7 +47,7 @@ serve(async (req) => {
       payment_methods: { installments: 12 },
       auto_return: "approved",
       back_urls: {
-        success: `${baseAppUrl}/pricing?payment=success`,
+        success: `${baseAppUrl}/dashboard?payment=success`,
         failure: `${baseAppUrl}/pricing?payment=failure`,
         pending: `${baseAppUrl}/pricing?payment=pending`,
       },

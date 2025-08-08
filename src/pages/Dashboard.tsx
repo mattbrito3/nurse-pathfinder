@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,40 @@ import { useFormattedDashboardStats } from "@/hooks/useDashboardStats";
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { stats, isLoading: statsLoading, formatNumber, getDescription } = useFormattedDashboardStats();
+
+  // Detect payment=success and poll subscription for up to 15s
+  const hasPaymentSuccess = useMemo(() => new URLSearchParams(location.search).get('payment') === 'success', [location.search]);
+  useEffect(() => {
+    if (!user || !hasPaymentSuccess) return;
+    let mounted = true;
+    let attempts = 0;
+    const poll = async () => {
+      try {
+        // hit a cheap endpoint: select active subscription for this user
+        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_subscriptions?user_id=eq.${user.id}&status=eq.active&select=*,subscription_plans(name)&limit=1`, {
+          headers: {
+            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          }
+        });
+        const data = await res.json();
+        if (mounted && Array.isArray(data) && data.length > 0) {
+          // remove query param and show toast via URL-free state
+          navigate('/dashboard', { replace: true });
+          return; // stop polling
+        }
+      } catch {}
+      attempts += 1;
+      if (mounted && attempts < 15) {
+        setTimeout(poll, 1000);
+      }
+    };
+    poll();
+    return () => { mounted = false; };
+  }, [user, hasPaymentSuccess, navigate]);
 
   // Redirecionar se não estiver logado
   useEffect(() => {
