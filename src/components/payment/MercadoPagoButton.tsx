@@ -27,14 +27,14 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
   const hasOpenedRef = useRef(false);
 
   const handlePayment = async () => {
-    if (hasOpenedRef.current) return; // evita abrir mais de uma aba
     if (!user) {
       toast.error('Faça login para continuar', {
         description: 'Você precisa estar logado para assinar um plano'
       });
       return;
     }
-
+    if (hasOpenedRef.current) return; // evita abrir mais de uma aba
+    hasOpenedRef.current = true; // ativa o guard imediatamente
     setIsLoading(true);
 
     try {
@@ -59,7 +59,6 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
         ? preference.sandbox_init_point
         : preference.init_point;
       const win = window.open(checkoutUrl, '_blank', 'noopener');
-      hasOpenedRef.current = true;
       if (!win) {
         // fallback se popup bloquear: redireciona mesma aba
         window.location.href = checkoutUrl;
@@ -75,13 +74,16 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
       });
     } finally {
       setIsLoading(false);
+      // Se falhar antes do redirect, libera novo clique
+      // Se der certo, a página será redirecionada e o componente desmonta
+      hasOpenedRef.current = false;
     }
   };
 
   return (
     <Button
       onClick={handlePayment}
-      disabled={isLoading}
+      disabled={isLoading || hasOpenedRef.current}
       className={className}
       variant="default"
     >
