@@ -82,7 +82,17 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
 
   return (
     <Button
-      onClick={handlePayment}
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        void handlePayment();
+      }}
+      onPointerDown={() => {
+        if (!hasOpenedRef.current) {
+          hasOpenedRef.current = true;
+        }
+      }}
       disabled={isLoading || hasOpenedRef.current}
       className={className}
       variant="default"
