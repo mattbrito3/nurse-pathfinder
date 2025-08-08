@@ -30,6 +30,13 @@ serve(async (req) => {
     const baseAppUrl = appUrl || Deno.env.get("APP_URL") || "https://teste.dosecerta.online";
     const functionsUrl = Deno.env.get("PROJECT_URL") || Deno.env.get("SUPABASE_URL");
 
+    // definir valor final (forçado via env ou informado), respeitando mínimo configurável
+    const requestedAmount = Number(Deno.env.get('MP_FORCE_AMOUNT') || amount);
+    const minAmount = Number(Deno.env.get('MP_MIN_AMOUNT') || '1.00');
+    const finalUnitPrice = Number.isFinite(requestedAmount)
+      ? Math.max(Number(requestedAmount.toFixed(2)), Math.max(0.01, minAmount))
+      : Math.max(Number(amount.toFixed(2)), Math.max(0.01, minAmount));
+
     const preferenceData = {
       external_reference: userId,
       metadata: { userId, planName },
@@ -39,7 +46,7 @@ serve(async (req) => {
           title: `Plano ${planName} - DoseCerta`,
           description: `Assinatura do plano ${planName}`,
           quantity: 1,
-          unit_price: Number(Deno.env.get('MP_FORCE_AMOUNT') || amount),
+          unit_price: finalUnitPrice,
           currency_id: "BRL",
           category_id: "education",
         },
@@ -57,7 +64,7 @@ serve(async (req) => {
     };
 
     // Chamada REST direta (SDK do MP não é compatível com Edge Runtime/Deno)
-    const resp = await fetch("https://api.mercadopago.com/checkout/preferences", {
+    let resp = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
@@ -68,7 +75,27 @@ serve(async (req) => {
 
     if (!resp.ok) {
       const bodyText = await resp.text();
-      throw new Error(`MercadoPago error: ${resp.status} - ${bodyText}`);
+      // fallback: se MP rejeitar valor mínimo, tenta com 1.00
+      if (resp.status === 400 && /min|least|menor|minimum|unit_price/i.test(bodyText)) {
+        const retryData = {
+          ...preferenceData,
+          items: [{ ...preferenceData.items[0], unit_price: 1.00 }],
+        };
+        resp = await fetch("https://api.mercadopago.com/checkout/preferences", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(retryData),
+        });
+        if (!resp.ok) {
+          const retryText = await resp.text();
+          throw new Error(`MercadoPago error (retry with 1.00): ${resp.status} - ${retryText}`);
+        }
+      } else {
+        throw new Error(`MercadoPago error: ${resp.status} - ${bodyText}`);
+      }
     }
 
     const created = await resp.json();
