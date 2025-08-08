@@ -6,19 +6,28 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { Payment, MercadoPagoConfig } from "https://esm.sh/mercadopago@2.2.0"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Instância do cliente Mercado Pago
-const mpClient = new MercadoPagoConfig({
-  accessToken: Deno.env.get('VITE_MERCADOPAGO_ACCESS_TOKEN') as string,
-});
-
-const payment = new Payment(mpClient);
+// Função REST para obter detalhes do pagamento (SDK não é compatível com Edge Runtime)
+async function fetchPaymentDetails(paymentId: string): Promise<any> {
+  const accessToken = Deno.env.get('VITE_MERCADOPAGO_ACCESS_TOKEN');
+  if (!accessToken) throw new Error('Missing MercadoPago access token');
+  const resp = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`MercadoPago payments fetch error: ${resp.status} - ${text}`);
+  }
+  return await resp.json();
+}
 
 // Função para verificar a assinatura do Mercado Pago
 async function verifyMercadoPagoSignature(request: Request, body: string): Promise<boolean> {
@@ -215,8 +224,8 @@ async function handlePayment(supabase: any, paymentData: any) {
   console.log('💳 Processing payment:', paymentData.id)
   
   try {
-    // Get full payment data using SDK
-    const fullPaymentData = await payment.get({ id: paymentData.id });
+    // Buscar dados completos do pagamento via REST
+    const fullPaymentData = await fetchPaymentDetails(paymentData.id);
     console.log('📨 Full payment data:', JSON.stringify(fullPaymentData, null, 2));
     
     const { id, status, external_reference, transaction_amount, payer } = fullPaymentData
