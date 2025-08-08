@@ -53,19 +53,12 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
         amount
       );
 
-      // Redirect to MercadoPago checkout (open in new tab) and keep this tab aguardando
+      // Redirect to MercadoPago checkout (mesma aba para evitar duplicidade de popups)
       const useSandbox = import.meta.env.VITE_USE_MERCADOPAGO_SANDBOX === 'true' || import.meta.env.DEV;
       const checkoutUrl = useSandbox && preference.sandbox_init_point
         ? preference.sandbox_init_point
         : preference.init_point;
-      const win = window.open(checkoutUrl, '_blank', 'noopener');
-      if (!win) {
-        // fallback se popup bloquear: redireciona mesma aba
-        window.location.href = checkoutUrl;
-        return;
-      }
-      // Leva o usuário para o dashboard aguardando aprovação (Pix/cash)
-      window.location.href = '/dashboard?payment=pending';
+      window.location.href = checkoutUrl;
 
     } catch (error) {
       console.error('❌ Payment error:', error);
