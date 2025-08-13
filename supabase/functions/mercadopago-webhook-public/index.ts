@@ -321,27 +321,55 @@ async function handleSubscription(supabase: any, subscriptionData: any) {
   
   const { id, status, external_reference, reason, auto_recurring } = subscriptionData
 
-  // Buscar o plan_id correto da tabela subscription_plans
-  console.log('🔍 Looking for subscription plan...');
-  const { data: plans, error: planError } = await supabase
-    .from('subscription_plans')
-    .select('id, name, price')
-    .eq('active', true)
-    .order('price', { ascending: true })
-    .limit(1);
+  // Buscar o plan_id correto baseado no valor da assinatura
+  console.log('🔍 Looking for subscription plan based on auto_recurring:', auto_recurring);
+  
+  let planId;
+  
+  // Se há auto_recurring com valor, buscar plano pago
+  if (auto_recurring && auto_recurring.transaction_amount > 0) {
+    const { data: paidPlans, error: paidPlanError } = await supabase
+      .from('subscription_plans')
+      .select('id, name, price')
+      .eq('active', true)
+      .gt('price', 0) // Apenas planos pagos
+      .order('price', { ascending: true })
+      .limit(1);
 
-  if (planError) {
-    console.error('❌ Error fetching subscription plans:', planError);
-    throw planError;
+    if (paidPlanError) {
+      console.error('❌ Error fetching paid subscription plans:', paidPlanError);
+      throw paidPlanError;
+    }
+
+    if (paidPlans && paidPlans.length > 0) {
+      planId = paidPlans[0].id;
+      console.log('✅ Found paid plan:', { id: planId, name: paidPlans[0].name, price: paidPlans[0].price });
+    } else {
+      console.error('❌ No paid subscription plans found');
+      throw new Error('No paid subscription plans available');
+    }
+  } else {
+    // Se não há valor, buscar plano gratuito
+    const { data: freePlans, error: freePlanError } = await supabase
+      .from('subscription_plans')
+      .select('id, name, price')
+      .eq('active', true)
+      .eq('price', 0) // Apenas plano gratuito
+      .limit(1);
+
+    if (freePlanError) {
+      console.error('❌ Error fetching free subscription plans:', freePlanError);
+      throw freePlanError;
+    }
+
+    if (freePlans && freePlans.length > 0) {
+      planId = freePlans[0].id;
+      console.log('✅ Found free plan:', { id: planId, name: freePlans[0].name, price: freePlans[0].price });
+    } else {
+      console.error('❌ No free subscription plans found');
+      throw new Error('No free subscription plans available');
+    }
   }
-
-  if (!plans || plans.length === 0) {
-    console.error('❌ No subscription plans found');
-    throw new Error('No subscription plans available');
-  }
-
-  const planId = plans[0].id; // Usar o UUID correto do plano
-  console.log('✅ Found plan:', { id: planId, name: plans[0].name, price: plans[0].price });
 
   // Update user subscription
   const { error: subError } = await supabase
@@ -375,27 +403,55 @@ async function handleSubscriptionPayment(supabase: any, paymentData: any) {
 async function updateSubscriptionFromPayment(supabase: any, paymentData: any) {
   const { external_reference, transaction_amount, metadata } = paymentData
 
-  // Buscar o plan_id correto da tabela subscription_plans
-  console.log('🔍 Looking for subscription plan...');
-  const { data: plans, error: planError } = await supabase
-    .from('subscription_plans')
-    .select('id, name, price')
-    .eq('active', true)
-    .order('price', { ascending: true })
-    .limit(1);
+  // Buscar o plan_id correto baseado no valor do pagamento
+  console.log('🔍 Looking for subscription plan based on amount:', transaction_amount);
+  
+  let planId;
+  
+  // Se o valor for maior que 0, buscar plano pago
+  if (transaction_amount > 0) {
+    const { data: paidPlans, error: paidPlanError } = await supabase
+      .from('subscription_plans')
+      .select('id, name, price')
+      .eq('active', true)
+      .gt('price', 0) // Apenas planos pagos
+      .order('price', { ascending: true })
+      .limit(1);
 
-  if (planError) {
-    console.error('❌ Error fetching subscription plans:', planError);
-    throw planError;
+    if (paidPlanError) {
+      console.error('❌ Error fetching paid subscription plans:', paidPlanError);
+      throw paidPlanError;
+    }
+
+    if (paidPlans && paidPlans.length > 0) {
+      planId = paidPlans[0].id;
+      console.log('✅ Found paid plan:', { id: planId, name: paidPlans[0].name, price: paidPlans[0].price });
+    } else {
+      console.error('❌ No paid subscription plans found');
+      throw new Error('No paid subscription plans available');
+    }
+  } else {
+    // Se o valor for 0, buscar plano gratuito
+    const { data: freePlans, error: freePlanError } = await supabase
+      .from('subscription_plans')
+      .select('id, name, price')
+      .eq('active', true)
+      .eq('price', 0) // Apenas plano gratuito
+      .limit(1);
+
+    if (freePlanError) {
+      console.error('❌ Error fetching free subscription plans:', freePlanError);
+      throw freePlanError;
+    }
+
+    if (freePlans && freePlans.length > 0) {
+      planId = freePlans[0].id;
+      console.log('✅ Found free plan:', { id: planId, name: freePlans[0].name, price: freePlans[0].price });
+    } else {
+      console.error('❌ No free subscription plans found');
+      throw new Error('No free subscription plans available');
+    }
   }
-
-  if (!plans || plans.length === 0) {
-    console.error('❌ No subscription plans found');
-    throw new Error('No subscription plans available');
-  }
-
-  const planId = plans[0].id; // Usar o UUID correto do plano
-  console.log('✅ Found plan:', { id: planId, name: plans[0].name, price: plans[0].price });
 
   // Update user subscription
   const { error: updateError } = await supabase
