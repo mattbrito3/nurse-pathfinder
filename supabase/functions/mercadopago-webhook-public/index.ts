@@ -239,14 +239,23 @@ async function handlePayment(supabase: any, paymentData: any) {
     const { error: paymentError } = await supabase
       .from('payment_history')
       .upsert({
+        user_id: external_reference, // Use external_reference as user_id
         payment_provider: 'mercadopago',
         payment_id: id.toString(),
-        user_id: external_reference, // alinhar com consultas do app
         amount: transaction_amount,
         currency: 'BRL',
-        status: status,
-        payer_email: payer?.email,
+        status: status === 'approved' ? 'succeeded' : status === 'pending' ? 'pending' : 'failed',
+        description: `Pagamento MercadoPago - ${status}`,
+        payment_method: 'pix',
+        external_reference,
         payment_data: fullPaymentData,
+        metadata: {
+          mercadopago_payment_id: id,
+          external_reference,
+          payer_email: payer?.email,
+          payer_data: payer,
+          full_payment_data: fullPaymentData
+        },
         created_at: new Date().toISOString()
       })
 
