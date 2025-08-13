@@ -283,13 +283,10 @@ async function handlePayment(supabase: any, paymentData: any) {
   console.log('💳 Processing payment:', paymentData.id)
   
   try {
-    // Buscar dados completos do pagamento via REST
-    const fullPaymentData = await fetchPaymentDetails(paymentData.id);
-    console.log('📨 Full payment data:', JSON.stringify(fullPaymentData, null, 2));
-    
-    const { id, status, external_reference, transaction_amount, payer } = fullPaymentData
+    // Usar dados do webhook diretamente, sem buscar na API
+    const { id, status, external_reference, transaction_amount, payer } = paymentData
 
-    console.log('🔍 Payment details extracted:');
+    console.log('🔍 Payment details from webhook:');
     console.log('  - ID:', id);
     console.log('  - Status:', status);
     console.log('  - External Reference:', external_reference);
@@ -317,13 +314,13 @@ async function handlePayment(supabase: any, paymentData: any) {
         description: `Pagamento MercadoPago - ${status}`,
         payment_method: 'pix',
         external_reference,
-        payment_data: fullPaymentData,
+        payment_data: paymentData,
         metadata: {
           mercadopago_payment_id: id,
           external_reference,
           payer_email: payer?.email,
           payer_data: payer,
-          full_payment_data: fullPaymentData
+          full_payment_data: paymentData
         },
         created_at: new Date().toISOString()
       })
@@ -336,9 +333,9 @@ async function handlePayment(supabase: any, paymentData: any) {
     console.log('✅ Payment history updated successfully');
 
     // If payment is approved or credited (Pix), update subscription
-    if (status === 'approved' || status === 'credited' || fullPaymentData.date_approved !== null) {
+    if (status === 'approved' || status === 'credited') {
       console.log('🔄 Payment approved, updating subscription...');
-      await updateSubscriptionFromPayment(supabase, fullPaymentData)
+      await updateSubscriptionFromPayment(supabase, paymentData)
     } else {
       console.log('⚠️ Payment not approved yet, status:', status);
     }
