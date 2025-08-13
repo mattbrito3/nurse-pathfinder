@@ -24,15 +24,13 @@ interface CalculatorLimits {
 
 export const useCalculatorLimits = () => {
   const { user } = useAuth();
-  const { hasPremiumAccess, planLimits, subscriptionLoading } = useSubscription();
+  const { isActive, isLoading: subscriptionLoading } = useSubscription();
   const [usage, setUsage] = useState<CalculatorUsage | null>(null);
   const [isLoadingUsage, setIsLoadingUsage] = useState(true);
 
-
-
   // Definir limites baseado no plano
   const getCalculatorLimits = (): CalculatorLimits => {
-    if (hasPremiumAccess) {
+    if (isActive) {
       // Planos pagos: acesso completo
       return {
         maxDailyCalculations: 999, // Ilimitado na prática
@@ -178,7 +176,7 @@ export const useCalculatorLimits = () => {
   // Carregar uso inicial
   useEffect(() => {
     loadUsage();
-  }, [user?.id, hasPremiumAccess]);
+  }, [user?.id, isActive]);
 
   const limits = getCalculatorLimits();
 
@@ -197,7 +195,7 @@ export const useCalculatorLimits = () => {
     incrementUsage,
     
     // Informações úteis
-    isFreePlan: !hasPremiumAccess,
+    isFreePlan: !isActive,
     usagePercentage: usage ? (usage.daily_calculations / limits.maxDailyCalculations) * 100 : 0
   };
 };

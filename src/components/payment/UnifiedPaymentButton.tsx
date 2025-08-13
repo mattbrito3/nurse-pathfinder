@@ -8,6 +8,8 @@ interface UnifiedPaymentButtonProps {
   planPeriod: string;
   className?: string;
   children?: React.ReactNode;
+  onSuccess?: () => void;
+  onError?: (error: any) => void;
 }
 
 const UnifiedPaymentButton: React.FC<UnifiedPaymentButtonProps> = (props) => {

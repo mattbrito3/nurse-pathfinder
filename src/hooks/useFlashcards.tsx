@@ -1,48 +1,41 @@
+/**
+ * 🧠 FLASHCARDS HOOK
+ * Sistema completo de flashcards com repetição espaçada
+ */
+
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { toast } from 'sonner';
 
-// Utility function to shuffle array (Fisher-Yates algorithm)
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
-}
-
-// Types
 export interface FlashcardCategory {
   id: string;
   name: string;
-  description: string;
-  color: string;
-  icon: string;
-  created_at: string;
-  updated_at: string;
-  // Calculated statistics
+  description?: string;
+  color?: string;
+  icon?: string;
   flashcard_count?: number;
-  avg_difficulty?: number | null;
+  created_at: string;
 }
 
 export interface Flashcard {
   id: string;
   category_id: string;
+  category_name?: string;
   front: string;
   back: string;
   difficulty_level: number;
-  created_by: string | null;
+  created_by?: string;
   is_public: boolean;
-  tags: string[];
+  tags?: string[];
   created_at: string;
   updated_at: string;
-  category?: FlashcardCategory;
-  progress?: UserProgress;
+  progress?: UserFlashcardProgress;
 }
 
-export interface UserProgress {
+export interface UserFlashcardProgress {
   id: string;
   user_id: string;
   flashcard_id: string;
@@ -54,8 +47,8 @@ export interface UserProgress {
   times_correct: number;
   times_incorrect: number;
   consecutive_correct: number;
-  last_reviewed_at: string | null;
-  next_review_at: string;
+  last_reviewed_at?: string;
+  next_review_at?: string;
   mastery_level: number;
   is_favorite: boolean;
   created_at: string;
@@ -66,17 +59,21 @@ export interface StudySession {
   id: string;
   user_id: string;
   session_type: 'review' | 'learning' | 'practice';
-  category_id: string | null;
+  category_id?: string;
   cards_studied: number;
   cards_correct: number;
   cards_incorrect: number;
   total_time_seconds: number;
   started_at: string;
-  ended_at: string | null;
+  ended_at?: string;
   created_at: string;
 }
 
 export interface FlashcardResponse {
+  id: string;
+  user_id: string;
+  flashcard_id: string;
+  session_id: string;
   quality: number; // 0-5 (SM-2 algorithm)
   response_time_ms: number;
   was_correct: boolean;
@@ -85,6 +82,7 @@ export interface FlashcardResponse {
 
 export const useFlashcards = () => {
   const { user } = useAuth();
+  const { isActive } = useSubscription();
   const queryClient = useQueryClient();
   const [currentSession, setCurrentSession] = useState<StudySession | null>(null);
 
@@ -112,93 +110,58 @@ export const useFlashcards = () => {
       
       if (error) throw error;
       
-             // Process categories to calculate statistics
-       return data.map(category => {
-         // Handle categories with no flashcards
-         const allFlashcards = category.flashcards || [];
-         
-         // Filter flashcards user can see (public + their private ones)
-         const visibleFlashcards = allFlashcards.filter(f => 
-           f.is_public || (user?.id && f.created_by === user.id)
-         );
-         
-         const flashcard_count = visibleFlashcards.length;
-         const avg_difficulty = flashcard_count > 0 
-           ? Math.round((visibleFlashcards.reduce((sum, f) => sum + f.difficulty_level, 0) / flashcard_count) * 10) / 10
-           : null;
-           
-         // 🔍 DEBUG: Log category statistics
-         console.log(`📊 Category "${category.name}":`, {
-           total_flashcards: allFlashcards.length,
-           visible_flashcards: flashcard_count,
-           avg_difficulty
-         });
-           
-         return {
-           ...category,
-           flashcard_count,
-           avg_difficulty,
-           flashcards: undefined // Remove to avoid circular data
-         };
-       }) as FlashcardCategory[];
-    }
+      return data?.map(category => ({
+        ...category,
+        flashcard_count: category.flashcards?.length || 0
+      })) || [];
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 
-  // Fetch flashcards by category
-  const useFlashcardsByCategory = (categoryId?: string, enabled: boolean = true) => {
-    return useQuery({
-      queryKey: ['flashcards', categoryId, user?.id],
-      staleTime: 0, // Force refresh to see updated times_seen
-      queryFn: async () => {
-        // First get the flashcards
-        let query = supabase
-          .from('flashcards')
-          .select(`
-            *,
-            category:flashcard_categories(*)
-          `)
-          .or(`is_public.eq.true,and(is_public.eq.false,created_by.eq.${user.id})`)
-          .order('created_at', { ascending: false });
+  // Fetch user statistics
+  const {
+    data: userStats = null,
+    isLoading: statsLoading,
+    error: statsError
+  } = useQuery({
+    queryKey: ['user-flashcard-stats', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      
+      const { data, error } = await supabase
+        .from('user_flashcard_progress')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      const totalCards = data?.length || 0;
+      const masteredCards = data?.filter(p => p.mastery_level >= 5).length || 0;
+      const totalReviews = data?.reduce((sum, p) => sum + p.times_seen, 0) || 0;
+      const correctReviews = data?.reduce((sum, p) => sum + p.times_correct, 0) || 0;
+      const accuracy = totalReviews > 0 ? (correctReviews / totalReviews) * 100 : 0;
+      
+      return {
+        totalCards,
+        masteredCards,
+        totalReviews,
+        correctReviews,
+        accuracy: Math.round(accuracy * 100) / 100
+      };
+    },
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000 // 2 minutes
+  });
 
-        if (categoryId) {
-          query = query.eq('category_id', categoryId);
-        }
-
-        const { data: flashcardsData, error: flashcardsError } = await query;
-        if (flashcardsError) throw flashcardsError;
-
-        if (!flashcardsData || !user?.id) return flashcardsData as Flashcard[];
-
-        // Get progress for these flashcards
-        const flashcardIds = flashcardsData.map(f => f.id);
-        const { data: progressData, error: progressError } = await supabase
-          .from('user_flashcard_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .in('flashcard_id', flashcardIds);
-
-        if (progressError) throw progressError;
-
-        // Merge the data
-        const flashcardsWithProgress = flashcardsData.map(flashcard => ({
-          ...flashcard,
-          progress: progressData?.find(p => p.flashcard_id === flashcard.id) || null
-        }));
-
-        return flashcardsWithProgress as Flashcard[];
-      },
-      enabled: !!categories.length && enabled
-    });
-  };
-
-  // Fetch favorite flashcards across all categories
+  // Fetch favorite flashcards
   const useFavoriteFlashcards = () => {
     return useQuery({
       queryKey: ['favorite-flashcards', user?.id],
       queryFn: async () => {
         if (!user?.id) return [];
         
-        // Get favorite flashcard IDs
+        // Get favorite flashcards
         const { data: progressData, error: progressError } = await supabase
           .from('user_flashcard_progress')
           .select('flashcard_id')
@@ -241,8 +204,7 @@ export const useFlashcards = () => {
         return flashcardsWithProgress as Flashcard[];
       },
       enabled: !!user?.id,
-      staleTime: 0, // Always fetch fresh data
-      cacheTime: 0  // Don't cache at all
+      staleTime: 0 // Always fetch fresh data
     });
   };
 
@@ -273,9 +235,16 @@ export const useFlashcards = () => {
   const getStudyCards = async (sessionType: 'review' | 'learning' | 'practice', categoryId?: string, limit: number = 10) => {
     if (!user?.id) throw new Error('User not authenticated');
     
-
-
-
+    // Check monthly usage limit for free users
+    if (!isActive) {
+      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const monthlyUsageKey = `flashcard_monthly_usage_${user.id}_${currentMonth}`;
+      const currentUsage = parseInt(localStorage.getItem(monthlyUsageKey) || '0');
+      
+      if (currentUsage >= 50) {
+        throw new Error('Limite mensal de 50 flashcards atingido. Faça upgrade para acessar flashcards ilimitados.');
+      }
+    }
 
     if (sessionType === 'review') {
       // Use due cards for review
@@ -288,420 +257,190 @@ export const useFlashcards = () => {
       if (error) throw error;
       return data || [];
     } else {
-      // For learning/practice, get cards from specific category or all
-      // 🔧 FIXED: Split into two queries and combine (more reliable than OR)
-      
-      // Query 1: Get public flashcards
-      let publicQuery = supabase
+      // For learning/practice, get random cards
+      let query = supabase
         .from('flashcards')
-        .select('id, front, back, difficulty_level, category_id, category:flashcard_categories(name), created_by, is_public')
-        .eq('is_public', true);
-
+        .select(`
+          *,
+          category:flashcard_categories(*)
+        `)
+        .or(`is_public.eq.true,and(is_public.eq.false,created_by.eq.${user.id})`)
+        .limit(limit);
+      
       if (categoryId) {
-        publicQuery = publicQuery.eq('category_id', categoryId);
-      }
-
-      // Query 2: Get user's private flashcards
-      let privateQuery = supabase
-        .from('flashcards')
-        .select('id, front, back, difficulty_level, category_id, category:flashcard_categories(name), created_by, is_public')
-        .eq('is_public', false)
-        .eq('created_by', user.id);
-
-      if (categoryId) {
-        privateQuery = privateQuery.eq('category_id', categoryId);
-      }
-
-      // Execute both queries
-      const [publicResult, privateResult] = await Promise.all([
-        publicQuery,
-        privateQuery
-      ]);
-
-      if (publicResult.error) throw publicResult.error;
-      if (privateResult.error) throw privateResult.error;
-
-      // Combine results with guaranteed private inclusion
-      const publicCards = publicResult.data || [];
-      const privateCards = privateResult.data || [];
-      
-      // 🎯 SMART MIXING: Ensure private cards are always included
-      let finalCards = [];
-      
-      if (privateCards.length > 0) {
-        // Reserve spots for private cards (max 30% of limit)
-        const maxPrivateSlots = Math.max(1, Math.floor(limit * 0.3));
-        const guaranteedPrivateCards = privateCards.slice(0, maxPrivateSlots);
-        const remainingSlots = limit - guaranteedPrivateCards.length;
-        
-        // Fill remaining slots with public cards
-        const selectedPublicCards = publicCards.slice(0, remainingSlots);
-        
-        // Mix them together and ALWAYS shuffle for better learning
-        const mixedCards = [...guaranteedPrivateCards, ...selectedPublicCards];
-        finalCards = shuffleArray(mixedCards); // 🎲 ALWAYS shuffle, regardless of category
-      } else {
-        // No private cards, just use public ones and shuffle
-        const selectedCards = publicCards.slice(0, limit);
-        finalCards = shuffleArray(selectedCards); // 🎲 ALWAYS shuffle for variety
+        query = query.eq('category_id', categoryId);
       }
       
-      const data = finalCards;
-
-      // 🔍 DEBUG: Log what cards are being returned
-      const privateCardsInFinal = data.filter(card => card.created_by === user.id).length;
-      console.log('🎯 getStudyCards DEBUG (SMART MIXING + SHUFFLE):', {
-        sessionType,
-        categoryId,
-        limit,
-        user_id: user.id,
-        public_cards_available: publicCards.length,
-        private_cards_available: privateCards.length,
-        private_cards_included: privateCardsInFinal,
-        total_cards_returned: data?.length || 0,
-        mixing_strategy: privateCards.length > 0 ? '30% private guaranteed' : 'public only',
-        shuffle_applied: '🎲 Always shuffled for random order',
-        category_filter: categoryId ? `category_id = ${categoryId}` : 'no category filter',
-        cards_detail: data?.map(card => ({
-          id: card.id,
-          front: card.front.substring(0, 50),
-          is_public: card.is_public,
-          created_by: card.created_by,
-          is_mine: card.created_by === user.id,
-          category_id: card.category_id
-        }))
-      });
+      const { data, error } = await query;
+      if (error) throw error;
       
-      // 🔍 DEBUG: Let's also check if your specific flashcard exists anywhere
-      console.log('🔍 Private cards found:', {
-        total_private_cards: privateCards.length,
-        private_cards_detail: privateCards.map(card => ({
-          id: card.id,
-          front: card.front,
-          is_public: card.is_public,
-          category_id: card.category_id
-        }))
-      });
-
-      let mappedCards = data?.map((card, index) => ({
-        flashcard_id: card.id || `card_${index}_${Date.now()}`,
-        front: card.front,
-        back: card.back,
-        category_name: card.category?.name || 'Geral',
-        difficulty_level: card.difficulty_level,
-        mastery_level: 0, // Will add progress data later
-        times_seen: 0 // Will add progress data later
-      })) || [];
-
-      // If no category specified (random exploration), shuffle the cards
-      if (!categoryId && mappedCards.length > 0) {
-        mappedCards = shuffleArray(mappedCards);
-      }
-
-      return mappedCards;
+      return data || [];
     }
-  };
-
-  // Fetch user progress for a specific flashcard
-  const getUserProgress = async (flashcardId: string): Promise<UserProgress | null> => {
-    if (!user?.id) return null;
-
-    const { data, error } = await supabase
-      .from('user_flashcard_progress')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('flashcard_id', flashcardId)
-      .single();
-
-    if (error && error.code !== 'PGRST116') throw error;
-    return data;
   };
 
   // Start study session
-  const startStudySession = useMutation({
-    mutationFn: async ({ 
-      sessionType, 
-      categoryId 
-    }: { 
-      sessionType: 'review' | 'learning' | 'practice';
-      categoryId?: string;
-    }) => {
-      if (!user?.id) throw new Error('User not authenticated');
+  const startStudySession = async ({ sessionType, categoryId }: { sessionType: 'review' | 'learning' | 'practice', categoryId?: string }) => {
+    if (!user?.id) throw new Error('User not authenticated');
+    
+    // Check monthly usage limit for free users
+    if (!isActive) {
+      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+      const monthlyUsageKey = `flashcard_monthly_usage_${user.id}_${currentMonth}`;
+      const currentUsage = parseInt(localStorage.getItem(monthlyUsageKey) || '0');
+      
+      if (currentUsage >= 50) {
+        throw new Error('Limite mensal de 50 flashcards atingido. Faça upgrade para acessar flashcards ilimitados.');
+      }
+    }
 
-      const { data, error } = await supabase
-        .from('flashcard_study_sessions')
+    const { data, error } = await supabase
+      .from('flashcard_study_sessions')
+      .insert({
+        user_id: user.id,
+        session_type: sessionType,
+        category_id: categoryId
+      })
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    setCurrentSession(data);
+    return data;
+  };
+
+  // End study session
+  const endStudySession = async (sessionId: string, stats: { cardsStudied: number, cardsCorrect: number, cardsIncorrect: number, totalTimeSeconds: number }) => {
+    const { error } = await supabase
+      .from('flashcard_study_sessions')
+      .update({
+        cards_studied: stats.cardsStudied,
+        cards_correct: stats.cardsCorrect,
+        cards_incorrect: stats.cardsIncorrect,
+        total_time_seconds: stats.totalTimeSeconds,
+        ended_at: new Date().toISOString()
+      })
+      .eq('id', sessionId);
+    
+    if (error) throw error;
+    
+    // Update monthly usage for free users
+    if (!isActive) {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      const monthlyUsageKey = `flashcard_monthly_usage_${user?.id}_${currentMonth}`;
+      const currentUsage = parseInt(localStorage.getItem(monthlyUsageKey) || '0');
+      localStorage.setItem(monthlyUsageKey, (currentUsage + stats.cardsStudied).toString());
+    }
+    
+    setCurrentSession(null);
+    queryClient.invalidateQueries({ queryKey: ['user-flashcard-stats'] });
+  };
+
+  // Submit flashcard response
+  const submitResponse = useMutation({
+    mutationFn: async ({ flashcardId, quality, responseTime, wasCorrect, reviewType }: {
+      flashcardId: string;
+      quality: number;
+      responseTime: number;
+      wasCorrect: boolean;
+      reviewType: 'scheduled' | 'extra_practice' | 'cramming';
+    }) => {
+      if (!user?.id || !currentSession) throw new Error('User not authenticated or no active session');
+      
+      // Insert response
+      const { data: responseData, error: responseError } = await supabase
+        .from('flashcard_responses')
         .insert({
           user_id: user.id,
-          session_type: sessionType,
-          category_id: categoryId || null
+          flashcard_id: flashcardId,
+          session_id: currentSession.id,
+          quality,
+          response_time_ms: responseTime,
+          was_correct: wasCorrect,
+          review_type: reviewType
         })
         .select()
         .single();
-
-      if (error) throw error;
-      return data as StudySession;
-    },
-    onSuccess: (session) => {
-      setCurrentSession(session);
-    }
-  });
-
-  // End study session
-  const endStudySession = useMutation({
-    mutationFn: async (sessionId: string) => {
-      const { data, error } = await supabase
-        .from('flashcard_study_sessions')
-        .update({ ended_at: new Date().toISOString() })
-        .eq('id', sessionId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      setCurrentSession(null);
-      queryClient.invalidateQueries({ queryKey: ['study-sessions'] });
-    }
-  });
-
-  // Mark flashcard as viewed (increment times_seen)
-  const markAsViewed = useMutation({
-    mutationFn: async (flashcardId: string) => {
-      if (!user?.id) throw new Error('User not authenticated');
-
-      // Check if progress exists
-      const { data: existingProgress } = await supabase
+      
+      if (responseError) throw responseError;
+      
+      // Update progress using SM-2 algorithm
+      const { data: progressData, error: progressError } = await supabase
         .from('user_flashcard_progress')
         .select('*')
         .eq('user_id', user.id)
         .eq('flashcard_id', flashcardId)
-        .maybeSingle();
-
-      if (existingProgress) {
+        .single();
+      
+      if (progressError && progressError.code !== 'PGRST116') throw progressError;
+      
+      let newProgress;
+      if (progressData) {
         // Update existing progress
-        const { error } = await supabase
+        const { ease_factor, interval_days, repetition_count } = progressData;
+        const newEaseFactor = Math.max(1.3, ease_factor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
+        
+        let newInterval;
+        if (quality >= 3) {
+          if (interval_days === 1) {
+            newInterval = 6;
+          } else {
+            newInterval = Math.round(interval_days * newEaseFactor);
+          }
+        } else {
+          newInterval = 1;
+        }
+        
+        const newRepetitionCount = quality >= 3 ? repetition_count + 1 : 0;
+        
+        const { error: updateError } = await supabase
           .from('user_flashcard_progress')
           .update({
-            times_seen: existingProgress.times_seen + 1,
-            last_reviewed_at: new Date().toISOString()
+            ease_factor: newEaseFactor,
+            interval_days: newInterval,
+            repetition_count: newRepetitionCount,
+            times_seen: progressData.times_seen + 1,
+            times_correct: progressData.times_correct + (wasCorrect ? 1 : 0),
+            times_incorrect: progressData.times_incorrect + (wasCorrect ? 0 : 1),
+            consecutive_correct: wasCorrect ? progressData.consecutive_correct + 1 : 0,
+            last_reviewed_at: new Date().toISOString(),
+            next_review_at: new Date(Date.now() + newInterval * 24 * 60 * 60 * 1000).toISOString(),
+            mastery_level: Math.min(5, Math.floor(newRepetitionCount / 2))
           })
-          .eq('id', existingProgress.id);
-
-        if (error) throw error;
-        return { ...existingProgress, times_seen: existingProgress.times_seen + 1 };
+          .eq('id', progressData.id);
+        
+        if (updateError) throw updateError;
       } else {
-        // Create new progress record
-        const { data, error } = await supabase
+        // Create new progress
+        const { error: insertError } = await supabase
           .from('user_flashcard_progress')
           .insert({
             user_id: user.id,
             flashcard_id: flashcardId,
+            ease_factor: 2.5,
+            interval_days: quality >= 3 ? 6 : 1,
+            repetition_count: quality >= 3 ? 1 : 0,
             times_seen: 1,
-            times_correct: 0,
-            times_incorrect: 0,
-            consecutive_correct: 0,
-            last_reviewed_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      }
-    },
-    onSuccess: () => {
-      // Invalidate queries to refresh the UI
-      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-      queryClient.invalidateQueries({ queryKey: ['user-flashcard-stats'] });
-    }
-  });
-
-  // Submit flashcard response
-  const submitResponse = useMutation({
-    mutationFn: async ({
-      flashcardId,
-      response,
-      sessionId
-    }: {
-      flashcardId: string;
-      response: FlashcardResponse;
-      sessionId?: string;
-    }) => {
-      if (!user?.id) throw new Error('User not authenticated');
-
-      // 1. Insert response record
-      if (sessionId) {
-        await supabase
-          .from('flashcard_responses')
-          .insert({
-            session_id: sessionId,
-            user_id: user.id,
-            flashcard_id: flashcardId,
-            quality: response.quality,
-            response_time_ms: response.response_time_ms,
-            was_correct: response.was_correct,
-            review_type: response.review_type
+            times_correct: wasCorrect ? 1 : 0,
+            times_incorrect: wasCorrect ? 0 : 1,
+            consecutive_correct: wasCorrect ? 1 : 0,
+            last_reviewed_at: new Date().toISOString(),
+            next_review_at: new Date(Date.now() + (quality >= 3 ? 6 : 1) * 24 * 60 * 60 * 1000).toISOString(),
+            mastery_level: quality >= 3 ? 1 : 0
           });
+        
+        if (insertError) throw insertError;
       }
-
-      // 2. Get or create user progress
-      let progress = await getUserProgress(flashcardId);
       
-      if (!progress) {
-        const { data, error } = await supabase
-          .from('user_flashcard_progress')
-          .insert({
-            user_id: user.id,
-            flashcard_id: flashcardId,
-            times_seen: 1,
-            times_correct: response.was_correct ? 1 : 0,
-            times_incorrect: response.was_correct ? 0 : 1,
-            consecutive_correct: response.was_correct ? 1 : 0,
-            last_reviewed_at: new Date().toISOString()
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        progress = data;
-      }
-
-      // 3. Calculate next review using spaced repetition
-      const { data: nextReview, error: calcError } = await supabase
-        .rpc('calculate_next_review', {
-          ease_factor: progress.ease_factor,
-          interval_days: progress.interval_days,
-          quality: response.quality
-        });
-
-      if (calcError) throw calcError;
-
-      const newReview = nextReview[0];
-      const nextReviewDate = new Date();
-      
-      // 🛡️ SAFETY: Limit interval to max 365 days (1 year) to prevent timestamp overflow
-      const safeInterval = Math.min(newReview.new_interval, 365);
-      nextReviewDate.setDate(nextReviewDate.getDate() + safeInterval);
-      
-      // 🔍 DEBUG: Log interval safety check
-      if (newReview.new_interval > 365) {
-        console.warn('⚠️ INTERVAL CAPPED:', {
-          original_interval: newReview.new_interval,
-          capped_interval: safeInterval,
-          flashcard_id: flashcardId
-        });
-      }
-
-      // 4. Update progress
-      const qualityHistory = [...progress.quality_responses, response.quality].slice(-10); // Keep last 10
-      const newConsecutive = response.was_correct ? progress.consecutive_correct + 1 : 0;
-      
-      // 🎯 IMPROVED MASTERY ALGORITHM - More practical and faster progression
-      // Bonus progression for "Perfeito" (quality 5) responses
-      const perfectCount = qualityHistory.filter(q => q === 5).length;
-      const hasPerfectBonus = perfectCount >= 3; // 3+ "Perfeito" responses give bonus
-      
-      let newMasteryLevel = 0;
-      if (newConsecutive >= 8 || (newConsecutive >= 6 && hasPerfectBonus)) {
-        newMasteryLevel = 5; // DOMINADO after 8 consecutive OR 6 consecutive with perfect bonus
-      } else if (newConsecutive >= 6 || (newConsecutive >= 5 && hasPerfectBonus)) {
-        newMasteryLevel = 4; // Avançado after 6 consecutive OR 5 with perfect bonus
-      } else if (newConsecutive >= 4 || (newConsecutive >= 3 && hasPerfectBonus)) {
-        newMasteryLevel = 3; // Intermediário after 4 consecutive OR 3 with perfect bonus
-      } else if (newConsecutive >= 3) {
-        newMasteryLevel = 2; // Básico after 3 consecutive
-      } else if (newConsecutive >= 2) {
-        newMasteryLevel = 1; // Iniciante after 2 consecutive
-      } else {
-        newMasteryLevel = 0; // Novo
-      }
-
-      // 🔍 DEBUG: Log mastery calculation
-      console.log('🎯 MASTERY CALCULATION DEBUG:', {
-        flashcardId,
-        quality: response.quality,
-        was_correct: response.was_correct,
-        old_consecutive: progress.consecutive_correct,
-        new_consecutive: newConsecutive,
-        perfect_count: perfectCount,
-        has_perfect_bonus: hasPerfectBonus,
-        old_mastery: progress.mastery_level,
-        new_mastery: newMasteryLevel,
-        times_correct: progress.times_correct + (response.was_correct ? 1 : 0),
-        times_seen: progress.times_seen + 1,
-        quality_history: qualityHistory
-      });
-
-      const { error: updateError } = await supabase
-        .from('user_flashcard_progress')
-        .update({
-          ease_factor: newReview.new_ease_factor,
-          interval_days: newReview.new_interval,
-          repetition_count: newReview.new_repetition_count,
-          quality_responses: qualityHistory,
-          times_seen: progress.times_seen + 1,
-          times_correct: progress.times_correct + (response.was_correct ? 1 : 0),
-          times_incorrect: progress.times_incorrect + (response.was_correct ? 0 : 1),
-          consecutive_correct: newConsecutive,
-          last_reviewed_at: new Date().toISOString(),
-          next_review_at: nextReviewDate.toISOString(),
-          mastery_level: newMasteryLevel
-        })
-        .eq('id', progress.id);
-
-      if (updateError) throw updateError;
-
-      // 5. Update session stats
-      if (sessionId) {
-        // Get current session stats from database to avoid state sync issues
-        const { data: currentSessionData } = await supabase
-          .from('flashcard_study_sessions')
-          .select('cards_studied, cards_correct, cards_incorrect, total_time_seconds')
-          .eq('id', sessionId)
-          .single();
-
-        if (currentSessionData) {
-          const newStats = {
-            cards_studied: (currentSessionData.cards_studied || 0) + 1,
-            cards_correct: (currentSessionData.cards_correct || 0) + (response.was_correct ? 1 : 0),
-            cards_incorrect: (currentSessionData.cards_incorrect || 0) + (response.was_correct ? 0 : 1),
-            total_time_seconds: (currentSessionData.total_time_seconds || 0) + Math.floor(response.response_time_ms / 1000)
-          };
-
-          console.log('📊 Atualizando estatísticas da sessão:', {
-            sessionId,
-            before: currentSessionData,
-            after: newStats,
-            wasCorrect: response.was_correct
-          });
-
-          const { error: sessionUpdateError } = await supabase
-            .from('flashcard_study_sessions')
-            .update(newStats)
-            .eq('id', sessionId);
-
-          if (sessionUpdateError) {
-            console.error('❌ Erro ao atualizar estatísticas da sessão:', sessionUpdateError);
-          } else {
-            console.log('✅ Estatísticas da sessão atualizadas com sucesso!');
-          }
-        }
-      }
-
-      return { progress, nextReview: newReview };
+      return responseData;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['due-cards'] });
-      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
       queryClient.invalidateQueries({ queryKey: ['user-flashcard-stats'] });
-      // Invalidate analytics queries to update charts
-      queryClient.invalidateQueries({ queryKey: ['analytics-overall-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['analytics-weekly-progress'] });
-      queryClient.invalidateQueries({ queryKey: ['analytics-category-stats'] });
-      queryClient.invalidateQueries({ queryKey: ['analytics-mastery-distribution'] });
-      queryClient.invalidateQueries({ queryKey: ['analytics-study-streak'] });
-      refetchDueCards();
+    },
+    onError: (error) => {
+      console.error('Error submitting response:', error);
+      toast.error('Erro ao salvar resposta. Tente novamente.');
     }
   });
 
@@ -709,150 +448,62 @@ export const useFlashcards = () => {
   const toggleFavorite = useMutation({
     mutationFn: async (flashcardId: string) => {
       if (!user?.id) throw new Error('User not authenticated');
-
-      const progress = await getUserProgress(flashcardId);
       
-      if (!progress) {
-        // Create progress with favorite
+      const { data: progress, error: fetchError } = await supabase
+        .from('user_flashcard_progress')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('flashcard_id', flashcardId)
+        .single();
+      
+      if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+      
+      if (progress) {
+        // Update existing progress
+        const { error } = await supabase
+          .from('user_flashcard_progress')
+          .update({ is_favorite: !progress.is_favorite })
+          .eq('id', progress.id);
+        
+        if (error) throw error;
+        return !progress.is_favorite;
+      } else {
+        // Create new progress with favorite
         const { error } = await supabase
           .from('user_flashcard_progress')
           .insert({
             user_id: user.id,
             flashcard_id: flashcardId,
-            is_favorite: true,
-            mastery_level: 0,
-            times_seen: 0
+            is_favorite: true
           });
+        
         if (error) throw error;
-      } else {
-        // Toggle favorite
-        const { error } = await supabase
-          .from('user_flashcard_progress')
-          .update({ is_favorite: !progress.is_favorite })
-          .eq('id', progress.id);
-        if (error) throw error;
+        return true;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
+      queryClient.invalidateQueries({ queryKey: ['favorite-flashcards'] });
+    },
+    onError: (error) => {
+      console.error('Error toggling favorite:', error);
+      toast.error('Erro ao atualizar favorito. Tente novamente.');
     }
   });
 
-  // Create custom flashcard
-  const createFlashcard = useMutation({
-    mutationFn: async (flashcard: {
-      category_id: string;
-      front: string;
-      back: string;
-      difficulty_level: number;
-      tags?: string[];
-    }) => {
-      if (!user?.id) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('flashcards')
-        .insert({
-          ...flashcard,
-          created_by: user.id,
-          is_public: false
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-    }
-  });
-
-  // Update flashcard
-  const updateFlashcard = useMutation({
-    mutationFn: async ({
-      id,
-      updates
-    }: {
-      id: string;
-      updates: {
-        category_id?: string;
-        front?: string;
-        back?: string;
-        difficulty_level?: number;
-        tags?: string[];
-      };
-    }) => {
-      if (!user?.id) throw new Error('User not authenticated');
-
-      const { data, error } = await supabase
-        .from('flashcards')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .eq('created_by', user.id) // Can only update own flashcards
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-    }
-  });
-
-  // Delete flashcard
-  const deleteFlashcard = useMutation({
-    mutationFn: async (id: string) => {
-      if (!user?.id) throw new Error('User not authenticated');
-
-      const { error } = await supabase
-        .from('flashcards')
-        .delete()
-        .eq('id', id)
-        .eq('created_by', user.id); // Can only delete own flashcards
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['flashcards'] });
-    }
-  });
-
-  // Get user statistics
-  const {
-    data: userStats,
-    isLoading: statsLoading
-  } = useQuery({
-    queryKey: ['user-flashcard-stats', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-
-      const { data, error } = await supabase
-        .from('user_flashcard_progress')
-        .select('mastery_level, times_seen, times_correct, times_incorrect')
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      const totalCards = data.length;
-      const masteredCards = data.filter(p => p.mastery_level >= 5).length;
-      const totalReviews = data.reduce((sum, p) => sum + p.times_seen, 0);
-      const totalCorrect = data.reduce((sum, p) => sum + p.times_correct, 0);
-      const accuracy = totalReviews > 0 ? (totalCorrect / totalReviews * 100) : 0;
-
-      return {
-        totalCards,
-        masteredCards,
-        totalReviews,
-        accuracy: Math.round(accuracy),
-        cardsToReview: dueCards.length
-      };
-    },
-    enabled: !!user?.id
-  });
+  // Get monthly usage for free users
+  const getMonthlyUsage = () => {
+    if (!user?.id) return { current: 0, limit: 50 };
+    
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const monthlyUsageKey = `flashcard_monthly_usage_${user.id}_${currentMonth}`;
+    const currentUsage = parseInt(localStorage.getItem(monthlyUsageKey) || '0');
+    
+    return {
+      current: currentUsage,
+      limit: 50,
+      percentage: (currentUsage / 50) * 100
+    };
+  };
 
   return {
     // Data
@@ -866,33 +517,23 @@ export const useFlashcards = () => {
     dueCardsLoading,
     statsLoading,
     
-    // Errors
-    categoriesError,
-    
     // Functions
-    useFlashcardsByCategory,
-    useFavoriteFlashcards,
-    getUserProgress,
+    startStudySession,
+    endStudySession,
+    submitResponse,
+    toggleFavorite,
     getStudyCards,
+    useFavoriteFlashcards,
     refetchDueCards,
     
-    // Mutations
-    startStudySession: startStudySession.mutateAsync,
-    endStudySession: endStudySession.mutateAsync,
-    submitResponse: submitResponse.mutateAsync,
-    markAsViewed: markAsViewed.mutateAsync,
-    toggleFavorite: toggleFavorite.mutateAsync,
-    createFlashcard: createFlashcard.mutateAsync,
-    updateFlashcard: updateFlashcard.mutateAsync,
-    deleteFlashcard: deleteFlashcard.mutateAsync,
+    // Subscription info
+    isActive,
+    hasFlashcardLimit: !isActive,
+    flashcardLimit: 50,
+    getMonthlyUsage,
     
-    // Loading states for mutations
-    isStartingSession: startStudySession.isPending,
-    isSubmittingResponse: submitResponse.isPending,
-    isMarkingAsViewed: markAsViewed.isPending,
-    isTogglingFavorite: toggleFavorite.isPending,
-    isCreatingFlashcard: createFlashcard.isPending,
-    isUpdatingFlashcard: updateFlashcard.isPending,
-    isDeletingFlashcard: deleteFlashcard.isPending
+    // Errors
+    categoriesError,
+    statsError
   };
 };

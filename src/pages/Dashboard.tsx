@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Calculator, BookOpen, Brain, FileText, User, Settings, LogOut, BarChart3, Home, Edit, Menu, X } from "lucide-react";
 import { useFormattedDashboardStats } from "@/hooks/useDashboardStats";
-
+import { toast } from "sonner";
+import PaymentStatusBanner from "@/components/payment/PaymentStatusBanner";
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -15,39 +17,42 @@ const Dashboard = () => {
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { stats, isLoading: statsLoading, formatNumber, getDescription } = useFormattedDashboardStats();
+  const { isActive, planName, startPaymentPolling } = useSubscription();
 
   // Detect payment state from query
   const paymentState = useMemo(() => new URLSearchParams(location.search).get('payment'), [location.search]);
+  
   useEffect(() => {
     const shouldPoll = paymentState === 'success' || paymentState === 'pending';
     if (!user || !shouldPoll) return;
+    
     let mounted = true;
-    let attempts = 0;
-    const maxAttempts = paymentState === 'pending' ? 60 : 15; // Pix pode demorar mais
-    const poll = async () => {
-      try {
-        // hit a cheap endpoint: select active subscription for this user
-        const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/rest/v1/user_subscriptions?user_id=eq.${user.id}&status=eq.active&select=*,subscription_plans(name)&limit=1`, {
-          headers: {
-            apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string,
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          }
-        });
-        const data = await res.json();
-        if (mounted && Array.isArray(data) && data.length > 0) {
+    
+    startPaymentPolling(
+      // onSuccess
+      () => {
+        if (mounted) {
           // remove query param and show toast via URL-free state
           navigate('/dashboard', { replace: true });
-          return; // stop polling
+          toast.success('Pagamento confirmado!', {
+            description: 'Sua assinatura está ativa. Bem-vindo ao plano premium!'
+          });
         }
-      } catch {}
-      attempts += 1;
-      if (mounted && attempts < maxAttempts) {
-        setTimeout(poll, 1000);
-      }
-    };
-    poll();
+      },
+      // onTimeout
+      () => {
+        if (mounted) {
+          toast.info('Pagamento ainda em processamento', {
+            description: 'O pagamento PIX pode demorar alguns minutos. Você será notificado quando for confirmado.'
+          });
+        }
+      },
+      paymentState === 'pending' ? 60 : 15, // Pix pode demorar mais
+      1000
+    );
+    
     return () => { mounted = false; };
-  }, [user, paymentState, navigate]);
+  }, [user, paymentState, navigate, startPaymentPolling]);
 
   // Redirecionar se não estiver logado
   useEffect(() => {
@@ -203,6 +208,18 @@ const Dashboard = () => {
           </div>
         )}
       </header>
+
+      {/* Payment Status Banner */}
+      {paymentState && (paymentState === 'success' || paymentState === 'pending') && (
+        <PaymentStatusBanner 
+          status={paymentState === 'success' ? 'checking' : 'pending'}
+          message={
+            paymentState === 'success' 
+              ? 'Verificando confirmação do pagamento...' 
+              : 'Aguardando confirmação do pagamento PIX...'
+          }
+        />
+      )}
 
       <div className="container mx-auto px-4 py-4 sm:py-8">
         {/* Welcome Section */}

@@ -12,6 +12,8 @@ interface MercadoPagoButtonProps {
   planPeriod: string;
   className?: string;
   children?: React.ReactNode;
+  onSuccess?: () => void;
+  onError?: (error: any) => void;
 }
 
 const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
@@ -20,7 +22,9 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
   planPrice,
   planPeriod,
   className,
-  children
+  children,
+  onSuccess,
+  onError
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -53,11 +57,25 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
         amount
       );
 
+      // Store payment info in sessionStorage for post-payment handling
+      sessionStorage.setItem('pending_payment', JSON.stringify({
+        userId: user.id,
+        planName,
+        amount,
+        timestamp: Date.now()
+      }));
+
       // Redirect to MercadoPago checkout (mesma aba para evitar duplicidade de popups)
       const useSandbox = import.meta.env.VITE_USE_MERCADOPAGO_SANDBOX === 'true' || import.meta.env.DEV;
       const checkoutUrl = useSandbox && preference.sandbox_init_point
         ? preference.sandbox_init_point
         : preference.init_point;
+      
+      // Call success callback before redirect
+      if (onSuccess) {
+        onSuccess();
+      }
+      
       window.location.href = checkoutUrl;
 
     } catch (error) {
@@ -65,6 +83,10 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
       toast.error('Erro ao processar pagamento', {
         description: 'Tente novamente em alguns instantes'
       });
+      
+      if (onError) {
+        onError(error);
+      }
     } finally {
       setIsLoading(false);
       // Se falhar antes do redirect, libera novo clique

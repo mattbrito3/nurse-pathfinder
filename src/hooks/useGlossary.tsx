@@ -1,16 +1,21 @@
+/**
+ * 📚 GLOSSARY HOOK
+ * Gerencia termos médicos com suporte a favoritos e filtros
+ */
+
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
-import { useToast } from './use-toast';
-import { expandedMedicalTerms, medicalCategories } from '@/data/expandedMedicalTerms';
+import { useToast } from '@/hooks/use-toast';
+import { medicalCategories, expandedMedicalTerms } from '@/data/expandedMedicalTerms';
 
-// Tipos
 export interface GlossaryCategory {
   id: string;
   name: string;
-  description: string;
-  color: string;
+  description?: string;
+  color?: string;
   created_at: string;
 }
 
@@ -39,6 +44,7 @@ export interface SearchFilters {
 
 export const useGlossary = () => {
   const { user } = useAuth();
+  const { isActive } = useSubscription();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [filters, setFilters] = useState<SearchFilters>({
@@ -77,26 +83,22 @@ export const useGlossary = () => {
   }));
 
   // Converter os termos expandidos para o formato do hook (fallback)
-  const mockTerms: MedicalTerm[] = expandedMedicalTerms.map((term, index) => {
-    const categoryIndex = medicalCategories.findIndex(cat => cat === term.category);
-    const categoryId = (categoryIndex + 1).toString();
-    
-    return {
-      id: term.id,
-      term: term.term,
-      definition: term.definition,
-      category_id: categoryId,
-      category_name: term.category,
-      synonyms: term.synonyms || [],
-      related_terms: term.relatedTerms || [],
-      difficulty_level: term.difficulty as 'básico' | 'intermediário' | 'avançado',
-      usage_count: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-  });
+  const mockTerms: MedicalTerm[] = expandedMedicalTerms.map((term, index) => ({
+    id: `mock-${index + 1}`,
+    term: term.term,
+    definition: term.definition,
+    pronunciation: undefined, // Propriedade não existe no tipo original
+    category_id: term.category || '1', // Usar category como category_id
+    category_name: term.category,
+    synonyms: term.synonyms || [],
+    related_terms: term.relatedTerms || [], // Usar relatedTerms
+    difficulty_level: term.difficulty as 'básico' | 'intermediário' | 'avançado',
+    usage_count: 0,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  }));
 
-  // Verificar se a tabela user_favorite_terms existe
+  // Verificar se a tabela de favoritos existe
   const checkFavoritesTableExists = async (): Promise<boolean> => {
     try {
       const { error } = await supabase
@@ -388,9 +390,9 @@ export const useGlossary = () => {
     staleTime: 5 * 60 * 1000, // 5 minutos
   });
 
-  // Aplicar filtros aos termos
+  // Aplicar filtros aos termos e limites baseados no plano
   const { data: terms = [], isLoading: termsLoading } = useQuery({
-    queryKey: ['glossary-terms-filtered', filters, userFavorites, allTerms],
+    queryKey: ['glossary-terms-filtered', filters, userFavorites, allTerms, isActive],
     queryFn: async () => {
       await new Promise(resolve => setTimeout(resolve, 100));
       
@@ -398,6 +400,7 @@ export const useGlossary = () => {
       console.log('Initial terms count:', allTerms.length);
       console.log('Current filters:', filters);
       console.log('User favorites count:', userFavorites.length);
+      console.log('User subscription active:', isActive);
       
       let filteredTerms = [...allTerms];
 
@@ -424,6 +427,12 @@ export const useGlossary = () => {
         filteredTerms = filteredTerms.filter(term => userFavorites.includes(term.id));
       }
 
+      // Aplicar limite baseado no plano do usuário
+      if (!isActive && filteredTerms.length > 100) {
+        console.log('📊 GLOSSARY: Limiting to 100 terms for free plan');
+        filteredTerms = filteredTerms.slice(0, 100);
+      }
+
       console.log('Final filtered terms count:', filteredTerms.length);
       return filteredTerms as MedicalTerm[];
     },
@@ -436,85 +445,63 @@ export const useGlossary = () => {
     mutationFn: async (termId: string) => {
       if (!user) throw new Error('Usuário não autenticado');
 
-      const isCurrentlyFavorite = userFavorites.includes(termId);
-
-      if (usingRealData) {
-        // Usar banco de dados
-        const tableExists = await checkFavoritesTableExists();
-
-        if (tableExists) {
-          try {
-            if (isCurrentlyFavorite) {
-              // Remover favorito
-              const { error } = await supabase
-                .from('user_favorite_terms')
-                .delete()
-                .eq('user_id', user.id)
-                .eq('term_id', termId);
-
-              if (error) throw error;
-
-              toast({
-                title: "Removido dos favoritos",
-                description: "Termo removido da sua lista de favoritos."
-              });
-            } else {
-              // Adicionar favorito
-              const { error } = await supabase
-                .from('user_favorite_terms')
-                .insert({
-                  user_id: user.id,
-                  term_id: termId
-                });
-
-              if (error) throw error;
-
-              toast({
-                title: "Adicionado aos favoritos",
-                description: "Termo adicionado à sua lista de favoritos."
-              });
-            }
-          } catch (error) {
-            console.error('Erro ao alterar favorito no banco:', error);
-            throw error;
-          }
-        }
-      } else {
-        // Para dados mock, usar localStorage com chave específica
-        console.log('Usando localStorage para dados mock');
-        const storageKey = getMockFavoritesKey();
-        const stored = localStorage.getItem(storageKey);
-        let favorites: string[] = stored ? JSON.parse(stored) : [];
+      // Se estamos usando dados mock, usar localStorage
+      if (usingRealData === false) {
+        const stored = localStorage.getItem(getMockFavoritesKey());
+        const favorites: string[] = stored ? JSON.parse(stored) : [];
         
-        if (isCurrentlyFavorite) {
-          favorites = favorites.filter(id => id !== termId);
-          toast({
-            title: "Removido dos favoritos",
-            description: "Termo removido da sua lista de favoritos."
-          });
+        const isFavorite = favorites.includes(termId);
+        if (isFavorite) {
+          const newFavorites = favorites.filter(id => id !== termId);
+          localStorage.setItem(getMockFavoritesKey(), JSON.stringify(newFavorites));
         } else {
           favorites.push(termId);
-          toast({
-            title: "Adicionado aos favoritos",
-            description: "Termo adicionado à sua lista de favoritos."
-          });
+          localStorage.setItem(getMockFavoritesKey(), JSON.stringify(favorites));
         }
         
-        localStorage.setItem(storageKey, JSON.stringify(favorites));
+        return { termId, isFavorite: !isFavorite };
       }
 
-      return termId;
+      // Para dados reais, usar banco de dados
+      const isCurrentlyFavorite = userFavorites.includes(termId);
+      
+      if (isCurrentlyFavorite) {
+        // Remover favorito
+        const { error } = await supabase
+          .from('user_favorite_terms')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('term_id', termId);
+
+        if (error) throw error;
+      } else {
+        // Adicionar favorito
+        const { error } = await supabase
+          .from('user_favorite_terms')
+          .insert({
+            user_id: user.id,
+            term_id: termId
+          });
+
+        if (error) throw error;
+      }
+
+      return { termId, isFavorite: !isCurrentlyFavorite };
     },
-    onSuccess: () => {
-      // Invalidar queries relacionadas para atualizar a UI
+    onSuccess: (data) => {
+      // Atualizar cache
       queryClient.invalidateQueries({ queryKey: ['user-favorites'] });
-      queryClient.invalidateQueries({ queryKey: ['glossary-terms-filtered'] });
+      
+      toast({
+        title: data.isFavorite ? 'Adicionado aos favoritos' : 'Removido dos favoritos',
+        variant: "default"
+      });
     },
     onError: (error) => {
-      console.error('Erro ao alterar favoritos:', error);
+      console.error('Erro ao alternar favorito:', error);
       toast({
-        title: "Erro",
-        description: "Não foi possível alterar os favoritos. Tente novamente.",
+        title: 'Erro ao atualizar favoritos',
+        description: 'Tente novamente em alguns instantes',
         variant: "destructive"
       });
     }
@@ -581,10 +568,10 @@ export const useGlossary = () => {
     
     // Estados de loading
     categoriesLoading,
-    termsLoading: termsLoadingRaw || termsLoading,
+    termsLoading,
     isToggling,
     
-    // Ações
+    // Funções
     updateFilters,
     clearFilters,
     toggleFavorite,
@@ -595,7 +582,9 @@ export const useGlossary = () => {
     favoriteCount,
     categoriesCount,
     
-    // Status
-    usingRealData
+    // Informações do plano
+    isActive,
+    hasGlossaryLimit: !isActive,
+    glossaryLimit: 100
   };
 };

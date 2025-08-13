@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,13 +17,17 @@ import {
   Star
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { useSubscription } from '@/hooks/useSubscription';
 import { toast } from 'sonner';
 import UnifiedPaymentButton from '@/components/payment/UnifiedPaymentButton';
+import PaymentStatusBanner from '@/components/payment/PaymentStatusBanner';
 
 const Pricing = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
+  const { isActive, planName, checkSubscription, startPaymentPolling } = useSubscription();
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
 
   // Planos simplificados - apenas Estudante
   const plans = [
@@ -64,20 +68,53 @@ const Pricing = () => {
     }
   ];
 
+  // Sistema de polling para verificar pagamento
+  const handlePaymentPolling = async () => {
+    if (!user?.id || isCheckingPayment) return;
+    
+    setIsCheckingPayment(true);
+    
+    startPaymentPolling(
+      // onSuccess
+      () => {
+        toast.success('Pagamento confirmado!', {
+          description: 'Sua assinatura está ativa. Redirecionando para o dashboard...'
+        });
+        navigate('/dashboard', { replace: true });
+      },
+      // onTimeout
+      () => {
+        setIsCheckingPayment(false);
+        toast.info('Pagamento ainda em processamento', {
+          description: 'O pagamento PIX pode demorar alguns minutos. Você será redirecionado automaticamente quando for confirmado.'
+        });
+      },
+      60, // maxAttempts
+      1000 // pollInterval
+    );
+  };
+
   // Handle payment status from URL params
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
-    if (paymentStatus === 'success') {
+    const subscriptionStatus = searchParams.get('subscription');
+    
+    if (paymentStatus === 'success' || subscriptionStatus === 'success') {
       toast.success('Pagamento realizado com sucesso!', {
-        description: 'Sua assinatura está ativa. Bem-vindo ao plano premium!'
+        description: 'Verificando status da assinatura...'
       });
-      navigate('/dashboard', { replace: true });
-    } else if (paymentStatus === 'canceled') {
-      toast.info('Pagamento cancelado', {
+      handlePaymentPolling();
+    } else if (paymentStatus === 'pending') {
+      toast.info('Pagamento em processamento', {
+        description: 'Aguardando confirmação do pagamento PIX...'
+      });
+      handlePaymentPolling();
+    } else if (paymentStatus === 'failure' || paymentStatus === 'canceled') {
+      toast.error('Pagamento não foi concluído', {
         description: 'Você pode tentar novamente quando quiser.'
       });
     }
-  }, [searchParams, navigate]);
+  }, [searchParams, user?.id]);
 
   // Helper functions
   const getPlanType = (planName: string): 'professional' | 'annual' => {
@@ -87,7 +124,9 @@ const Pricing = () => {
   };
 
   const getCurrentPlanName = () => {
-    // Simplificado - sempre retorna Gratuito por enquanto
+    if (isActive && planName) {
+      return planName;
+    }
     return 'Gratuito';
   };
 
@@ -124,6 +163,14 @@ const Pricing = () => {
           )}
         </div>
       </header>
+
+      {/* Payment Status Banner */}
+      {isCheckingPayment && (
+        <PaymentStatusBanner 
+          status="checking" 
+          message="Verificando status do pagamento..."
+        />
+      )}
 
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto">
@@ -246,6 +293,17 @@ const Pricing = () => {
                           planPrice={formatPrice(plan.price)}
                           planPeriod="/mês"
                           className={`w-full ${isPopular ? 'bg-primary hover:bg-primary/90' : ''}`}
+                          onSuccess={() => {
+                            toast.info('Redirecionando para o pagamento...', {
+                              description: 'Aguarde enquanto preparamos seu pagamento.'
+                            });
+                          }}
+                          onError={(error) => {
+                            console.error('Erro no pagamento:', error);
+                            toast.error('Erro ao iniciar pagamento', {
+                              description: 'Tente novamente em alguns instantes.'
+                            });
+                          }}
                         >
                           <CreditCard className="h-4 w-4 mr-2" />
                           Assinar Plano
