@@ -235,7 +235,15 @@ async function handlePayment(supabase: any, paymentData: any) {
     
     const { id, status, external_reference, transaction_amount, payer } = fullPaymentData
 
+    console.log('🔍 Payment details extracted:');
+    console.log('  - ID:', id);
+    console.log('  - Status:', status);
+    console.log('  - External Reference:', external_reference);
+    console.log('  - Amount:', transaction_amount);
+    console.log('  - Payer:', payer);
+
     // Update payment history
+    console.log('📝 Updating payment history...');
     const { error: paymentError } = await supabase
       .from('payment_history')
       .upsert({
@@ -264,9 +272,14 @@ async function handlePayment(supabase: any, paymentData: any) {
       throw paymentError
     }
 
+    console.log('✅ Payment history updated successfully');
+
     // If payment is approved or credited (Pix), update subscription
     if (status === 'approved' || status === 'credited' || fullPaymentData.date_approved !== null) {
+      console.log('🔄 Payment approved, updating subscription...');
       await updateSubscriptionFromPayment(supabase, fullPaymentData)
+    } else {
+      console.log('⚠️ Payment not approved yet, status:', status);
     }
 
     console.log('✅ Payment processed successfully')
@@ -313,7 +326,7 @@ async function handleSubscription(supabase: any, subscriptionData: any) {
     .from('user_subscriptions')
     .upsert({
       user_id: external_reference, // Assuming external_reference is user_id
-      subscription_plan_id: 1, // Default to student plan
+      plan_id: 1, // Default to student plan - use plan_id instead of subscription_plan_id
       mercadopago_subscription_id: id.toString(),
       status: status,
       current_period_start: new Date().toISOString(),
@@ -351,7 +364,7 @@ async function updateSubscriptionFromPayment(supabase: any, paymentData: any) {
     .from('user_subscriptions')
     .upsert({
       user_id: external_reference,
-      subscription_plan_id: planId,
+      plan_id: planId, // Use plan_id instead of subscription_plan_id
       status: 'active',
       current_period_start: new Date().toISOString(),
       current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),

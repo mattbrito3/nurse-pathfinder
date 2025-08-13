@@ -14,7 +14,9 @@ import {
   Shield,
   Sparkles,
   TrendingUp,
-  Star
+  Star,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -28,6 +30,7 @@ const Pricing = () => {
   const { user } = useAuth();
   const { isActive, planName, checkSubscription, startPaymentPolling } = useSubscription();
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<'success' | 'error' | 'pending' | null>(null);
 
   // Planos simplificados - apenas Estudante
   const plans = [
@@ -94,27 +97,58 @@ const Pricing = () => {
     );
   };
 
-  // Handle payment status from URL params
+  // Verificar status do pagamento e redirecionar se necessário
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
-    const subscriptionStatus = searchParams.get('subscription');
+    const paymentId = searchParams.get('payment_id');
+    const externalReference = searchParams.get('external_reference');
     
-    if (paymentStatus === 'success' || subscriptionStatus === 'success') {
-      toast.success('Pagamento realizado com sucesso!', {
-        description: 'Verificando status da assinatura...'
-      });
-      handlePaymentPolling();
+    console.log('🔍 Payment status check:', { paymentStatus, paymentId, externalReference });
+    
+    if (paymentStatus === 'success' || paymentStatus === 'approved') {
+      console.log('✅ Payment successful, starting verification...');
+      
+      // Mostrar banner de sucesso
+      setPaymentStatus('success');
+      
+      // Iniciar verificação automática da assinatura
+      const checkInterval = setInterval(async () => {
+        try {
+          console.log('🔄 Checking subscription status...');
+          await checkSubscription();
+          
+          // Se a assinatura estiver ativa, redirecionar
+          if (isActive) {
+            console.log('🎉 Subscription active, redirecting to dashboard...');
+            clearInterval(checkInterval);
+            toast.success('Pagamento confirmado! Redirecionando para o dashboard...');
+            navigate('/dashboard?payment=success');
+          }
+        } catch (error) {
+          console.error('❌ Error checking subscription:', error);
+        }
+      }, 3000); // Verificar a cada 3 segundos
+      
+      // Parar verificação após 2 minutos
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (!isActive) {
+          console.log('⚠️ Subscription not activated after 2 minutes');
+          toast.info('Pagamento processado! Verificando status da assinatura...');
+        }
+      }, 120000);
+      
+      return () => clearInterval(checkInterval);
+    } else if (paymentStatus === 'failure' || paymentStatus === 'rejected') {
+      console.log('❌ Payment failed');
+      setPaymentStatus('error');
+      toast.error('Pagamento não foi aprovado. Tente novamente.');
     } else if (paymentStatus === 'pending') {
-      toast.info('Pagamento em processamento', {
-        description: 'Aguardando confirmação do pagamento PIX...'
-      });
-      handlePaymentPolling();
-    } else if (paymentStatus === 'failure' || paymentStatus === 'canceled') {
-      toast.error('Pagamento não foi concluído', {
-        description: 'Você pode tentar novamente quando quiser.'
-      });
+      console.log('⏳ Payment pending');
+      setPaymentStatus('pending');
+      toast.info('Pagamento em processamento. Aguarde a confirmação.');
     }
-  }, [searchParams, user?.id]);
+  }, [searchParams, isActive, checkSubscription, navigate]);
 
   // Helper functions
   const getPlanType = (planName: string): 'professional' | 'annual' => {
@@ -140,278 +174,292 @@ const Pricing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Header */}
-      <header className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b border-border/40">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={() => navigate('/')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar ao Site
-            </Button>
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <CreditCard className="h-4 w-4 text-primary" />
-              </div>
-              <h1 className="text-xl font-bold text-foreground">Planos e Preços</h1>
-            </div>
-          </div>
-          {user && (
-            <Button variant="outline" onClick={() => navigate('/dashboard')}>
-              Ir para Dashboard
-            </Button>
-          )}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Escolha seu Plano
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300">
+            Desbloqueie todo o potencial do DoseCerta
+          </p>
         </div>
-      </header>
 
-      {/* Payment Status Banner */}
-      {isCheckingPayment && (
-        <PaymentStatusBanner 
-          status="checking" 
-          message="Verificando status do pagamento..."
-        />
-      )}
-
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-6xl mx-auto">
-          
-          {/* Hero Section */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium mb-4">
-              <Sparkles className="h-4 w-4" />
-              Escolha seu plano
-            </div>
-            <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-6">
-              Acelere sua carreira na <span className="text-primary">enfermagem</span>
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Escolha o plano ideal para suas necessidades de estudo e desenvolvimento profissional.
-              Cancele a qualquer momento.
-            </p>
-            
-            {/* Current Plan Badge */}
-            {user && (
-              <div className="mt-6">
-                <Badge variant="secondary" className="text-base px-4 py-2">
-                  <Crown className="h-4 w-4 mr-2" />
-                  Plano atual: {getCurrentPlanName()}
-                </Badge>
+        {/* Payment Status Banner */}
+        {paymentStatus === 'success' && (
+          <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="flex-shrink-0">
+                  <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-green-800 dark:text-green-200">
+                    Pagamento Confirmado!
+                  </h3>
+                  <p className="text-green-700 dark:text-green-300">
+                    Seu pagamento foi processado com sucesso. Verificando status da assinatura...
+                  </p>
+                </div>
               </div>
-            )}
+              <Button
+                onClick={() => navigate('/dashboard')}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                Ir para o Dashboard
+              </Button>
+            </div>
           </div>
+        )}
 
-          {/* Pricing Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 max-w-4xl mx-auto">
-            {plans.map((plan) => {
-              const isPopular = plan.popular;
-              const isFree = plan.price === 0;
-              const isCurrent = isCurrentPlan(plan.name);
-              
-              return (
-                <Card 
-                  key={plan.id} 
-                  className={`relative ${
-                    isPopular 
-                      ? 'border-primary shadow-lg scale-105 bg-gradient-to-br from-primary/5 to-purple/5' 
-                      : 'hover:shadow-md transition-shadow'
-                  }`}
-                >
-                  {isPopular && (
-                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                      <Badge className="bg-primary text-primary-foreground px-3 py-1">
-                        <Crown className="h-3 w-3 mr-1" />
-                        Mais Popular
-                      </Badge>
-                    </div>
-                  )}
+        {paymentStatus === 'error' && (
+          <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <X className="h-6 w-6 text-red-600 dark:text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-red-800 dark:text-red-200">
+                  Pagamento Não Aprovado
+                </h3>
+                <p className="text-red-700 dark:text-red-300">
+                  Houve um problema com o pagamento. Tente novamente.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {paymentStatus === 'pending' && (
+          <div className="mb-8 p-6 bg-yellow-50 border border-yellow-200 rounded-lg dark:bg-yellow-900/20 dark:border-yellow-800">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-yellow-800 dark:text-yellow-200">
+                  Pagamento em Processamento
+                </h3>
+                <p className="text-yellow-700 dark:text-yellow-300">
+                  Aguarde a confirmação do pagamento PIX.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Plans Grid */}
+        <div className="grid md:grid-cols-1 lg:grid-cols-1 gap-8 max-w-2xl mx-auto">
+          {plans.map((plan) => {
+            const isPopular = plan.popular;
+            const isFree = plan.price === 0;
+            const isCurrent = isCurrentPlan(plan.name);
+            
+            return (
+              <Card 
+                key={plan.id} 
+                className={`relative ${
+                  isPopular 
+                    ? 'border-primary shadow-lg scale-105 bg-gradient-to-br from-primary/5 to-purple/5' 
+                    : 'hover:shadow-md transition-shadow'
+                }`}
+              >
+                {isPopular && (
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <Badge className="bg-primary text-primary-foreground px-3 py-1">
+                      <Crown className="h-3 w-3 mr-1" />
+                      Mais Popular
+                    </Badge>
+                  </div>
+                )}
+                
+                {isCurrent && (
+                  <div className="absolute -top-4 right-4">
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      <Check className="h-3 w-3 mr-1" />
+                      Ativo
+                    </Badge>
+                  </div>
+                )}
+
+                <CardHeader className="text-center pb-4">
+                  <div className="mb-4">
+                    {isFree ? (
+                      <Star className="h-12 w-12 mx-auto text-muted-foreground" />
+                    ) : isPopular ? (
+                      <Zap className="h-12 w-12 mx-auto text-primary" />
+                    ) : (
+                      <Shield className="h-12 w-12 mx-auto text-orange-500" />
+                    )}
+                  </div>
                   
-                  {isCurrent && (
-                    <div className="absolute -top-4 right-4">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        <Check className="h-3 w-3 mr-1" />
-                        Ativo
-                      </Badge>
+                  <CardTitle className="text-2xl font-bold mb-2">{plan.name}</CardTitle>
+                  <p className="text-muted-foreground text-sm mb-4">{plan.description}</p>
+                  
+                  <div className="text-center">
+                    <div className="text-4xl font-bold text-foreground">
+                      {formatPrice(plan.price)}
                     </div>
-                  )}
+                    <div className="text-sm text-muted-foreground">
+                      {plan.interval === 'year' ? '/ano' : '/mês'}
+                    </div>
+                  </div>
+                </CardHeader>
 
-                  <CardHeader className="text-center pb-4">
-                    <div className="mb-4">
-                      {isFree ? (
-                        <Star className="h-12 w-12 mx-auto text-muted-foreground" />
-                      ) : isPopular ? (
-                        <Zap className="h-12 w-12 mx-auto text-primary" />
-                      ) : (
-                        <Shield className="h-12 w-12 mx-auto text-orange-500" />
-                      )}
-                    </div>
-                    
-                    <CardTitle className="text-2xl font-bold mb-2">{plan.name}</CardTitle>
-                    <p className="text-muted-foreground text-sm mb-4">{plan.description}</p>
-                    
-                    <div className="text-center">
-                      <div className="text-4xl font-bold text-foreground">
-                        {formatPrice(plan.price)}
+                <CardContent className="space-y-6">
+                  {/* Features List */}
+                  <div className="space-y-3">
+                    {plan.features.map((feature, index) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground">{feature}</span>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        {plan.interval === 'year' ? '/ano' : '/mês'}
-                      </div>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="space-y-6">
-                    {/* Features List */}
-                    <div className="space-y-3">
-                      {plan.features.map((feature, index) => (
-                        <div key={index} className="flex items-start gap-3">
-                          <Check className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-muted-foreground">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <Separator />
-
-                    {/* Action Button */}
-                    <div className="space-y-3">
-                      {isCurrent ? (
-                        <Button className="w-full" variant="outline" disabled>
-                          <Check className="h-4 w-4 mr-2" />
-                          Plano Atual
-                        </Button>
-                      ) : isFree ? (
-                        <Button 
-                          variant="medical" 
-                          className="w-full"
-                          onClick={() => navigate('/register')}
-                        >
-                          Começar Grátis
-                        </Button>
-                      ) : (
-                        <UnifiedPaymentButton
-                          planType={getPlanType(plan.name)}
-                          planName={plan.name}
-                          planPrice={formatPrice(plan.price)}
-                          planPeriod="/mês"
-                          className={`w-full ${isPopular ? 'bg-primary hover:bg-primary/90' : ''}`}
-                          onSuccess={() => {
-                            toast.info('Redirecionando para o pagamento...', {
-                              description: 'Aguarde enquanto preparamos seu pagamento.'
-                            });
-                          }}
-                          onError={(error) => {
-                            console.error('Erro no pagamento:', error);
-                            toast.error('Erro ao iniciar pagamento', {
-                              description: 'Tente novamente em alguns instantes.'
-                            });
-                          }}
-                        >
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          Assinar Plano
-                        </UnifiedPaymentButton>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-
-          {/* Features Comparison */}
-          <div className="bg-background rounded-lg border p-8 max-w-4xl mx-auto">
-            <h3 className="text-2xl font-bold text-center mb-8">Compare os recursos</h3>
-            
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-4 pr-6">Recursos</th>
-                    {plans.map((plan) => (
-                      <th key={plan.id} className="text-center py-4 px-4 min-w-[120px]">
-                        {plan.name}
-                      </th>
                     ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  <tr>
-                    <td className="py-4 pr-6 font-medium">Flashcards por mês</td>
-                    <td className="text-center py-4 px-4">50</td>
-                    <td className="text-center py-4 px-4">
-                      <span className="text-green-600 font-medium">Ilimitados</span>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-4 pr-6 font-medium">Calculadora de medicação</td>
-                    <td className="text-center py-4 px-4">
-                      <Check className="h-5 w-5 text-green-500 mx-auto" />
-                    </td>
-                    <td className="text-center py-4 px-4">
-                      <Check className="h-5 w-5 text-green-500 mx-auto" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-4 pr-6 font-medium">Acesso offline</td>
-                    <td className="text-center py-4 px-4">
-                      <X className="h-5 w-5 text-red-400 mx-auto" />
-                    </td>
-                    <td className="text-center py-4 px-4">
-                      <Check className="h-5 w-5 text-green-500 mx-auto" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-4 pr-6 font-medium">Análises avançadas</td>
-                    <td className="text-center py-4 px-4">
-                      <X className="h-5 w-5 text-red-400 mx-auto" />
-                    </td>
-                    <td className="text-center py-4 px-4">
-                      <Check className="h-5 w-5 text-green-500 mx-auto" />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="py-4 pr-6 font-medium">Suporte prioritário</td>
-                    <td className="text-center py-4 px-4">
-                      <X className="h-5 w-5 text-red-400 mx-auto" />
-                    </td>
-                    <td className="text-center py-4 px-4">
-                      <Check className="h-5 w-5 text-green-500 mx-auto" />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  </div>
 
-          {/* FAQ or Benefits Section */}
-          <div className="mt-16 text-center">
-            <h3 className="text-2xl font-bold mb-6">Por que escolher o Dose Certa?</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <TrendingUp className="h-8 w-8 text-primary" />
-                </div>
-                <h4 className="font-semibold mb-2">Progresso Acelerado</h4>
-                <p className="text-muted-foreground text-sm">
-                  Sistema de aprendizado adaptativo que acelera sua evolução profissional
-                </p>
+                  <Separator />
+
+                  {/* Action Button */}
+                  <div className="space-y-3">
+                    {isCurrent ? (
+                      <Button className="w-full" variant="outline" disabled>
+                        <Check className="h-4 w-4 mr-2" />
+                        Plano Atual
+                      </Button>
+                    ) : isFree ? (
+                      <Button 
+                        variant="medical" 
+                        className="w-full"
+                        onClick={() => navigate('/register')}
+                      >
+                        Começar Grátis
+                      </Button>
+                    ) : (
+                      <UnifiedPaymentButton
+                        planType={getPlanType(plan.name)}
+                        planName={plan.name}
+                        planPrice={formatPrice(plan.price)}
+                        planPeriod="/mês"
+                        className={`w-full ${isPopular ? 'bg-primary hover:bg-primary/90' : ''}`}
+                        onSuccess={() => {
+                          toast.info('Redirecionando para o pagamento...', {
+                            description: 'Aguarde enquanto preparamos seu pagamento.'
+                          });
+                        }}
+                        onError={(error) => {
+                          console.error('Erro no pagamento:', error);
+                          toast.error('Erro ao iniciar pagamento', {
+                            description: 'Tente novamente em alguns instantes.'
+                          });
+                        }}
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Assinar Plano
+                      </UnifiedPaymentButton>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Features Comparison */}
+        <div className="bg-background rounded-lg border p-8 max-w-4xl mx-auto">
+          <h3 className="text-2xl font-bold text-center mb-8">Compare os recursos</h3>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-4 pr-6">Recursos</th>
+                  {plans.map((plan) => (
+                    <th key={plan.id} className="text-center py-4 px-4 min-w-[120px]">
+                      {plan.name}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                <tr>
+                  <td className="py-4 pr-6 font-medium">Flashcards por mês</td>
+                  <td className="text-center py-4 px-4">50</td>
+                  <td className="text-center py-4 px-4">
+                    <span className="text-green-600 font-medium">Ilimitados</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-4 pr-6 font-medium">Calculadora de medicação</td>
+                  <td className="text-center py-4 px-4">
+                    <Check className="h-5 w-5 text-green-500 mx-auto" />
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <Check className="h-5 w-5 text-green-500 mx-auto" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-4 pr-6 font-medium">Acesso offline</td>
+                  <td className="text-center py-4 px-4">
+                    <X className="h-5 w-5 text-red-400 mx-auto" />
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <Check className="h-5 w-5 text-green-500 mx-auto" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-4 pr-6 font-medium">Análises avançadas</td>
+                  <td className="text-center py-4 px-4">
+                    <X className="h-5 w-5 text-red-400 mx-auto" />
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <Check className="h-5 w-5 text-green-500 mx-auto" />
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-4 pr-6 font-medium">Suporte prioritário</td>
+                  <td className="text-center py-4 px-4">
+                    <X className="h-5 w-5 text-red-400 mx-auto" />
+                  </td>
+                  <td className="text-center py-4 px-4">
+                    <Check className="h-5 w-5 text-green-500 mx-auto" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* FAQ or Benefits Section */}
+        <div className="mt-16 text-center">
+          <h3 className="text-2xl font-bold mb-6">Por que escolher o Dose Certa?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="h-8 w-8 text-primary" />
               </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Shield className="h-8 w-8 text-primary" />
-                </div>
-                <h4 className="font-semibold mb-2">Conteúdo Validado</h4>
-                <p className="text-muted-foreground text-sm">
-                  Desenvolvido por profissionais experientes e atualizado constantemente
-                </p>
+              <h4 className="font-semibold mb-2">Progresso Acelerado</h4>
+              <p className="text-muted-foreground text-sm">
+                Sistema de aprendizado adaptativo que acelera sua evolução profissional
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-8 w-8 text-primary" />
               </div>
-              <div className="text-center">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Zap className="h-8 w-8 text-primary" />
-                </div>
-                <h4 className="font-semibold mb-2">Resultados Rápidos</h4>
-                <p className="text-muted-foreground text-sm">
-                  Veja sua performance melhorar desde a primeira semana de uso
-                </p>
+              <h4 className="font-semibold mb-2">Conteúdo Validado</h4>
+              <p className="text-muted-foreground text-sm">
+                Desenvolvido por profissionais experientes e atualizado constantemente
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="h-8 w-8 text-primary" />
               </div>
+              <h4 className="font-semibold mb-2">Resultados Rápidos</h4>
+              <p className="text-muted-foreground text-sm">
+                Veja sua performance melhorar desde a primeira semana de uso
+              </p>
             </div>
           </div>
         </div>
