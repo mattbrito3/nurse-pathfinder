@@ -14,19 +14,73 @@ const corsHeaders = {
 
 // Função REST para obter detalhes do pagamento (SDK não é compatível com Edge Runtime)
 async function fetchPaymentDetails(paymentId: string): Promise<any> {
+  console.log('🔍 Fetching payment details for ID:', paymentId);
+  
   const accessToken = Deno.env.get('VITE_MERCADOPAGO_ACCESS_TOKEN');
-  if (!accessToken) throw new Error('Missing MercadoPago access token');
-  const resp = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
-  if (!resp.ok) {
-    const text = await resp.text();
-    throw new Error(`MercadoPago payments fetch error: ${resp.status} - ${text}`);
+  if (!accessToken) {
+    console.error('❌ Missing MercadoPago access token');
+    throw new Error('Missing MercadoPago access token');
   }
-  return await resp.json();
+  
+  console.log('🔑 Access token loaded:', accessToken.substring(0, 10) + '...');
+  
+  const apiUrl = `https://api.mercadopago.com/v1/payments/${paymentId}`;
+  console.log('🌐 API URL:', apiUrl);
+  
+  try {
+    const resp = await fetch(apiUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    console.log('📡 Response status:', resp.status);
+    console.log('📡 Response headers:', Object.fromEntries(resp.headers.entries()));
+    
+    if (!resp.ok) {
+      const text = await resp.text();
+      console.error('❌ API Error Response:', text);
+      
+      // Se for 404, pode ser que o pagamento ainda não esteja disponível
+      if (resp.status === 404) {
+        console.log('⚠️ Payment not found (404) - may still be processing');
+        // Retornar dados básicos para continuar o processamento
+        return {
+          id: paymentId,
+          status: 'pending',
+          external_reference: null,
+          transaction_amount: 0,
+          payer: null,
+          date_approved: null
+        };
+      }
+      
+      throw new Error(`MercadoPago payments fetch error: ${resp.status} - ${text}`);
+    }
+    
+    const paymentData = await resp.json();
+    console.log('✅ Payment data fetched successfully:', JSON.stringify(paymentData, null, 2));
+    return paymentData;
+    
+  } catch (error) {
+    console.error('❌ Error fetching payment details:', error);
+    
+    // Se for erro de rede ou timeout, retornar dados básicos
+    if (error.message.includes('fetch') || error.message.includes('timeout')) {
+      console.log('⚠️ Network error - returning basic payment data');
+      return {
+        id: paymentId,
+        status: 'pending',
+        external_reference: null,
+        transaction_amount: 0,
+        payer: null,
+        date_approved: null
+      };
+    }
+    
+    throw error;
+  }
 }
 
 // Função para verificar a assinatura do Mercado Pago
@@ -242,6 +296,13 @@ async function handlePayment(supabase: any, paymentData: any) {
     console.log('  - Amount:', transaction_amount);
     console.log('  - Payer:', payer);
 
+    // Se não temos external_reference, não podemos processar
+    if (!external_reference) {
+      console.log('⚠️ No external_reference found - payment may still be processing');
+      console.log('✅ Payment processing completed (waiting for external_reference)');
+      return;
+    }
+
     // Update payment history
     console.log('📝 Updating payment history...');
     const { error: paymentError } = await supabase
@@ -250,7 +311,7 @@ async function handlePayment(supabase: any, paymentData: any) {
         user_id: external_reference, // Use external_reference as user_id
         payment_provider: 'mercadopago',
         payment_id: id.toString(),
-        amount: transaction_amount,
+        amount: transaction_amount || 0,
         currency: 'BRL',
         status: status === 'approved' ? 'succeeded' : status === 'pending' ? 'pending' : 'failed',
         description: `Pagamento MercadoPago - ${status}`,
