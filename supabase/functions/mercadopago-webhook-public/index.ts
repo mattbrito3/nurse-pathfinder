@@ -321,12 +321,34 @@ async function handleSubscription(supabase: any, subscriptionData: any) {
   
   const { id, status, external_reference, reason, auto_recurring } = subscriptionData
 
+  // Buscar o plan_id correto da tabela subscription_plans
+  console.log('🔍 Looking for subscription plan...');
+  const { data: plans, error: planError } = await supabase
+    .from('subscription_plans')
+    .select('id, name, price')
+    .eq('active', true)
+    .order('price', { ascending: true })
+    .limit(1);
+
+  if (planError) {
+    console.error('❌ Error fetching subscription plans:', planError);
+    throw planError;
+  }
+
+  if (!plans || plans.length === 0) {
+    console.error('❌ No subscription plans found');
+    throw new Error('No subscription plans available');
+  }
+
+  const planId = plans[0].id; // Usar o UUID correto do plano
+  console.log('✅ Found plan:', { id: planId, name: plans[0].name, price: plans[0].price });
+
   // Update user subscription
   const { error: subError } = await supabase
     .from('user_subscriptions')
     .upsert({
       user_id: external_reference, // Assuming external_reference is user_id
-      plan_id: 1, // Default to student plan - use plan_id instead of subscription_plan_id
+      plan_id: planId, // Usar o UUID correto
       mercadopago_subscription_id: id.toString(),
       status: status,
       current_period_start: new Date().toISOString(),
@@ -353,18 +375,34 @@ async function handleSubscriptionPayment(supabase: any, paymentData: any) {
 async function updateSubscriptionFromPayment(supabase: any, paymentData: any) {
   const { external_reference, transaction_amount, metadata } = paymentData
 
-  // Determine plan based on amount or metadata
-  let planId = 1 // Default to student plan (R$ 18,99)
-  if (transaction_amount >= 18.99) {
-    planId = 1 // Student plan
+  // Buscar o plan_id correto da tabela subscription_plans
+  console.log('🔍 Looking for subscription plan...');
+  const { data: plans, error: planError } = await supabase
+    .from('subscription_plans')
+    .select('id, name, price')
+    .eq('active', true)
+    .order('price', { ascending: true })
+    .limit(1);
+
+  if (planError) {
+    console.error('❌ Error fetching subscription plans:', planError);
+    throw planError;
   }
+
+  if (!plans || plans.length === 0) {
+    console.error('❌ No subscription plans found');
+    throw new Error('No subscription plans available');
+  }
+
+  const planId = plans[0].id; // Usar o UUID correto do plano
+  console.log('✅ Found plan:', { id: planId, name: plans[0].name, price: plans[0].price });
 
   // Update user subscription
   const { error: updateError } = await supabase
     .from('user_subscriptions')
     .upsert({
       user_id: external_reference,
-      plan_id: planId, // Use plan_id instead of subscription_plan_id
+      plan_id: planId, // Usar o UUID correto
       status: 'active',
       current_period_start: new Date().toISOString(),
       current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
