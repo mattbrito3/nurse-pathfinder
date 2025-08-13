@@ -283,10 +283,30 @@ async function handlePayment(supabase: any, paymentData: any) {
   console.log('💳 Processing payment:', paymentData.id)
   
   try {
-    // Usar dados do webhook diretamente, sem buscar na API
-    const { id, status, external_reference, transaction_amount, payer } = paymentData
+    // Se recebemos apenas o ID, buscar dados completos na API
+    let fullPaymentData = paymentData;
+    
+    if (paymentData.data && paymentData.data.id) {
+      console.log('🔍 Fetching complete payment data for ID:', paymentData.data.id);
+      try {
+        fullPaymentData = await fetchPaymentDetails(paymentData.data.id);
+        console.log('📨 Complete payment data:', JSON.stringify(fullPaymentData, null, 2));
+      } catch (error) {
+        console.error('❌ Error fetching payment details:', error);
+        // Se não conseguir buscar, usar dados básicos
+        fullPaymentData = {
+          id: paymentData.data.id,
+          status: 'pending',
+          external_reference: null,
+          transaction_amount: 0,
+          payer: null
+        };
+      }
+    }
 
-    console.log('🔍 Payment details from webhook:');
+    const { id, status, external_reference, transaction_amount, payer } = fullPaymentData
+
+    console.log('🔍 Payment details extracted:');
     console.log('  - ID:', id);
     console.log('  - Status:', status);
     console.log('  - External Reference:', external_reference);
@@ -314,13 +334,13 @@ async function handlePayment(supabase: any, paymentData: any) {
         description: `Pagamento MercadoPago - ${status}`,
         payment_method: 'pix',
         external_reference,
-        payment_data: paymentData,
+        payment_data: fullPaymentData,
         metadata: {
           mercadopago_payment_id: id,
           external_reference,
           payer_email: payer?.email,
           payer_data: payer,
-          full_payment_data: paymentData
+          full_payment_data: fullPaymentData
         },
         created_at: new Date().toISOString()
       })
@@ -335,7 +355,7 @@ async function handlePayment(supabase: any, paymentData: any) {
     // If payment is approved or credited (Pix), update subscription
     if (status === 'approved' || status === 'credited') {
       console.log('🔄 Payment approved, updating subscription...');
-      await updateSubscriptionFromPayment(supabase, paymentData)
+      await updateSubscriptionFromPayment(supabase, fullPaymentData)
     } else {
       console.log('⚠️ Payment not approved yet, status:', status);
     }
