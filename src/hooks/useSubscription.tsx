@@ -51,7 +51,7 @@ export const useSubscription = () => {
             features
           )
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', user.id.toString())
         .eq('status', 'active')
         .single();
 
@@ -127,7 +127,7 @@ export const useSubscription = () => {
         const { data, error } = await supabase
           .from('user_subscriptions')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id.toString())
           .eq('status', 'active')
           .single();
 
