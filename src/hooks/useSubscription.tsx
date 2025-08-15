@@ -26,6 +26,7 @@ export const useSubscription = () => {
 
   const checkSubscription = useCallback(async () => {
     if (!user?.id) {
+      console.log('🚫 useSubscription: No user ID, setting inactive');
       setSubscriptionStatus({
         isActive: false,
         isLoading: false
@@ -35,6 +36,8 @@ export const useSubscription = () => {
 
     try {
       setSubscriptionStatus(prev => ({ ...prev, isLoading: true, error: undefined }));
+      
+      console.log('🔍 useSubscription: Checking subscription for user:', user.id);
 
       const { data, error } = await supabase
         .from('user_subscriptions')
@@ -50,11 +53,18 @@ export const useSubscription = () => {
         .eq('status', 'active')
         .single();
 
+      console.log('📊 useSubscription: Query result:', { data, error });
+
       if (error && error.code !== 'PGRST116') {
         throw error;
       }
 
       if (data) {
+        console.log('✅ useSubscription: Active subscription found:', {
+          planName: data.subscription_plans?.name,
+          planId: data.subscription_plan_id,
+          status: data.status
+        });
         setSubscriptionStatus({
           isActive: true,
           planName: data.subscription_plans?.name,
@@ -64,13 +74,14 @@ export const useSubscription = () => {
           isLoading: false
         });
       } else {
+        console.log('❌ useSubscription: No active subscription found');
         setSubscriptionStatus({
           isActive: false,
           isLoading: false
         });
       }
     } catch (error) {
-      console.error('Erro ao verificar assinatura:', error);
+      console.error('❌ useSubscription: Error checking subscription:', error);
       setSubscriptionStatus({
         isActive: false,
         isLoading: false,

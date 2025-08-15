@@ -114,18 +114,20 @@ const Pricing = () => {
       // Iniciar verificação automática da assinatura
       const checkInterval = setInterval(async () => {
         try {
-          console.log('🔄 Checking subscription status...');
+          console.log('🔄 Pricing: Checking subscription status...');
           await checkSubscription();
+          
+          console.log('📊 Pricing: Current subscription status:', { isActive, planName });
           
           // Se a assinatura estiver ativa, redirecionar
           if (isActive) {
-            console.log('🎉 Subscription active, redirecting to dashboard...');
+            console.log('🎉 Pricing: Subscription active, redirecting to dashboard...');
             clearInterval(checkInterval);
             toast.success('Pagamento confirmado! Redirecionando para o dashboard...');
             navigate('/dashboard?payment=success');
           }
         } catch (error) {
-          console.error('❌ Error checking subscription:', error);
+          console.error('❌ Pricing: Error checking subscription:', error);
         }
       }, 3000); // Verificar a cada 3 segundos
       
