@@ -617,35 +617,7 @@ async function handleSubscriptionPayment(supabase: any, paymentData: any) {
   await handlePayment(supabase, paymentData)
 }
 
-async function fetchPaymentDetails(paymentId: string) {
-  console.log('🔍 Fetching payment details from MercadoPago API for payment:', paymentId);
-  
-  const accessToken = Deno.env.get("VITE_MERCADOPAGO_ACCESS_TOKEN");
-  if (!accessToken) {
-    throw new Error('Missing MercadoPago access token');
-  }
 
-  try {
-    const response = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`MercadoPago API error: ${response.status} - ${await response.text()}`);
-    }
-
-    const paymentData = await response.json();
-    console.log('✅ Payment details fetched successfully');
-    return paymentData;
-  } catch (error) {
-    console.error('❌ Error fetching payment details:', error);
-    throw error;
-  }
-}
 
 async function updateSubscriptionFromPayment(supabase: any, paymentData: any) {
   const { external_reference, transaction_amount, metadata } = paymentData
