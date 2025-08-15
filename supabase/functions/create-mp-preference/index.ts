@@ -54,11 +54,11 @@ serve(async (req) => {
       payment_methods: { installments: 12 },
       auto_return: "approved",
       back_urls: {
-        success: `${baseAppUrl}/dashboard?payment=success`,
+        success: `${baseAppUrl}/pricing?payment=success`,
         failure: `${baseAppUrl}/pricing?payment=failure`,
-        pending: `${baseAppUrl}/dashboard?payment=pending`,
+        pending: `${baseAppUrl}/pricing?payment=pending`,
       },
-      notification_url: `${functionsUrl}/functions/v1/mercadopago-webhook-public`,
+      notification_url: `${functionsUrl}/mercadopago-webhook-public`,
       expires: true,
       expiration_date_to: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     };
