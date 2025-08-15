@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface SubscriptionStatus {
   isActive: boolean;
@@ -65,6 +66,13 @@ export const useSubscription = () => {
           planId: data.subscription_plan_id,
           status: data.status
         });
+        
+        // Toast visual em produção
+        toast.success(`🎉 Assinatura ativa: ${data.subscription_plans?.name}`, {
+          description: `Status: ${data.status}`,
+          duration: 3000
+        });
+        
         setSubscriptionStatus({
           isActive: true,
           planName: data.subscription_plans?.name,
@@ -75,6 +83,13 @@ export const useSubscription = () => {
         });
       } else {
         console.log('❌ useSubscription: No active subscription found');
+        
+        // Toast visual para debug em produção
+        toast.info('🔍 Verificando assinatura...', {
+          description: 'Nenhuma assinatura ativa encontrada',
+          duration: 2000
+        });
+        
         setSubscriptionStatus({
           isActive: false,
           isLoading: false

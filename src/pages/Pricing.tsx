@@ -119,6 +119,15 @@ const Pricing = () => {
           
           console.log('📊 Pricing: Current subscription status:', { isActive, planName });
           
+          // Toast visual para debug em produção
+          if (isActive) {
+            toast.success(`🎉 Assinatura confirmada: ${planName}!`);
+          } else {
+            toast.info('🔄 Verificando status da assinatura...', {
+              description: 'Aguardando confirmação do pagamento'
+            });
+          }
+          
           // Se a assinatura estiver ativa, redirecionar
           if (isActive) {
             console.log('🎉 Pricing: Subscription active, redirecting to dashboard...');
@@ -219,31 +228,46 @@ const Pricing = () => {
         </div>
 
         {/* Payment Status Banner */}
-        {paymentStatus === 'success' && (
-          <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="flex-shrink-0">
-                  <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-green-800 dark:text-green-200">
-                    Pagamento Confirmado!
-                  </h3>
-                  <p className="text-green-700 dark:text-green-300">
-                    Seu pagamento foi processado com sucesso. Verificando status da assinatura...
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={() => navigate('/dashboard')}
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                Ir para o Dashboard
-              </Button>
-            </div>
-          </div>
-        )}
+               {paymentStatus === 'success' && (
+         <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-lg dark:bg-green-900/20 dark:border-green-800">
+           <div className="flex items-center justify-between">
+             <div className="flex items-center space-x-3">
+               <div className="flex-shrink-0">
+                 <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
+               </div>
+               <div>
+                 <h3 className="text-lg font-medium text-green-800 dark:text-green-200">
+                   Pagamento Confirmado!
+                 </h3>
+                 <p className="text-green-700 dark:text-green-300">
+                   Seu pagamento foi processado com sucesso. Verificando status da assinatura...
+                 </p>
+                 <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                   Status atual: {isActive ? `✅ Ativo (${planName})` : '⏳ Aguardando ativação'}
+                 </p>
+               </div>
+             </div>
+             <div className="flex gap-2">
+               <Button
+                 onClick={async () => {
+                   toast.info('🔄 Verificando assinatura...');
+                   await checkSubscription();
+                 }}
+                 variant="outline"
+                 className="border-green-600 text-green-600 hover:bg-green-50"
+               >
+                 🔄 Verificar
+               </Button>
+               <Button
+                 onClick={() => navigate('/dashboard')}
+                 className="bg-green-600 hover:bg-green-700 text-white"
+               >
+                 Ir para o Dashboard
+               </Button>
+             </div>
+           </div>
+         </div>
+       )}
 
         {paymentStatus === 'error' && (
           <div className="mb-8 p-6 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
