@@ -31,7 +31,12 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
   const hasOpenedRef = useRef(false);
 
   const handlePayment = async () => {
+    console.log('🚀 MercadoPagoButton: Starting payment process...');
+    console.log('🔍 MercadoPagoButton: User:', user?.id);
+    console.log('🔍 MercadoPagoButton: Plan:', { planName, planPrice, planType });
+    
     if (!user) {
+      console.log('❌ MercadoPagoButton: No user logged in');
       toast.error('Faça login para continuar', {
         description: 'Você precisa estar logado para assinar um plano'
       });
@@ -86,10 +91,20 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
       window.location.href = checkoutUrl;
 
     } catch (error) {
-      console.error('❌ Payment error:', error);
-      toast.error('Erro ao processar pagamento', {
-        description: 'Tente novamente em alguns instantes'
-      });
+      console.error('❌ MercadoPagoButton: Payment error:', error);
+      console.error('❌ MercadoPagoButton: Error details:', JSON.stringify(error, null, 2));
+      
+      // Check if it's a maintenance message
+      if (error?.message?.includes('Sistema de pagamentos em atualização')) {
+        toast.info('Sistema de pagamentos em atualização', {
+          description: 'Estamos implementando uma nova solução de pagamento mais segura. Em breve você poderá assinar o plano Estudante!',
+          duration: 5000
+        });
+      } else {
+        toast.error('Erro ao processar pagamento', {
+          description: 'Tente novamente em alguns instantes'
+        });
+      }
       
       if (onError) {
         onError(error);
