@@ -57,11 +57,18 @@ const MercadoPagoButton: React.FC<MercadoPagoButtonProps> = ({
         amount
       );
 
-      // Store payment info in sessionStorage for post-payment handling
+      // Store payment info and session data for post-payment handling
       sessionStorage.setItem('pending_payment', JSON.stringify({
         userId: user.id,
         planName,
         amount,
+        timestamp: Date.now()
+      }));
+      
+      // Store user session to prevent logout on return
+      sessionStorage.setItem('user_before_payment', JSON.stringify({
+        userId: user.id,
+        email: user.email,
         timestamp: Date.now()
       }));
 

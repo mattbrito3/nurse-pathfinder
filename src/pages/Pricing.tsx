@@ -105,8 +105,23 @@ const Pricing = () => {
     
     console.log('🔍 Payment status check:', { paymentStatus, paymentId, externalReference });
     
+    // Check if user is returning from payment and prevent logout
+    const userBeforePayment = sessionStorage.getItem('user_before_payment');
+    if (userBeforePayment && !user && (paymentStatus || paymentId || externalReference)) {
+      console.log('🔄 User returned from payment but was logged out, showing message...');
+      toast.info('Sessão expirada após pagamento', {
+        description: 'Faça login novamente para verificar seu pagamento',
+        duration: 5000
+      });
+      // Don't clear the session storage yet, let user login first
+      return;
+    }
+    
     if (paymentStatus === 'success' || paymentStatus === 'approved') {
       console.log('✅ Payment successful, starting verification...');
+      
+      // Clear stored payment session since user is back and logged in
+      sessionStorage.removeItem('user_before_payment');
       
       // Mostrar banner de sucesso
       setPaymentStatus('success');
