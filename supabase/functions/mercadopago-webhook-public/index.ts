@@ -280,28 +280,40 @@ serve(async (req) => {
 })
 
 async function handlePayment(supabase: any, paymentData: any) {
-  console.log('💳 Processing payment:', paymentData.id)
+  console.log('💳 Processing payment data received:', JSON.stringify(paymentData, null, 2));
   
   try {
     // Se recebemos apenas o ID, buscar dados completos na API
     let fullPaymentData = paymentData;
     
+    // Identificar a estrutura dos dados recebidos
+    let paymentId = null;
     if (paymentData.data && paymentData.data.id) {
-      console.log('🔍 Fetching complete payment data for ID:', paymentData.data.id);
+      paymentId = paymentData.data.id;
+    } else if (paymentData.id) {
+      paymentId = paymentData.id;
+    }
+    
+    console.log('🆔 Payment ID identified:', paymentId);
+    
+    if (paymentId) {
+      console.log('🔍 Fetching complete payment data for ID:', paymentId);
       try {
-        fullPaymentData = await fetchPaymentDetails(paymentData.data.id);
-        console.log('📨 Complete payment data:', JSON.stringify(fullPaymentData, null, 2));
+        fullPaymentData = await fetchPaymentDetails(paymentId);
+        console.log('📨 Complete payment data from API:', JSON.stringify(fullPaymentData, null, 2));
       } catch (error) {
         console.error('❌ Error fetching payment details:', error);
         // Se não conseguir buscar, usar dados básicos
         fullPaymentData = {
-          id: paymentData.data.id,
+          id: paymentId,
           status: 'pending',
           external_reference: null,
           transaction_amount: 0,
           payer: null
         };
       }
+    } else {
+      console.log('⚠️ No payment ID found in data structure');
     }
 
     const { id, status, external_reference, transaction_amount, payer } = fullPaymentData
@@ -470,29 +482,54 @@ async function handlePayment(supabase: any, paymentData: any) {
 }
 
 async function fetchMerchantOrderDetails(orderId: string): Promise<any> {
+  console.log('🔍 Fetching merchant order details for ID:', orderId);
+  
   const accessToken = Deno.env.get('VITE_MERCADOPAGO_ACCESS_TOKEN');
   if (!accessToken) throw new Error('Missing MercadoPago access token');
-  const resp = await fetch(`https://api.mercadolibre.com/merchant_orders/${orderId}`, {
+  
+  // Usar a URL correta da API do MercadoPago (não MercadoLibre)
+  const url = `https://api.mercadopago.com/merchant_orders/${orderId}`;
+  console.log('📡 Fetching from URL:', url);
+  
+  const resp = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
+  
   if (!resp.ok) {
     const text = await resp.text();
+    console.error('❌ Merchant order fetch failed:', { status: resp.status, text });
     throw new Error(`Merchant order fetch error: ${resp.status} - ${text}`);
   }
-  return await resp.json();
+  
+  const result = await resp.json();
+  console.log('✅ Merchant order fetched successfully');
+  return result;
 }
 
 async function handleMerchantOrder(supabase: any, orderId: string) {
   console.log('🧾 Processing merchant_order:', orderId);
-  const order = await fetchMerchantOrderDetails(orderId);
-  const payments = Array.isArray(order?.payments) ? order.payments : [];
-  for (const p of payments) {
-    if (p?.id) {
-      await handlePayment(supabase, { id: String(p.id) });
+  
+  try {
+    const order = await fetchMerchantOrderDetails(orderId);
+    console.log('📋 Merchant order details:', JSON.stringify(order, null, 2));
+    
+    const payments = Array.isArray(order?.payments) ? order.payments : [];
+    console.log('💳 Found payments in order:', payments.length);
+    
+    for (const p of payments) {
+      if (p?.id) {
+        console.log('🔄 Processing payment from merchant order:', p.id);
+        await handlePayment(supabase, { data: { id: String(p.id) } });
+      }
     }
+    
+    console.log('✅ Merchant order processing completed');
+  } catch (error) {
+    console.error('❌ Error processing merchant order:', error);
+    throw error;
   }
 }
 
