@@ -316,9 +316,80 @@ async function handlePayment(supabase: any, paymentData: any) {
     // Se não temos external_reference, não podemos processar
     if (!external_reference) {
       console.log('⚠️ No external_reference found - payment may still be processing');
+      console.log('📊 Full payment data for debug:', JSON.stringify(fullPaymentData, null, 2));
+      
+      // Salvar payment data mesmo sem external_reference para debug
+      try {
+        await supabase
+          .from('payment_history')
+          .insert({
+            payment_provider: 'mercadopago',
+            payment_id: id.toString(),
+            amount: transaction_amount || 0,
+            currency: 'BRL',
+            status: 'pending',
+            description: `Pagamento MercadoPago - ${status} (sem external_reference)`,
+            payment_method: 'pix',
+            metadata: {
+              mercadopago_payment_id: id,
+              status,
+              error: 'No external_reference found',
+              full_payment_data: fullPaymentData
+            },
+            created_at: new Date().toISOString()
+          });
+        console.log('📝 Payment saved for debugging without external_reference');
+      } catch (debugError) {
+        console.error('❌ Error saving debug payment:', debugError);
+      }
+      
       console.log('✅ Payment processing completed (waiting for external_reference)');
       return;
     }
+
+    // Verificar se o usuário existe no sistema antes de processar
+    console.log('🔍 Verificando se o usuário existe:', external_reference);
+    const { data: userExists, error: userError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', external_reference)
+      .single();
+
+    if (userError || !userExists) {
+      console.log('⚠️ User not found:', external_reference, 'Error:', userError);
+      
+      // Ainda assim, salvar o pagamento para debug
+      try {
+        await supabase
+          .from('payment_history')
+          .insert({
+            payment_provider: 'mercadopago',
+            payment_id: id.toString(),
+            amount: transaction_amount || 0,
+            currency: 'BRL',
+            status: 'failed',
+            description: `Pagamento MercadoPago - ${status} (usuário não encontrado)`,
+            payment_method: 'pix',
+            metadata: {
+              mercadopago_payment_id: id,
+              external_reference,
+              error: 'User not found in profiles table',
+              payer_email: payer?.email,
+              payer_data: payer,
+              full_payment_data: fullPaymentData
+            },
+            created_at: new Date().toISOString()
+          });
+        console.log('📝 Payment saved for debugging (user not found)');
+      } catch (debugError) {
+        console.error('❌ Error saving debug payment for missing user:', debugError);
+      }
+      
+      console.log('❌ Cannot process payment: user not found');
+      return;
+    }
+
+    console.log('✅ User found, proceeding with payment processing');
 
     // Update payment history
     console.log('📝 Updating payment history...');
@@ -333,8 +404,6 @@ async function handlePayment(supabase: any, paymentData: any) {
         status: status === 'approved' ? 'succeeded' : status === 'pending' ? 'pending' : 'failed',
         description: `Pagamento MercadoPago - ${status}`,
         payment_method: 'pix',
-        external_reference,
-        payment_data: fullPaymentData,
         metadata: {
           mercadopago_payment_id: id,
           external_reference,
@@ -355,9 +424,42 @@ async function handlePayment(supabase: any, paymentData: any) {
     // If payment is approved or credited (Pix), update subscription
     if (status === 'approved' || status === 'credited') {
       console.log('🔄 Payment approved, updating subscription...');
-      await updateSubscriptionFromPayment(supabase, fullPaymentData)
+      try {
+        await updateSubscriptionFromPayment(supabase, fullPaymentData);
+        console.log('✅ Subscription updated successfully');
+      } catch (subscriptionError) {
+        console.error('❌ Error updating subscription:', subscriptionError);
+        
+        // Salvar erro para debug
+        await supabase
+          .from('payment_history')
+          .upsert({
+            user_id: external_reference,
+            payment_provider: 'mercadopago',
+            payment_id: id.toString(),
+            amount: transaction_amount || 0,
+            currency: 'BRL',
+            status: 'failed',
+            description: `Erro ao atualizar assinatura - ${subscriptionError.message}`,
+            payment_method: 'pix',
+            metadata: {
+              mercadopago_payment_id: id,
+              external_reference,
+              subscription_error: subscriptionError.message,
+              payer_email: payer?.email,
+              full_payment_data: fullPaymentData
+            },
+            created_at: new Date().toISOString()
+          });
+      }
     } else {
       console.log('⚠️ Payment not approved yet, status:', status);
+      console.log('📊 Payment details for non-approved status:', {
+        id,
+        status,
+        external_reference,
+        transaction_amount
+      });
     }
 
     console.log('✅ Payment processed successfully')

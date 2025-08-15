@@ -146,7 +146,37 @@ const Pricing = () => {
     } else if (paymentStatus === 'pending') {
       console.log('⏳ Payment pending');
       setPaymentStatus('pending');
-      toast.info('Pagamento em processamento. Aguarde a confirmação.');
+      toast.info('Pagamento PIX em processamento. Aguarde a confirmação.');
+      
+      // Para PIX, também iniciar verificação automática (pode demorar mais)
+      const checkInterval = setInterval(async () => {
+        try {
+          console.log('🔄 Checking subscription status for PIX payment...');
+          await checkSubscription();
+          
+          // Se a assinatura estiver ativa, redirecionar
+          if (isActive) {
+            console.log('🎉 PIX payment confirmed, redirecting to dashboard...');
+            clearInterval(checkInterval);
+            setPaymentStatus('success');
+            toast.success('Pagamento PIX confirmado! Redirecionando para o dashboard...');
+            navigate('/dashboard?payment=success');
+          }
+        } catch (error) {
+          console.error('❌ Error checking subscription for PIX:', error);
+        }
+      }, 5000); // Verificar a cada 5 segundos para PIX
+      
+      // Parar verificação após 10 minutos (PIX pode demorar mais)
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (!isActive) {
+          console.log('⚠️ PIX payment not confirmed after 10 minutes');
+          toast.info('Pagamento PIX ainda em processamento. Atualize a página em alguns minutos.');
+        }
+      }, 600000); // 10 minutos
+      
+      return () => clearInterval(checkInterval);
     }
   }, [searchParams, isActive, checkSubscription, navigate]);
 
