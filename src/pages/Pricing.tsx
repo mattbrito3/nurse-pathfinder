@@ -29,6 +29,16 @@ const Pricing = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { isActive, planName, checkSubscription, startPaymentPolling } = useSubscription();
+  
+  // Debug: Log subscription status
+  useEffect(() => {
+    console.log('🔍 Pricing Debug:', { 
+      user: user?.id, 
+      isActive, 
+      planName,
+      timestamp: new Date().toISOString() 
+    });
+  }, [user, isActive, planName]);
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'error' | 'pending' | null>(null);
 

@@ -39,6 +39,7 @@ export const useSubscription = () => {
       setSubscriptionStatus(prev => ({ ...prev, isLoading: true, error: undefined }));
       
       console.log('🔍 useSubscription: Checking subscription for user:', user.id);
+      console.log('📊 useSubscription: Full user object:', user);
 
       const { data, error } = await supabase
         .from('user_subscriptions')
