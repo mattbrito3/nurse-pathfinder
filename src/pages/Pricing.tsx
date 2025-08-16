@@ -107,7 +107,46 @@ const Pricing = () => {
     );
   };
 
-  // Verificar status do pagamento e redirecionar se necessário
+  // NOVO: Verificação automática contínua para PIX
+  useEffect(() => {
+    // Se há pagamento pendente no sessionStorage, iniciar verificação automática
+    const pendingPayment = sessionStorage.getItem('pending_payment');
+    if (pendingPayment && user && !isActive) {
+      console.log('🔄 Detected pending PIX payment, starting automatic verification...');
+      toast.info('Verificando pagamento PIX automaticamente...', {
+        description: 'Aguarde enquanto confirmamos seu pagamento'
+      });
+      
+      const autoCheckInterval = setInterval(async () => {
+        try {
+          await checkSubscription();
+          if (isActive) {
+            console.log('🎉 Auto-check: PIX payment confirmed!');
+            clearInterval(autoCheckInterval);
+            sessionStorage.removeItem('pending_payment');
+            sessionStorage.removeItem('user_before_payment');
+            toast.success('Pagamento PIX confirmado! Redirecionando...');
+            navigate('/dashboard?payment=success');
+          }
+        } catch (error) {
+          console.error('❌ Auto-check error:', error);
+        }
+      }, 5000); // Verificar a cada 5 segundos
+      
+      // Parar após 10 minutos
+      setTimeout(() => {
+        clearInterval(autoCheckInterval);
+        if (pendingPayment) {
+          sessionStorage.removeItem('pending_payment');
+          toast.info('Verificação automática finalizada. Use o botão manual se necessário.');
+        }
+      }, 600000);
+      
+      return () => clearInterval(autoCheckInterval);
+    }
+  }, [user, isActive, checkSubscription, navigate]);
+
+  // Verificar status do pagamento via URL e redirecionar se necessário
   useEffect(() => {
     const paymentStatus = searchParams.get('payment');
     const paymentId = searchParams.get('payment_id');

@@ -487,8 +487,8 @@ async function fetchMerchantOrderDetails(orderId: string): Promise<any> {
   const accessToken = Deno.env.get('VITE_MERCADOPAGO_ACCESS_TOKEN');
   if (!accessToken) throw new Error('Missing MercadoPago access token');
   
-  // Usar a URL correta da API do MercadoPago (não MercadoLibre)
-  const url = `https://api.mercadopago.com/merchant_orders/${orderId}`;
+  // Usar a URL correta da API do MercadoPago para merchant orders
+  const url = `https://api.mercadopago.com/v1/merchant_orders/${orderId}`;
   console.log('📡 Fetching from URL:', url);
   
   const resp = await fetch(url, {
@@ -522,7 +522,8 @@ async function handleMerchantOrder(supabase: any, orderId: string) {
     for (const p of payments) {
       if (p?.id) {
         console.log('🔄 Processing payment from merchant order:', p.id);
-        await handlePayment(supabase, { data: { id: String(p.id) } });
+        // Corrigir chamada para handlePayment - passar objeto correto
+        await handlePayment(supabase, { id: String(p.id) });
       }
     }
     
