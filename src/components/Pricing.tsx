@@ -25,7 +25,7 @@ const plans = [
     popular: false
   },
   // 🧪 PLANO DE TESTE - apenas para debugging
-  ...(import.meta.env.VITE_ENVIRONMENT === 'test' ? [{
+  ...(import.meta.env.VITE_DEBUG_PAYMENT === 'true' ? [{
     name: "Teste",
     price: "R$ 0,01",
     period: "/teste",
