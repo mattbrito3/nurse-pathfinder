@@ -1,5 +1,5 @@
 import React from 'react';
-import MercadoPagoButton from './MercadoPagoButton';
+import PaymentMigrationToggle from './PaymentMigrationToggle';
 
 interface UnifiedPaymentButtonProps {
   planType: 'professional' | 'annual';
@@ -10,11 +10,14 @@ interface UnifiedPaymentButtonProps {
   children?: React.ReactNode;
   onSuccess?: () => void;
   onError?: (error: any) => void;
+  // Feature flags for testing
+  forceTransparent?: boolean;
+  forceClassic?: boolean;
 }
 
 const UnifiedPaymentButton: React.FC<UnifiedPaymentButtonProps> = (props) => {
-  // Use MercadoPago button for now
-  return <MercadoPagoButton {...props} />;
+  // Use new migration toggle component that handles both modes
+  return <PaymentMigrationToggle {...props} />;
 };
 
 export default UnifiedPaymentButton; 
