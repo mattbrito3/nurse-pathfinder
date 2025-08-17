@@ -54,6 +54,7 @@ const PaymentStatusTracker: React.FC<PaymentStatusTrackerProps> = ({
   const [isPolling, setIsPolling] = useState(false);
   const [countdown, setCountdown] = useState(300); // 5 minutes for PIX
   const [showQRCode, setShowQRCode] = useState(false);
+  const [completionCalled, setCompletionCalled] = useState(false); // Evitar múltiplas chamadas
 
   // Status em português
   const getStatusInfo = (status: string) => {
@@ -98,8 +99,10 @@ const PaymentStatusTracker: React.FC<PaymentStatusTrackerProps> = ({
 
   // Polling do status com limitações
   useEffect(() => {
-    if (currentStatus.status === 'approved' || currentStatus.status === 'rejected') {
+    if ((currentStatus.status === 'approved' || currentStatus.status === 'rejected') && !completionCalled) {
       setIsPolling(false);
+      setCompletionCalled(true); // Marcar como já chamado
+      console.log('🎯 Payment completed, calling onComplete only once');
       onComplete({ ...paymentResult, status: currentStatus.status });
       return;
     }
@@ -132,10 +135,16 @@ const PaymentStatusTracker: React.FC<PaymentStatusTrackerProps> = ({
         
         if (response.ok) {
           const status = await response.json();
-          setCurrentStatus(status);
           
+          // Só atualizar se o status realmente mudou
           if (status.status !== currentStatus.status) {
             console.log('📊 Payment status updated:', status);
+            setCurrentStatus(status);
+            
+            // Mostrar notificação apenas uma vez
+            if (status.status === 'approved' && !completionCalled) {
+              toast.success('Pagamento aprovado!', { duration: 3000 });
+            }
           }
         } else if (response.status === 401) {
           console.error('🚨 Unauthorized - stopping polling');

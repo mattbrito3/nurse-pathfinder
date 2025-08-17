@@ -157,9 +157,8 @@ const TransparentCheckout: React.FC<TransparentCheckoutProps> = ({
     
     // Se pagamento foi aprovado, redirecionar para dashboard
     if (paymentResult.status === 'approved') {
-      toast.success('Pagamento aprovado!', {
-        description: 'Seu plano foi ativado com sucesso'
-      });
+      // Notificação é mostrada no PaymentStatusTracker, evitar duplicata
+      console.log('🎯 Payment approved, redirecting to dashboard');
       
       setTimeout(() => {
         window.location.href = '/dashboard';
