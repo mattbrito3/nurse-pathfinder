@@ -24,6 +24,22 @@ const plans = [
     buttonVariant: "medical-outline" as const,
     popular: false
   },
+  // 🧪 PLANO DE TESTE - apenas para debugging
+  ...(import.meta.env.VITE_ENVIRONMENT === 'test' ? [{
+    name: "Teste",
+    price: "R$ 0,01",
+    period: "/teste",
+    description: "Plano de teste para desenvolvimento",
+    icon: Crown,
+    features: [
+      "Funcionalidades de teste",
+      "Apenas para debugging",
+      "Valor simbólico R$ 0,01"
+    ],
+    buttonText: "Testar (R$ 0,01)",
+    buttonVariant: "destructive" as const,
+    popular: false
+  }] : []),
   {
     name: "Estudante",
     price: "R$ 18,99",
