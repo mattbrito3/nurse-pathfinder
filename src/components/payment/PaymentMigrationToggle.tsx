@@ -16,7 +16,7 @@ import MercadoPagoButton from './MercadoPagoButton';
 import TransparentCheckout from './TransparentCheckout';
 
 interface PaymentMigrationToggleProps {
-  planType: 'professional' | 'annual';
+  planType: 'professional' | 'annual' | 'test';
   planName: string;
   planPrice: string;
   planPeriod: string;

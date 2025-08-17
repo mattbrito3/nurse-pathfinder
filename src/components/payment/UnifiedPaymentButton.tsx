@@ -2,7 +2,7 @@ import React from 'react';
 import PaymentMigrationToggle from './PaymentMigrationToggle';
 
 interface UnifiedPaymentButtonProps {
-  planType: 'professional' | 'annual';
+  planType: 'professional' | 'annual' | 'test';
   planName: string;
   planPrice: string;
   planPeriod: string;

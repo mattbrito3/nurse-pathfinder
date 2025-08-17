@@ -50,7 +50,7 @@ serve(async (req) => {
       });
     }
 
-    const functionsUrl = Deno.env.get("PROJECT_URL") || `${Deno.env.get("SUPABASE_URL")}/functions/v1`;
+    const functionsUrl = Deno.env.get("PROJECT_URL") || Deno.env.get("SUPABASE_URL");
     
     // Definir valor final (respeitando mínimos e força via env)
     const requestedAmount = Number(Deno.env.get('MP_FORCE_AMOUNT') || amount);
@@ -64,7 +64,7 @@ serve(async (req) => {
       transaction_amount: finalAmount,
       description: `Plano ${planName} - DoseCerta`,
       external_reference: userId,
-      notification_url: `${functionsUrl}/mercadopago-webhook-public`,
+      notification_url: `${functionsUrl}/functions/v1/mercadopago-webhook-public`,
       metadata: {
         userId,
         planName,
