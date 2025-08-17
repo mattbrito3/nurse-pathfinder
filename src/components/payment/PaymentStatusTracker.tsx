@@ -96,7 +96,7 @@ const PaymentStatusTracker: React.FC<PaymentStatusTrackerProps> = ({
     }
   };
 
-  // Polling do status
+  // Polling do status com limitações
   useEffect(() => {
     if (currentStatus.status === 'approved' || currentStatus.status === 'rejected') {
       setIsPolling(false);
@@ -104,12 +104,31 @@ const PaymentStatusTracker: React.FC<PaymentStatusTrackerProps> = ({
       return;
     }
 
+    let attempts = 0;
+    const maxAttempts = 30; // Máximo 30 tentativas (1.5 minutos)
+
     const pollStatus = async () => {
       try {
+        attempts++;
+        
+        // Parar após máximo de tentativas
+        if (attempts > maxAttempts) {
+          console.log('🛑 Polling stopped: Maximum attempts reached');
+          setIsPolling(false);
+          toast.error('Tempo limite excedido. Verifique o pagamento manualmente.');
+          return;
+        }
+
         const functionsUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL || 
                             `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
-        const response = await fetch(`${functionsUrl}/get-payment-status/${paymentResult.payment_id}`);
+        const response = await fetch(`${functionsUrl}/get-payment-status/${paymentResult.payment_id}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          }
+        });
         
         if (response.ok) {
           const status = await response.json();
@@ -118,9 +137,20 @@ const PaymentStatusTracker: React.FC<PaymentStatusTrackerProps> = ({
           if (status.status !== currentStatus.status) {
             console.log('📊 Payment status updated:', status);
           }
+        } else if (response.status === 401) {
+          console.error('🚨 Unauthorized - stopping polling');
+          setIsPolling(false);
+          toast.error('Erro de autenticação. Recarregue a página e tente novamente.');
+        } else {
+          console.error('❌ Response not ok:', response.status);
         }
       } catch (error) {
         console.error('❌ Error polling payment status:', error);
+        // Parar polling em caso de muitos erros
+        if (attempts > 5) {
+          setIsPolling(false);
+          toast.error('Erro no monitoramento. Verifique manualmente.');
+        }
       }
     };
 

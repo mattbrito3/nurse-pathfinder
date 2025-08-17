@@ -50,7 +50,7 @@ serve(async (req) => {
       });
     }
 
-    const functionsUrl = Deno.env.get("PROJECT_URL") || Deno.env.get("SUPABASE_URL");
+    const functionsUrl = Deno.env.get("PROJECT_URL") || `${Deno.env.get("SUPABASE_URL")}/functions/v1`;
     
     // Definir valor final (respeitando mínimos e força via env)
     const requestedAmount = Number(Deno.env.get('MP_FORCE_AMOUNT') || amount);
