@@ -487,4 +487,5 @@ Para suporte e dúvidas:
 **💡 Dose Certa** - Transformando o estudo de enfermagem através da tecnologia.
 
 **Versão**: 1.1.0
-**Última atualização**: 2025-01-08 
+**Última atualização**: 2025-01-08 #   C h e c k o u t   T r a n s p a r e n t e   c o n f i g u r a d o   n o   V e r c e l  
+ 
