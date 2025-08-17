@@ -128,7 +128,7 @@ const Pricing = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-2 gap-6 md:gap-8 max-w-6xl mx-auto">
           {plans.map((plan, index) => (
             <Card 
               key={index} 
@@ -188,6 +188,16 @@ const Pricing = () => {
                       planName={plan.name}
                       planPrice="18.99"
                       planPeriod="month"
+                      className="w-full py-6 text-lg hover-lift btn-pulse"
+                    >
+                      {plan.buttonText}
+                    </UnifiedPaymentButton>
+                  ) : plan.buttonText === "Testar (R$ 0,01)" ? (
+                    <UnifiedPaymentButton
+                      planType="test"
+                      planName={plan.name}
+                      planPrice="0.01"
+                      planPeriod="test"
                       className="w-full py-6 text-lg hover-lift btn-pulse"
                     >
                       {plan.buttonText}
