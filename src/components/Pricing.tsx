@@ -24,8 +24,8 @@ const plans = [
     buttonVariant: "medical-outline" as const,
     popular: false
   },
-  // 🧪 PLANO DE TESTE - apenas para debugging
-  ...(import.meta.env.VITE_DEBUG_PAYMENT === 'true' ? [{
+  // 🧪 PLANO DE TESTE - sempre mostrar temporariamente
+  {
     name: "Teste",
     price: "R$ 0,01",
     period: "/teste",
@@ -39,7 +39,7 @@ const plans = [
     buttonText: "Testar (R$ 0,01)",
     buttonVariant: "destructive" as const,
     popular: false
-  }] : []),
+  },
   {
     name: "Estudante",
     price: "R$ 18,99",
