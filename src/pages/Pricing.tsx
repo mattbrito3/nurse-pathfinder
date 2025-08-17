@@ -42,7 +42,7 @@ const Pricing = () => {
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<'success' | 'error' | 'pending' | null>(null);
 
-  // Planos simplificados - apenas Estudante
+  // Planos disponíveis
   const plans = [
     {
       id: 1,
@@ -58,6 +58,21 @@ const Pricing = () => {
         "Acesso básico ao dashboard"
       ],
       popular: false
+    },
+    // 🧪 PLANO DE TESTE - apenas para debugging
+    {
+      id: 3,
+      name: "Teste",
+      price: 0.01,
+      interval: "test",
+      description: "Plano de teste para desenvolvimento",
+      features: [
+        "Funcionalidades de teste",
+        "Apenas para debugging",
+        "Valor simbólico R$ 0,01"
+      ],
+      popular: false,
+      isTest: true
     },
     {
       id: 2,
@@ -370,7 +385,7 @@ const Pricing = () => {
         )}
 
         {/* Plans Grid */}
-        <div className="grid md:grid-cols-1 lg:grid-cols-1 gap-8 max-w-2xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
           {plans.map((plan) => {
             const isPopular = plan.popular;
             const isFree = plan.price === 0;
@@ -455,6 +470,28 @@ const Pricing = () => {
                       >
                         Começar Grátis
                       </Button>
+                    ) : plan.name === "Teste" ? (
+                      <UnifiedPaymentButton
+                        planType="test"
+                        planName={plan.name}
+                        planPrice="0.01"
+                        planPeriod="/teste"
+                        className="w-full bg-destructive hover:bg-destructive/90 text-white"
+                        onSuccess={() => {
+                          toast.info('Redirecionando para o pagamento...', {
+                            description: 'Teste de pagamento R$ 0,01'
+                          });
+                        }}
+                        onError={(error) => {
+                          console.error('Erro no pagamento:', error);
+                          toast.error('Erro ao iniciar pagamento', {
+                            description: 'Tente novamente em alguns instantes.'
+                          });
+                        }}
+                      >
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        Testar (R$ 0,01)
+                      </UnifiedPaymentButton>
                     ) : (
                       <UnifiedPaymentButton
                         planType={getPlanType(plan.name)}
@@ -506,11 +543,17 @@ const Pricing = () => {
                   <td className="py-4 pr-6 font-medium">Flashcards por mês</td>
                   <td className="text-center py-4 px-4">50</td>
                   <td className="text-center py-4 px-4">
+                    <span className="text-orange-600 font-medium">10</span>
+                  </td>
+                  <td className="text-center py-4 px-4">
                     <span className="text-green-600 font-medium">Ilimitados</span>
                   </td>
                 </tr>
                 <tr>
                   <td className="py-4 pr-6 font-medium">Calculadora de medicação</td>
+                  <td className="text-center py-4 px-4">
+                    <Check className="h-5 w-5 text-green-500 mx-auto" />
+                  </td>
                   <td className="text-center py-4 px-4">
                     <Check className="h-5 w-5 text-green-500 mx-auto" />
                   </td>
@@ -524,6 +567,9 @@ const Pricing = () => {
                     <X className="h-5 w-5 text-red-400 mx-auto" />
                   </td>
                   <td className="text-center py-4 px-4">
+                    <X className="h-5 w-5 text-red-400 mx-auto" />
+                  </td>
+                  <td className="text-center py-4 px-4">
                     <Check className="h-5 w-5 text-green-500 mx-auto" />
                   </td>
                 </tr>
@@ -533,11 +579,17 @@ const Pricing = () => {
                     <X className="h-5 w-5 text-red-400 mx-auto" />
                   </td>
                   <td className="text-center py-4 px-4">
+                    <X className="h-5 w-5 text-red-400 mx-auto" />
+                  </td>
+                  <td className="text-center py-4 px-4">
                     <Check className="h-5 w-5 text-green-500 mx-auto" />
                   </td>
                 </tr>
                 <tr>
                   <td className="py-4 pr-6 font-medium">Suporte prioritário</td>
+                  <td className="text-center py-4 px-4">
+                    <X className="h-5 w-5 text-red-400 mx-auto" />
+                  </td>
                   <td className="text-center py-4 px-4">
                     <X className="h-5 w-5 text-red-400 mx-auto" />
                   </td>
